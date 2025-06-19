@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:scalable_ecommerce/features/favorites/presentation/cubit/favorites_collections/favorites_collection_cubit.dart';
 import 'package:scalable_ecommerce/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 
 import '../../core/di/injection.dart';
@@ -8,6 +9,9 @@ import '../../core/storage/storage_service.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
+import '../../features/favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
+import '../../features/favorites/presentation/pages/favorites_collection_page.dart';
+import '../../features/favorites/presentation/pages/favorites_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/products/presentation/pages/products_page.dart';
 import '../../features/products/presentation/pages/product_detail_page.dart';
@@ -171,7 +175,24 @@ class AppRouter {
           // Favorites Tab
           GoRoute(
             path: '/favorites',
-            builder: (context, state) => const FavoritesPage(), // You'll need to create this
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+
+              return BlocProvider(
+  create: (context) => getIt<FavoritesCollectionsCubit>()..loadCollections(),
+  child: FavoritesPage(
+                initialCollectionId: extra?['collectionId'],
+                initialCategory: extra?['category'],
+              ),
+);
+            },
+          ),
+
+          GoRoute(
+            path: '/favorites/collections',
+            builder: (context, state) {
+              return const FavoritesCollectionsPage();
+            },
           ),
 
           // Cart Tab
@@ -567,17 +588,6 @@ class SearchPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(child: Text('Search Page - Coming Soon')),
-    );
-  }
-}
-
-class FavoritesPage extends StatelessWidget {
-  const FavoritesPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Favorites Page - Coming Soon')),
     );
   }
 }

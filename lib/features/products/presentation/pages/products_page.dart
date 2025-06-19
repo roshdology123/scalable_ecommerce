@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
+import 'package:scalable_ecommerce/features/cart/presentation/cubit/cart_cubit.dart';
 
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/debouncer.dart';
@@ -433,7 +434,10 @@ class ProductsPage extends HookWidget {
   }
 
   void _addToCart(BuildContext context, Product product) {
-    // This would be handled by a cart cubit
-    context.showSuccessSnackBar('products.added_to_cart'.tr(args: [product.title]));
+    context.read<CartCubit>().addToCart(productId: product.id, productTitle: product.title, productImage: product.image, price: product.price, quantity: 1,
+
+
+
+    );
   }
 }

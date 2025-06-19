@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:scalable_ecommerce/features/favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
 
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/cart/presentation/cubit/cart_cubit.dart';
@@ -37,6 +38,8 @@ class BlocProviders {
     BlocProvider<CartSummaryCubit>(
       create: (_) => getIt<CartSummaryCubit>(),
     ),
+
+    BlocProvider<FavoritesCubit>(create: (_) => getIt<FavoritesCubit>()),
   ];
 
   static Widget wrapWithProviders(Widget child) {

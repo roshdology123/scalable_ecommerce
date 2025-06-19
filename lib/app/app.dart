@@ -2,10 +2,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:scalable_ecommerce/features/favorites/presentation/cubit/favorites_collections/favorites_collection_cubit.dart';
 
 import '../core/di/injection.dart';
 import '../features/auth/presentation/cubit/auth_cubit.dart';
 import '../features/cart/presentation/cubit/cart_cubit.dart';
+import '../features/favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
 import '../features/products/presentation/cubit/products_cubit.dart';
 import 'router/app_router.dart';
 import 'themes/theme_cubit.dart';
@@ -30,9 +32,12 @@ class MyApp extends StatelessWidget {
           create: (_) => getIt<CartCubit>()..initializeCart(),
         ),
 
-        // BlocProvider(
-        //   create: (_) => getIt<FavoritesCubit>()..loadFavorites(),
-        // ),
+        BlocProvider(
+          create: (_) => getIt<FavoritesCubit>()..loadFavorites(),
+        ),
+        BlocProvider(
+          create: (_) => getIt<FavoritesCollectionsCubit>()..loadCollections(),
+        )
         // BlocProvider(
         //   create: (_) => getIt<SearchCubit>(),
         // ),

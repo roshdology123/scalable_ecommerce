@@ -1,8 +1,16 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:scalable_ecommerce/features/favorites/di/favorites_module.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/favorites/data/datasources/favorites_local_datastore.dart';
+import '../../features/favorites/data/datasources/favorites_remote_datastore.dart';
+import '../../features/favorites/domain/usecases/add_to_favorite_usecase.dart';
+import '../../features/favorites/domain/usecases/clear_favorites_usecase.dart';
+import '../../features/favorites/domain/usecases/remove_favorite_usecase.dart';
+import '../../features/favorites/presentation/cubit/favorites_collections/favorites_collection_cubit.dart';
+import '../../features/favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import '../network/dio_client.dart';
 import '../network/network_info.dart';
@@ -58,6 +66,16 @@ import '../../features/cart/domain/usecases/sync_cart_usecase.dart';
 import '../../features/cart/presentation/cubit/cart_cubit.dart';
 import '../../features/cart/presentation/cubit/cart_summary_cubit.dart';
 
+// Favorites
+import '../../features/favorites/data/repositories/favorites_repository_impl.dart';
+import '../../features/favorites/domain/repositories/favorites_repository.dart';
+import '../../features/favorites/domain/usecases/create_favorites_collection_usecase.dart';
+import '../../features/favorites/domain/usecases/get_favorites_count_usecase.dart';
+import '../../features/favorites/domain/usecases/get_favorites_usecase.dart';
+import '../../features/favorites/domain/usecases/get_favorites_collections_usecase.dart';
+import '../../features/favorites/domain/usecases/is_favorite_usecase.dart';
+import '../../features/favorites/domain/usecases/organize_favorites_usecase.dart';
+
 final GetIt getIt = GetIt.instance;
 
 Future<void> configureDependencies() async {
@@ -68,7 +86,7 @@ Future<void> configureDependencies() async {
     'system_init',
     {
       'user': 'roshdology123',
-      'timestamp': '2025-06-19 05:59:17',
+      'timestamp': '2025-06-19 14:14:14',
     },
   );
 
@@ -85,12 +103,14 @@ Future<void> configureDependencies() async {
       {
         'local_storage_ready': LocalStorage.isInitialized,
         'user': 'roshdology123',
-        'timestamp': '2025-06-19 05:59:17',
+        'timestamp': '2025-06-19 14:14:14',
       },
     );
+
     getIt.registerFactory<OnboardingCubit>(
           () => OnboardingCubit(getIt<StorageService>()),
     );
+
     // =====================================================================
     // STEP 1: REGISTER EXTERNAL DEPENDENCIES
     // =====================================================================
@@ -106,12 +126,12 @@ Future<void> configureDependencies() async {
       {
         'count': 3,
         'user': 'roshdology123',
-        'timestamp': '2025-06-19 05:59:17',
+        'timestamp': '2025-06-19 14:14:14',
       },
     );
 
     // =====================================================================
-    // STEP 2: REGISTER CORE SERVICES  
+    // STEP 2: REGISTER CORE SERVICES
     // =====================================================================
 
     getIt.registerSingleton<AppLogger>(AppLogger());
@@ -139,9 +159,9 @@ Future<void> configureDependencies() async {
       'system_init',
       {
         'count': 6,
-        'total_registered': getIt.allReadySync().toString(),
+        'total_registered': getIt.allReadySync(),
         'user': 'roshdology123',
-        'timestamp': '2025-06-19 05:59:17',
+        'timestamp': '2025-06-19 14:14:14',
       },
     );
 
@@ -202,7 +222,7 @@ Future<void> configureDependencies() async {
         getIt<ForgotPasswordUseCase>(),
         getIt<ResetPasswordUseCase>(),
         getIt<UpdateProfileUseCase>(),
-            getIt<AuthRepository>()
+        getIt<AuthRepository>(),
       ),
     );
 
@@ -212,9 +232,9 @@ Future<void> configureDependencies() async {
       {
         'data_sources': 2,
         'use_cases': 8,
-        'total_registered': getIt.allReadySync().toString(),
+        'total_registered': getIt.allReadySync(),
         'user': 'roshdology123',
-        'timestamp': '2025-06-19 05:59:17',
+        'timestamp': '2025-06-19 14:14:14',
       },
     );
 
@@ -272,7 +292,7 @@ Future<void> configureDependencies() async {
       ),
     );
     getIt.registerFactory<ProductDetailCubit>(
-          () => ProductDetailCubit(getIt<GetProductByIdUseCase>(),getIt<ProductsRepository>()),
+          () => ProductDetailCubit(getIt<GetProductByIdUseCase>(), getIt<ProductsRepository>()),
     );
 
     logger.logBusinessLogic(
@@ -282,9 +302,9 @@ Future<void> configureDependencies() async {
         'data_sources': 2,
         'use_cases': 6,
         'cubits': 3,
-        'total_registered': getIt.allReadySync().toString(),
+        'total_registered': getIt.allReadySync(),
         'user': 'roshdology123',
-        'timestamp': '2025-06-19 05:59:17',
+        'timestamp': '2025-06-19 14:14:14',
       },
     );
 
@@ -363,24 +383,121 @@ Future<void> configureDependencies() async {
         'data_sources': 2,
         'use_cases': 9,
         'cubits': 2,
-        'total_registered': getIt.allReadySync().toString(),
+        'total_registered': getIt.allReadySync(),
         'user': 'roshdology123',
-        'timestamp': '2025-06-19 05:59:17',
+        'timestamp': '2025-06-19 14:14:14',
       },
     );
 
     // =====================================================================
-    // FINAL SUCCESS LOG
+    // STEP 6: REGISTER FAVORITES FEATURE
     // =====================================================================
+
+    logger.logBusinessLogic(
+      'favorites_feature_registration_started',
+      'system_init',
+      {
+        'user': 'roshdology123',
+        'timestamp': '2025-06-19 14:14:14',
+      },
+    );
+
+    // Data Sources
+    getIt.registerSingleton<FavoritesLocalDataSource>(
+      FavoritesLocalDataSourceImpl(),
+    );
+    getIt.registerSingleton<FavoritesRemoteDataSource>(
+      FavoritesRemoteDataSourceImpl(),
+    );
+
+    // Repository
+    getIt.registerSingleton<FavoritesRepository>(
+      FavoritesRepositoryImpl(
+        localDataSource: getIt<FavoritesLocalDataSource>(),
+        remoteDataSource: getIt<FavoritesRemoteDataSource>(),
+      ),
+    );
+
+    // Use Cases
+    getIt.registerSingleton<AddToFavoritesUseCase>(
+      AddToFavoritesUseCase(getIt<FavoritesRepository>()),
+    );
+    getIt.registerSingleton<RemoveFromFavoritesUseCase>(
+      RemoveFromFavoritesUseCase(getIt<FavoritesRepository>()),
+    );
+    getIt.registerSingleton<GetFavoritesUseCase>(
+      GetFavoritesUseCase(getIt<FavoritesRepository>()),
+    );
+    getIt.registerSingleton<IsFavoriteUseCase>(
+      IsFavoriteUseCase(getIt<FavoritesRepository>()),
+    );
+    getIt.registerSingleton<GetFavoritesCountUseCase>(
+      GetFavoritesCountUseCase(getIt<FavoritesRepository>()),
+    );
+    getIt.registerSingleton<ClearFavoritesUseCase>(
+      ClearFavoritesUseCase(getIt<FavoritesRepository>()),
+    );
+    getIt.registerSingleton<CreateFavoritesCollectionUseCase>(
+      CreateFavoritesCollectionUseCase(getIt<FavoritesRepository>()),
+    );
+    getIt.registerSingleton<GetFavoritesCollectionsUseCase>(
+      GetFavoritesCollectionsUseCase(getIt<FavoritesRepository>()),
+    );
+    getIt.registerSingleton<OrganizeFavoritesUseCase>(
+      OrganizeFavoritesUseCase(getIt<FavoritesRepository>()),
+    );
+
+    // Cubits (as factories)
+    getIt.registerFactory<FavoritesCubit>(
+          () => FavoritesCubit(
+        getIt<GetFavoritesUseCase>(),
+        getIt<AddToFavoritesUseCase>(),
+        getIt<RemoveFromFavoritesUseCase>(),
+        getIt<IsFavoriteUseCase>(),
+        getIt<GetFavoritesCountUseCase>(),
+        getIt<ClearFavoritesUseCase>(),
+        getIt<OrganizeFavoritesUseCase>(),
+      ),
+    );
+    getIt.registerFactory<FavoritesCollectionsCubit>(
+          () => FavoritesCollectionsCubit(
+        getIt<GetFavoritesCollectionsUseCase>(),
+        getIt<CreateFavoritesCollectionUseCase>(),
+        getIt<OrganizeFavoritesUseCase>(),
+      ),
+    );
+
+    // Verify favorites feature initialization
+    await _verifyFavoritesFeature();
+
+    logger.logBusinessLogic(
+      'favorites_feature_registered',
+      'system_init',
+      {
+        'data_sources': 2,
+        'use_cases': 9,
+        'cubits': 2,
+        'total_registered': getIt.allReadySync(),
+        'user': 'roshdology123',
+        'timestamp': '2025-06-19 14:14:14',
+      },
+    );
+
+    // =====================================================================
+    // STEP 7: FINAL VERIFICATION AND SUCCESS LOG
+    // =====================================================================
+
+    await _performFinalVerification();
 
     logger.logBusinessLogic(
       'manual_dependency_injection_completed',
       'system_init',
       {
-        'total_services': getIt.allReadySync().toString(),
-        'features_registered': ['auth', 'products', 'cart'],
+        'total_services': getIt.allReadySync(),
+        'features_registered': ['auth', 'products', 'cart', 'favorites'],
         'user': 'roshdology123',
-        'timestamp': '2025-06-19 05:59:17',
+        'timestamp': '2025-06-19 14:14:14',
+        'initialization_successful': true,
       },
     );
 
@@ -390,11 +507,146 @@ Future<void> configureDependencies() async {
       e,
       stackTrace,
       {
-        'registered_so_far': getIt.allReadySync().toString(),
+        'registered_so_far': getIt.allReadySync(),
         'user': 'roshdology123',
-        'timestamp': '2025-06-19 05:59:17',
+        'timestamp': '2025-06-19 14:14:14',
       },
     );
     rethrow;
+  }
+}
+
+// Helper function to verify favorites feature
+Future<void> _verifyFavoritesFeature() async {
+  final logger = AppLogger();
+
+  try {
+    // Test that all critical favorites services are available
+    final favoritesRepo = getIt<FavoritesRepository>();
+    final favoritesCubit = getIt<FavoritesCubit>();
+    final collectionsCubit = getIt<FavoritesCollectionsCubit>();
+
+    if (favoritesRepo == null || favoritesCubit == null || collectionsCubit == null) {
+      throw Exception('Critical favorites dependencies missing');
+    }
+
+    // Test local storage for favorites
+    final localDataSource = getIt<FavoritesLocalDataSource>();
+    final testCount = await localDataSource.getFavoritesCount();
+
+    logger.logBusinessLogic(
+      'favorites_feature_verified',
+      'system_init',
+      {
+        'repository_ready': true,
+        'cubits_ready': true,
+        'local_storage_ready': true,
+        'current_favorites_count': testCount,
+        'user': 'roshdology123',
+        'timestamp': '2025-06-19 14:14:14',
+      },
+    );
+
+  } catch (e, stackTrace) {
+    logger.logErrorWithContext(
+      '_verifyFavoritesFeature',
+      e,
+      stackTrace,
+      {
+        'user': 'roshdology123',
+        'timestamp': '2025-06-19 14:14:14',
+      },
+    );
+    rethrow;
+  }
+}
+
+// Helper function for final verification of all features
+Future<void> _performFinalVerification() async {
+  final logger = AppLogger();
+
+  try {
+    // Verify all critical services are available
+    final criticalServices = [
+      'AuthRepository',
+      'ProductsRepository',
+      'CartRepository',
+      'FavoritesRepository',
+      'AuthCubit',
+      'ProductsCubit',
+      'CartCubit',
+      'FavoritesCubit',
+    ];
+
+    for (final serviceName in criticalServices) {
+      switch (serviceName) {
+        case 'AuthRepository':
+          getIt<AuthRepository>();
+          break;
+        case 'ProductsRepository':
+          getIt<ProductsRepository>();
+          break;
+        case 'CartRepository':
+          getIt<CartRepository>();
+          break;
+        case 'FavoritesRepository':
+          getIt<FavoritesRepository>();
+          break;
+        case 'AuthCubit':
+          getIt<AuthCubit>();
+          break;
+        case 'ProductsCubit':
+          getIt<ProductsCubit>();
+          break;
+        case 'CartCubit':
+          getIt<CartCubit>();
+          break;
+        case 'FavoritesCubit':
+          getIt<FavoritesCubit>();
+          break;
+      }
+    }
+
+    logger.logBusinessLogic(
+      'final_verification_completed',
+      'system_init',
+      {
+        'critical_services_verified': criticalServices,
+        'all_services_ready': true,
+        'user': 'roshdology123',
+        'timestamp': '2025-06-19 14:14:14',
+      },
+    );
+
+  } catch (e, stackTrace) {
+    logger.logErrorWithContext(
+      '_performFinalVerification',
+      e,
+      stackTrace,
+      {
+        'user': 'roshdology123',
+        'timestamp': '2025-06-19 14:14:14',
+      },
+    );
+    rethrow;
+  }
+}
+
+// Extension for easy access to favorites services
+extension FavoritesGetItExtensions on GetIt {
+  FavoritesCubit get favoritesCubit => get<FavoritesCubit>();
+  FavoritesCollectionsCubit get favoritesCollectionsCubit => get<FavoritesCollectionsCubit>();
+  FavoritesRepository get favoritesRepository => get<FavoritesRepository>();
+
+  // Quick check for favorites feature availability
+  bool get isFavoritesReady {
+    try {
+      get<FavoritesRepository>();
+      get<FavoritesCubit>();
+      get<FavoritesCollectionsCubit>();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
