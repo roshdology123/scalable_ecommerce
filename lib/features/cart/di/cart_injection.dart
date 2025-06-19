@@ -33,7 +33,6 @@ class CartInjection {
 
     getIt.registerLazySingleton<CartLocalDataSource>(
           () => CartLocalDataSourceImpl(
-        getIt<StorageService>(),
       ),
     );
 

@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:scalable_ecommerce/features/auth/domain/usecases/reset_password_usecase.dart';
+import 'package:scalable_ecommerce/features/auth/domain/usecases/update_profile_usecase.dart';
 
 import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/user.dart';
@@ -20,6 +22,8 @@ class AuthCubit extends Cubit<AuthState> {
   final LogoutUseCase _logoutUseCase;
   final GetCurrentUserUseCase _getCurrentUserUseCase;
   final ForgotPasswordUseCase _forgotPasswordUseCase;
+  final ResetPasswordUseCase _resetPasswordUseCase;
+  final UpdateProfileUseCase _updateProfileUseCase;
 
   AuthCubit(
       this._loginUseCase,
@@ -27,18 +31,37 @@ class AuthCubit extends Cubit<AuthState> {
       this._logoutUseCase,
       this._getCurrentUserUseCase,
       this._forgotPasswordUseCase,
-      ) : super(const AuthState.initial());
+      this._resetPasswordUseCase,
+      this._updateProfileUseCase,
+      ) : super(const AuthState.initial()) {
+    // Automatically check auth status when cubit is created
+    _initializeAuth();
+  }
+
+  // Private method to initialize auth without exposing it publicly
+  Future<void> _initializeAuth() async {
+    // Small delay to ensure the app is fully initialized
+    await Future.delayed(const Duration(milliseconds: 100));
+    await checkAuthStatus();
+  }
 
   Future<void> checkAuthStatus() async {
     emit(const AuthState.loading());
 
     final result = await _getCurrentUserUseCase(const NoParams());
     result.fold(
-          (failure) => emit(const AuthState.unauthenticated()),
-          (user) => emit(AuthState.authenticated(user)),
+          (failure) {
+        print('[AuthCubit] Auth check failed: ${failure.message}');
+        emit(const AuthState.unauthenticated());
+      },
+          (user) {
+        print('[AuthCubit] User authenticated: ${user.email}');
+        emit(AuthState.authenticated(user));
+      },
     );
   }
 
+  // Rest of your methods remain the same...
   Future<void> login({
     required String emailOrUsername,
     required String password,

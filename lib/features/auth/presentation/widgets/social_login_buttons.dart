@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -15,16 +16,7 @@ class SocialLoginButtons extends StatelessWidget {
         // Google Login Button
         OutlinedButton.icon(
           onPressed: () => _handleSocialLogin(context, 'google'),
-          icon: Container(
-            width: 20,
-            height: 20,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/google_logo.png'),
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
+          icon: const Icon(Icons.g_mobiledata),
           label: Text('auth.continue_with_google'.tr()),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(double.infinity, 48),
@@ -35,16 +27,7 @@ class SocialLoginButtons extends StatelessWidget {
         // Facebook Login Button
         OutlinedButton.icon(
           onPressed: () => _handleSocialLogin(context, 'facebook'),
-          icon: Container(
-            width: 20,
-            height: 20,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/facebook_logo.png'),
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
+          icon: const Icon(Icons.facebook),
           label: Text('auth.continue_with_facebook'.tr()),
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(double.infinity, 48),

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../core/di/injection.dart';
 import '../features/auth/presentation/cubit/auth_cubit.dart';
+import '../features/cart/presentation/cubit/cart_cubit.dart';
 import '../features/products/presentation/cubit/products_cubit.dart';
 import 'router/app_router.dart';
 import 'themes/theme_cubit.dart';
@@ -25,9 +26,10 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (_) => getIt<ProductsCubit>(),
         ),
-        // BlocProvider(
-        //   create: (_) => getIt<CartCubit>()..loadCart(),
-        // ),
+        BlocProvider(
+          create: (_) => getIt<CartCubit>()..initializeCart(),
+        ),
+
         // BlocProvider(
         //   create: (_) => getIt<FavoritesCubit>()..loadFavorites(),
         // ),

@@ -2,48 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
+import '../../features/cart/presentation/cubit/cart_cubit.dart';
+import '../../features/cart/presentation/cubit/cart_summary_cubit.dart';
 import '../../features/products/presentation/cubit/categories_cubit.dart';
-import '../../features/products/presentation/cubit/product_detail_cubit.dart';
 import '../../features/products/presentation/cubit/products_cubit.dart';
+import '../../features/products/presentation/cubit/product_detail_cubit.dart';
 import 'injection.dart';
 
-/// Helper class to provide BLoC instances
 class BlocProviders {
-  static List<BlocProvider> get globalProviders => [
-    // Global state that persists throughout the app
+  static List<BlocProvider> get providers => [
+    // Auth
     BlocProvider<AuthCubit>(
-      create: (context) => getIt<AuthCubit>()..checkAuthStatus(),
+      create: (_) => getIt<AuthCubit>(),
     ),
+
+    // Products
     BlocProvider<CategoriesCubit>(
-      create: (context) => getIt<CategoriesCubit>(),
+      create: (_) => getIt<CategoriesCubit>(),
+    ),
+
+    BlocProvider<ProductsCubit>(
+      create: (_) => getIt<ProductsCubit>(),
+    ),
+
+    BlocProvider<ProductDetailCubit>(
+      create: (_) => getIt<ProductDetailCubit>(),
+    ),
+
+    // Cart
+    BlocProvider<CartCubit>(
+      create: (_) => getIt<CartCubit>(),
+    ),
+
+    BlocProvider<CartSummaryCubit>(
+      create: (_) => getIt<CartSummaryCubit>(),
     ),
   ];
 
-  /// Provide ProductsCubit for products pages
-  static BlocProvider<ProductsCubit> productsProvider() {
-    return BlocProvider<ProductsCubit>(
-      create: (context) => getIt<ProductsCubit>(),
-    );
-  }
-
-  /// Provide ProductDetailCubit for product detail pages
-  static BlocProvider<ProductDetailCubit> productDetailProvider() {
-    return BlocProvider<ProductDetailCubit>(
-      create: (context) => getIt<ProductDetailCubit>(),
-    );
-  }
-
-  /// Helper method to wrap widgets with specific providers
-  static Widget withProductsProvider({required Widget child}) {
-    return BlocProvider<ProductsCubit>(
-      create: (context) => getIt<ProductsCubit>(),
-      child: child,
-    );
-  }
-
-  static Widget withProductDetailProvider({required Widget child}) {
-    return BlocProvider<ProductDetailCubit>(
-      create: (context) => getIt<ProductDetailCubit>(),
+  static Widget wrapWithProviders(Widget child) {
+    return MultiBlocProvider(
+      providers: providers,
       child: child,
     );
   }

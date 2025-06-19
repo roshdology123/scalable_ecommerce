@@ -15,70 +15,49 @@ import '../domain/usecases/logout_usecase.dart';
 import '../domain/usecases/register_usecase.dart';
 import '../domain/usecases/reset_password_usecase.dart';
 import '../domain/usecases/update_profile_usecase.dart';
-import '../presentation/cubit/auth_cubit.dart';
 
 @module
 abstract class AuthModule {
-  // Data Sources
-  @LazySingleton(as: AuthRemoteDataSource)
-  AuthRemoteDataSourceImpl authRemoteDataSource(DioClient dioClient) =>
-      AuthRemoteDataSourceImpl(dioClient);
+  // Note: AuthLocalDataSource is already registered with @LazySingleton
+  // Note: AuthRemoteDataSource needs to be implemented
 
-  @LazySingleton(as: AuthLocalDataSource)
-  AuthLocalDataSourceImpl authLocalDataSource(SecureStorage secureStorage) =>
-      AuthLocalDataSourceImpl(secureStorage);
-
-  // Repository
   @LazySingleton(as: AuthRepository)
   AuthRepositoryImpl authRepository(
       AuthRemoteDataSource remoteDataSource,
       AuthLocalDataSource localDataSource,
       NetworkInfo networkInfo,
-      ) => AuthRepositoryImpl(remoteDataSource, localDataSource, networkInfo);
+      ) =>
+      AuthRepositoryImpl(remoteDataSource, localDataSource, networkInfo);
 
-  // Use Cases
-  @injectable
-  LoginUseCase loginUseCase(AuthRepository repository) => LoginUseCase(repository);
+  @LazySingleton()
+  LoginUseCase loginUseCase(AuthRepository repository) =>
+      LoginUseCase(repository);
 
-  @injectable
-  RegisterUseCase registerUseCase(AuthRepository repository) => RegisterUseCase(repository);
+  @LazySingleton()
+  RegisterUseCase registerUseCase(AuthRepository repository) =>
+      RegisterUseCase(repository);
 
-  @injectable
-  LogoutUseCase logoutUseCase(AuthRepository repository) => LogoutUseCase(repository);
+  @LazySingleton()
+  LogoutUseCase logoutUseCase(AuthRepository repository) =>
+      LogoutUseCase(repository);
 
-  @injectable
+  @LazySingleton()
   GetCurrentUserUseCase getCurrentUserUseCase(AuthRepository repository) =>
       GetCurrentUserUseCase(repository);
 
-  @injectable
+  @LazySingleton()
   ForgotPasswordUseCase forgotPasswordUseCase(AuthRepository repository) =>
       ForgotPasswordUseCase(repository);
 
-  @injectable
-  ChangePasswordUseCase changePasswordUseCase(AuthRepository repository) =>
-      ChangePasswordUseCase(repository);
-
-  @injectable
+  @LazySingleton()
   ResetPasswordUseCase resetPasswordUseCase(AuthRepository repository) =>
       ResetPasswordUseCase(repository);
 
-  @injectable
+  @LazySingleton()
+  ChangePasswordUseCase changePasswordUseCase(AuthRepository repository) =>
+      ChangePasswordUseCase(repository);
+
+  @LazySingleton()
   UpdateProfileUseCase updateProfileUseCase(AuthRepository repository) =>
       UpdateProfileUseCase(repository);
-
-  // Cubit
-  @injectable
-  AuthCubit authCubit(
-      LoginUseCase loginUseCase,
-      RegisterUseCase registerUseCase,
-      LogoutUseCase logoutUseCase,
-      GetCurrentUserUseCase getCurrentUserUseCase,
-      ForgotPasswordUseCase forgotPasswordUseCase,
-      ) => AuthCubit(
-    loginUseCase,
-    registerUseCase,
-    logoutUseCase,
-    getCurrentUserUseCase,
-    forgotPasswordUseCase,
-  );
 }

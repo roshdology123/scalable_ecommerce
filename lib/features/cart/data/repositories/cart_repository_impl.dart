@@ -50,7 +50,9 @@ class CartRepositoryImpl implements CartRepository {
             DateTime.now().difference(startTime),
             {'source': 'local_only', 'items': localCart.items.length},
           );
-          return Right(localCart);
+          return Right(
+            localCart.toCart()
+          );
         } else {
           // Create empty guest cart
           final emptyCart = CartModel.empty();
@@ -62,7 +64,7 @@ class CartRepositoryImpl implements CartRepository {
             {'cart_id': emptyCart.id},
           );
 
-          return Right(emptyCart);
+          return Right(emptyCart.toCart());
         }
       }
 
@@ -92,7 +94,7 @@ class CartRepositoryImpl implements CartRepository {
               {'items': mergedCart.items.length, 'total': mergedCart.summary.total},
             );
 
-            return Right(mergedCart);
+            return Right(mergedCart.toCart());
           } else {
             // Save remote cart locally
             await _localDataSource.saveCart(remoteCart);
@@ -103,18 +105,18 @@ class CartRepositoryImpl implements CartRepository {
               {'source': 'remote', 'items': remoteCart.items.length},
             );
 
-            return Right(remoteCart);
+            return Right(remoteCart.toCart());
           }
         } catch (e) {
           _logger.w('Failed to get remote cart, using local: $e');
 
           if (localCart != null) {
-            return Right(localCart);
+            return Right(localCart.toCart());
           } else {
             // Create empty cart for authenticated user
             final emptyCart = CartModel.empty(userId: userId);
             await _localDataSource.saveCart(emptyCart);
-            return Right(emptyCart);
+            return Right(emptyCart.toCart());
           }
         }
       } else {
@@ -126,12 +128,12 @@ class CartRepositoryImpl implements CartRepository {
             {'source': 'local_offline', 'items': localCart.items.length},
           );
 
-          return Right(localCart);
+          return Right(localCart.toCart());
         } else {
           // Create empty cart
           final emptyCart = CartModel.empty(userId: userId);
           await _localDataSource.saveCart(emptyCart);
-          return Right(emptyCart);
+          return Right(emptyCart.toCart());
         }
       }
     } catch (e, stackTrace) {
@@ -143,15 +145,16 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       if (e is ApiException) {
-        return Left(ServerFailure(e.message, e.code));
+        return Left(ServerFailure(message: e.message, code: e.code));
       } else if (e is NetworkException) {
-        return Left(NetworkFailure(e.message, e.code));
+        return Left(NetworkFailure(message: e.message, code: e.code));
       } else if (e is CacheException) {
-        return Left(CacheFailure(e.message, e.code));
+        return Left(CacheFailure(message: e.message, code: e.code));
       } else {
         return Left(UnknownFailure(
-          'Failed to get cart: ${e.toString()}',
-          'GET_CART_ERROR',
+          code: 'GET_CART_ERROR',
+          message: 'Failed to get cart: ${e.toString()}',
+          data: {'user_id': userId, 'user': 'roshdology123'},
         ));
       }
     }
@@ -190,15 +193,17 @@ class CartRepositoryImpl implements CartRepository {
       // Validate input
       if (quantity <= 0) {
         return const Left(ValidationFailure(
-          'Quantity must be greater than 0',
-          'INVALID_QUANTITY',
+         message: 'Quantity must be greater than 0',
+          code: 'INVALID_QUANTITY',
+
         ));
       }
 
       if (maxQuantity != null && quantity > maxQuantity) {
         return Left(ValidationFailure(
-          'Quantity cannot exceed maximum of $maxQuantity',
-          'QUANTITY_EXCEEDS_MAX',
+          message: 'Cannot add $quantity items. Maximum quantity of $maxQuantity would be exceeded.',
+          code: 'QUANTITY_EXCEEDS_MAX',
+          fieldErrors: {'quantity': 'Cannot exceed maximum of $maxQuantity'},
         ));
       }
 
@@ -247,8 +252,9 @@ class CartRepositoryImpl implements CartRepository {
 
         if (maxQuantity != null && newQuantity > maxQuantity) {
           return Left(ValidationFailure(
-            'Cannot add $quantity items. Maximum quantity of $maxQuantity would be exceeded.',
-            'QUANTITY_EXCEEDS_MAX',
+            message: 'Cannot add $quantity items. Maximum quantity of $maxQuantity would be exceeded.',
+            code: 'QUANTITY_EXCEEDS_MAX',
+            fieldErrors: {'quantity': 'Cannot exceed maximum of $maxQuantity'},
           ));
         }
 
@@ -275,8 +281,9 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       return Left(UnknownFailure(
-        'Failed to add item to cart: ${e.toString()}',
-        'ADD_TO_CART_ERROR',
+        message: 'Failed to add item to cart: ${e.toString()}',
+        code: 'ADD_TO_CART_ERROR',
+        data: {'product_id': productId, 'user_id': userId, 'user': 'roshdology123'},
       ));
     }
   }
@@ -307,7 +314,7 @@ class CartRepositoryImpl implements CartRepository {
             'remaining_items': updatedCart.items.length,
           });
 
-          return Right(updatedCart);
+          return Right(updatedCart.toCart());
         } catch (e) {
           _logger.w('Failed to remove from remote cart, removed locally: $e');
 
@@ -341,11 +348,16 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       if (e is CacheException) {
-        return Left(CacheFailure(e.message, e.code));
+        return Left(CacheFailure(
+          message: e.message,
+          code: e.code,
+          data: {'item_id': itemId, 'user_id': userId, 'user': 'roshdology123'},
+        ));
       } else {
         return Left(UnknownFailure(
-          'Failed to remove item from cart: ${e.toString()}',
-          'REMOVE_FROM_CART_ERROR',
+          message: 'Failed to remove item from cart: ${e.toString()}',
+          code: 'REMOVE_FROM_CART_ERROR',
+          data: {'item_id': itemId, 'user_id': userId, 'user': 'roshdology123'},
         ));
       }
     }
@@ -375,8 +387,9 @@ class CartRepositoryImpl implements CartRepository {
           final itemIndex = cart.items.indexWhere((item) => item.id == itemId);
           if (itemIndex == -1) {
             return const Left(ValidationFailure(
-              'Item not found in cart',
-              'ITEM_NOT_FOUND',
+              message: 'Item not found in cart',
+              code: 'ITEM_NOT_FOUND',
+              fieldErrors: {'item_id': 'Item with this ID does not exist in the cart'},
             ));
           }
 
@@ -386,15 +399,17 @@ class CartRepositoryImpl implements CartRepository {
           if (quantity != null) {
             if (quantity <= 0) {
               return const Left(ValidationFailure(
-                'Quantity must be greater than 0',
-                'INVALID_QUANTITY',
+                message: 'Quantity must be greater than 0',
+                code: 'INVALID_QUANTITY',
+                fieldErrors: {'quantity': 'Quantity must be greater than 0'},
               ));
             }
 
             if (quantity > currentItem.maxQuantity) {
               return Left(ValidationFailure(
-                'Quantity cannot exceed maximum of ${currentItem.maxQuantity}',
-                'QUANTITY_EXCEEDS_MAX',
+                message: 'Cannot update quantity to $quantity. Maximum quantity is ${currentItem.maxQuantity}.',
+                code: 'QUANTITY_EXCEEDS_MAX',
+                fieldErrors: {'quantity': 'Cannot exceed maximum of ${currentItem.maxQuantity}'},
               ));
             }
           }
@@ -428,8 +443,9 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       return Left(UnknownFailure(
-        'Failed to update cart item: ${e.toString()}',
-        'UPDATE_CART_ITEM_ERROR',
+        message: 'Failed to update cart item: ${e.toString()}',
+        code: 'UPDATE_CART_ITEM_ERROR',
+        data: {'item_id': itemId, 'user_id': userId, 'user': 'roshdology123'},
       ));
     }
   }
@@ -472,11 +488,16 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       if (e is CacheException) {
-        return Left(CacheFailure(e.message, e.code));
+        return Left(CacheFailure(
+          message: e.message,
+          code: e.code,
+          data: {'user_id': userId, 'user': 'roshdology123'},
+        ));
       } else {
         return Left(UnknownFailure(
-          'Failed to clear cart: ${e.toString()}',
-          'CLEAR_CART_ERROR',
+          message: 'Failed to clear cart: ${e.toString()}',
+          code: 'CLEAR_CART_ERROR',
+          data: {'user_id': userId, 'user': 'roshdology123'},
         ));
       }
     }
@@ -538,15 +559,17 @@ class CartRepositoryImpl implements CartRepository {
 
       if (userId == null) {
         return const Left(ValidationFailure(
-          'User must be logged in to apply coupons',
-          'USER_NOT_AUTHENTICATED',
+          message: 'User must be logged in to apply coupons',
+          code: 'USER_NOT_AUTHENTICATED',
+          fieldErrors: {'user_id': 'User must be logged in to apply coupons'},
         ));
       }
 
       if (!await _networkInfo.isConnected) {
         return const Left(NetworkFailure(
-          'Internet connection required to apply coupons',
-          'NO_INTERNET_CONNECTION',
+          message: 'Internet connection required to apply coupons',
+          code: 'NO_INTERNET_CONNECTION',
+          data: {'network': 'Internet connection required to apply coupons'},
         ));
       }
 
@@ -559,7 +582,7 @@ class CartRepositoryImpl implements CartRepository {
         'discount_amount': updatedCart.summary.couponDiscount,
       });
 
-      return Right(updatedCart);
+      return Right(updatedCart.toCart());
     } catch (e, stackTrace) {
       _logger.logErrorWithContext(
         'CartRepository.applyCoupon',
@@ -574,28 +597,40 @@ class CartRepositoryImpl implements CartRepository {
 
       if (e is ApiException) {
         if (e.code == 'INVALID_COUPON') {
-          return Left(ValidationFailure(
-            'Invalid or expired coupon code',
-            'INVALID_COUPON',
+          return const Left(ValidationFailure(
+            message: 'Invalid coupon code',
+            code: 'INVALID_COUPON',
+            fieldErrors: {'coupon_code': 'The coupon code is invalid or expired'},
           ));
         } else if (e.code == 'COUPON_ALREADY_USED') {
-          return Left(ValidationFailure(
-            'Coupon has already been used',
-            'COUPON_ALREADY_USED',
+          return const Left(ValidationFailure(
+            message: 'Coupon has already been applied to this cart',
+            code: 'COUPON_ALREADY_USED',
+            fieldErrors: {'coupon_code': 'This coupon has already been applied to your cart'},
           ));
         } else if (e.code == 'MINIMUM_ORDER_NOT_MET') {
-          return Left(ValidationFailure(
-            'Minimum order amount not met for this coupon',
-            'MINIMUM_ORDER_NOT_MET',
+          return const Left(ValidationFailure(
+            message: 'Minimum order amount not met for this coupon',
+            code: 'MINIMUM_ORDER_NOT_MET',
+            fieldErrors: {'coupon_code': 'Your cart total does not meet the minimum required for this coupon'},
           ));
         }
-        return Left(ServerFailure(e.message, e.code));
+        return Left(ServerFailure(
+          message: e.message,
+          code: e.code,
+          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
+        ));
       } else if (e is NetworkException) {
-        return Left(NetworkFailure(e.message, e.code));
+        return Left(NetworkFailure(
+          message: e.message,
+          code: e.code,
+          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
+        ));
       } else {
         return Left(UnknownFailure(
-          'Failed to apply coupon: ${e.toString()}',
-          'APPLY_COUPON_ERROR',
+          message: 'Failed to apply coupon: ${e.toString()}',
+          code: 'APPLY_COUPON_ERROR',
+          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
         ));
       }
     }
@@ -614,15 +649,17 @@ class CartRepositoryImpl implements CartRepository {
 
       if (userId == null) {
         return const Left(ValidationFailure(
-          'User must be logged in to remove coupons',
-          'USER_NOT_AUTHENTICATED',
+          message: 'User must be logged in to remove coupons',
+          code: 'USER_NOT_AUTHENTICATED',
+          fieldErrors: {'user_id': 'User must be logged in to remove coupons'},
         ));
       }
 
       if (!await _networkInfo.isConnected) {
         return const Left(NetworkFailure(
-          'Internet connection required to remove coupons',
-          'NO_INTERNET_CONNECTION',
+          message: 'Internet connection required to remove coupons',
+          code: 'NO_INTERNET_CONNECTION',
+          data: {'network': 'Internet connection required to remove coupons'},
         ));
       }
 
@@ -634,7 +671,7 @@ class CartRepositoryImpl implements CartRepository {
         'user_id': userId,
       });
 
-      return Right(updatedCart);
+      return Right(updatedCart.toCart());
     } catch (e, stackTrace) {
       _logger.logErrorWithContext(
         'CartRepository.removeCoupon',
@@ -648,13 +685,22 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       if (e is ApiException) {
-        return Left(ServerFailure(e.message, e.code));
+        return Left(ServerFailure(
+          message: e.message,
+          code: e.code,
+          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
+        ));
       } else if (e is NetworkException) {
-        return Left(NetworkFailure(e.message, e.code));
+        return Left(NetworkFailure(
+          message: e.message,
+          code: e.code,
+          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
+        ));
       } else {
         return Left(UnknownFailure(
-          'Failed to remove coupon: ${e.toString()}',
-          'REMOVE_COUPON_ERROR',
+          message: 'Failed to remove coupon: ${e.toString()}',
+          code: 'REMOVE_COUPON_ERROR',
+          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
         ));
       }
     }
@@ -697,7 +743,7 @@ class CartRepositoryImpl implements CartRepository {
             },
           );
 
-          return Right(summary);
+          return Right(summary.toCartSummary());
         } catch (e) {
           _logger.w('Failed to calculate totals remotely, using local: $e');
         }
@@ -723,7 +769,7 @@ class CartRepositoryImpl implements CartRepository {
             },
           );
 
-          return Right(localSummary);
+          return Right(localSummary.toCartSummary());
         },
       );
     } catch (e, stackTrace) {
@@ -739,8 +785,14 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       return Left(UnknownFailure(
-        'Failed to calculate cart totals: ${e.toString()}',
-        'CALCULATE_TOTALS_ERROR',
+       message: 'Failed to calculate cart totals: ${e.toString()}',
+        code: 'CALCULATE_CART_TOTALS_ERROR',
+        data: {
+          'shipping_method_id': shippingMethodId,
+          'coupon_code': couponCode,
+          'user_id': userId,
+          'user': 'roshdology123',
+        },
       ));
     }
   }
@@ -752,8 +804,9 @@ class CartRepositoryImpl implements CartRepository {
 
       if (!await _networkInfo.isConnected) {
         return const Left(NetworkFailure(
-          'Internet connection required to sync cart',
-          'NO_INTERNET_CONNECTION',
+          message: 'Internet connection required to sync cart',
+          code: 'NO_INTERNET_CONNECTION',
+          data: {'network': 'Internet connection required to sync cart'},
         ));
       }
 
@@ -762,7 +815,7 @@ class CartRepositoryImpl implements CartRepository {
         // No local cart to sync, just get remote cart
         final remoteCart = await _remoteDataSource.getCart(userId);
         await _localDataSource.saveCart(remoteCart);
-        return Right(remoteCart);
+        return Right(remoteCart.toCart());
       }
 
       final syncedCart = await _remoteDataSource.syncCart(localCart);
@@ -777,7 +830,7 @@ class CartRepositoryImpl implements CartRepository {
         'synced_version': syncedCart.version,
       });
 
-      return Right(syncedCart);
+      return Right(syncedCart.toCart());
     } catch (e, stackTrace) {
       _logger.logErrorWithContext(
         'CartRepository.syncCart',
@@ -787,13 +840,22 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       if (e is ApiException) {
-        return Left(ServerFailure(e.message, e.code));
+        return Left(ServerFailure(
+          message: e.message,
+          code: e.code,
+          data: {'user_id': userId, 'user': 'roshdology123'},
+        ));
       } else if (e is NetworkException) {
-        return Left(NetworkFailure(e.message, e.code));
+        return Left(NetworkFailure(
+          message: e.message,
+          code: e.code,
+          data: {'user_id': userId, 'user': 'roshdology123'},
+        ));
       } else {
         return Left(UnknownFailure(
-          'Failed to sync cart: ${e.toString()}',
-          'SYNC_CART_ERROR',
+         message: 'Failed to sync cart: ${e.toString()}',
+          code: 'SYNC_CART_ERROR',
+          data: {'user_id': userId, 'user': 'roshdology123'},
         ));
       }
     }
@@ -812,8 +874,9 @@ class CartRepositoryImpl implements CartRepository {
 
       if (!await _networkInfo.isConnected) {
         return const Left(NetworkFailure(
-          'Internet connection required to merge cart',
-          'NO_INTERNET_CONNECTION',
+          message: 'Internet connection required to merge guest cart',
+          code: 'NO_INTERNET_CONNECTION',
+          data: {'network': 'Internet connection required to merge guest cart'},
         ));
       }
 
@@ -827,7 +890,7 @@ class CartRepositoryImpl implements CartRepository {
         'merged_items': mergedCart.items.length,
       });
 
-      return Right(mergedCart);
+      return Right(mergedCart.toCart());
     } catch (e, stackTrace) {
       _logger.logErrorWithContext(
         'CartRepository.mergeGuestCart',
@@ -841,13 +904,22 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       if (e is ApiException) {
-        return Left(ServerFailure(e.message, e.code));
+        return Left(ServerFailure(
+          message: e.message,
+          code: e.code,
+          data: {'user_id': userId, 'guest_cart_id': guestCart.id, 'user': 'roshdology123'},
+        ));
       } else if (e is NetworkException) {
-        return Left(NetworkFailure(e.message, e.code));
+        return Left(NetworkFailure(
+          message: e.message,
+          code: e.code,
+          data: {'user_id': userId, 'guest_cart_id': guestCart.id, 'user': 'roshdology123'},
+        ));
       } else {
         return Left(UnknownFailure(
-          'Failed to merge guest cart: ${e.toString()}',
-          'MERGE_CART_ERROR',
+          message: 'Failed to merge guest cart: ${e.toString()}',
+          code: 'MERGE_GUEST_CART_ERROR',
+          data: {'user_id': userId, 'guest_cart_id': guestCart.id, 'user': 'roshdology123'},
         ));
       }
     }
@@ -870,7 +942,7 @@ class CartRepositoryImpl implements CartRepository {
             'items_count': validatedCart.items.length,
           });
 
-          return Right(validatedCart);
+          return Right(validatedCart.toCart());
         } catch (e) {
           _logger.w('Failed to validate cart remotely, using local: $e');
         }
@@ -901,8 +973,9 @@ class CartRepositoryImpl implements CartRepository {
       );
 
       return Left(UnknownFailure(
-        'Failed to validate cart: ${e.toString()}',
-        'VALIDATE_CART_ERROR',
+        message: 'Failed to validate cart: ${e.toString()}',
+        code: 'VALIDATE_CART_ERROR',
+        data: {'user_id': userId, 'user': 'roshdology123'},
       ));
     }
   }
@@ -928,7 +1001,7 @@ class CartRepositoryImpl implements CartRepository {
           'user_id': userId,
         });
 
-        return Right(updatedCart);
+        return Right(updatedCart.toCart());
       } catch (e) {
         _logger.w('Failed to add to remote cart, added locally: $e');
         await _markPendingChange('add_item', item.toJson());
@@ -969,7 +1042,7 @@ class CartRepositoryImpl implements CartRepository {
           'user_id': userId,
         });
 
-        return Right(updatedCart);
+        return Right(updatedCart.toCart());
       } catch (e) {
         _logger.w('Failed to update remote cart item, updated locally: $e');
         await _markPendingChange('update_item', item.toJson());
@@ -1101,9 +1174,4 @@ class CartRepositoryImpl implements CartRepository {
         .join('|');
     return '${productId}_${variantString.hashCode}';
   }
-}
-
-// Helper extension
-extension on Iterable {
-  T? get firstOrNull => isEmpty ? null : first;
 }
