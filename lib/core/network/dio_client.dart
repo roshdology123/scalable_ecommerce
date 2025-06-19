@@ -291,7 +291,40 @@ class DioClient {
         final responseData = e.response?.data;
 
         if (statusCode != null) {
-          return ApiException.fromResponse(statusCode, responseData);
+          // Handle different response data types safely
+          String message = 'Server error occurred';
+
+          if (responseData is String) {
+            message = responseData.isNotEmpty ? responseData : message;
+          } else if (responseData is Map<String, dynamic>) {
+            message = responseData['message'] ??
+                responseData['error'] ??
+                responseData['detail'] ??
+                message;
+          }
+
+          switch (statusCode) {
+            case 401:
+              return AuthException(
+                message: message,
+                code: 'INVALID_CREDENTIALS',
+              );
+            case 400:
+              return ApiException.badRequest(message);
+            case 403:
+              return ApiException.forbidden(message);
+            case 404:
+              return ApiException.notFound(message);
+            case 500:
+              return ApiException.internalServerError(message);
+            default:
+              return ApiException(
+                message: message,
+                code: 'API_ERROR',
+                statusCode: statusCode,
+                responseData: responseData is Map<String, dynamic> ? responseData : null,
+              );
+          }
         }
         return NetworkException.serverError(500);
 

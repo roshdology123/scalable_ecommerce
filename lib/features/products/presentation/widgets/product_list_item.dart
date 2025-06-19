@@ -169,9 +169,10 @@ class ProductListItem extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        _buildStockInfo(context),
+
                       ],
                     ),
+                    _buildStockInfo(context),
                   ],
                 ),
               ),

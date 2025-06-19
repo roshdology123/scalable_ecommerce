@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,7 +10,7 @@ import 'core/utils/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await EasyLocalization.ensureInitialized();
   final logger = AppLogger();
 
   try {
@@ -39,7 +40,11 @@ void main() async {
       },
     );
 
-    runApp(const MyApp());
+    runApp(EasyLocalization(
+        supportedLocales: const [Locale('ar'), Locale('en')],
+        path: 'assets/translations',
+        fallbackLocale: const Locale('ar',),
+        child: const MyApp()));
 
   } catch (e, stackTrace) {
     logger.logErrorWithContext(
@@ -63,6 +68,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProviders.wrapWithProviders(
       MaterialApp.router(
+        localizationsDelegates: context.localizationDelegates,
+        supportedLocales: context.supportedLocales,
+        locale: context.locale,
         title: 'Scalable E-commerce',
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,

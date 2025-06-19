@@ -37,22 +37,13 @@ class LoginUseCase implements UseCase<User, LoginParams> {
       ));
     }
 
-    // Determine if input is email or username
-    final isEmail = params.emailOrUsername.contains('@');
-
-    if (isEmail) {
-      return await repository.login(
-        email: params.emailOrUsername,
-        password: params.password,
-        rememberMe: params.rememberMe,
-      );
-    } else {
-      return await repository.loginWithUsername(
-        username: params.emailOrUsername,
-        password: params.password,
-        rememberMe: params.rememberMe,
-      );
-    }
+    // For Fake Store API, we always use loginWithUsername since it only accepts username
+    // The API doesn't support email login, only username
+    return await repository.loginWithUsername(
+      username: params.emailOrUsername,
+      password: params.password,
+      rememberMe: params.rememberMe,
+    );
   }
 }
 

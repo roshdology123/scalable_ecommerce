@@ -8,4 +8,5 @@ class AuthState with _$AuthState {
   const factory AuthState.unauthenticated() = AuthUnauthenticated;
   const factory AuthState.error(String message, String? code) = AuthError;
   const factory AuthState.forgotPasswordSent() = AuthForgotPasswordSent;
+  const factory AuthState.passwordResetSuccess() = AuthPasswordResetSuccess;
 }

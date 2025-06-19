@@ -17,7 +17,7 @@ import '../widgets/loading_product_card.dart';
 
 class ProductDetailPage extends HookWidget {
   final int productId;
-  final Product? product; // Optional cached product for faster loading
+  final Product? product;
 
   const ProductDetailPage({
     super.key,
@@ -630,7 +630,7 @@ class ProductDetailPage extends HookWidget {
       Column(
         children: [
           SizedBox(
-            height: 280,
+            height: 320,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: relatedProducts.length,
@@ -704,6 +704,6 @@ class ProductDetailPage extends HookWidget {
   }
 
   void _navigateToProduct(BuildContext context, Product product) {
-    context.push('/product/${product.id}');
+    context.push('/home/product/${product.id}');
   }
 }

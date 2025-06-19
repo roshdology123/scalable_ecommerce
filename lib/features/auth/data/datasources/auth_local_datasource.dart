@@ -29,6 +29,12 @@ abstract class AuthLocalDataSource {
   Future<bool> isRememberMeEnabled();
   Future<void> setRememberMeEnabled(bool enabled);
 
+  Future<bool> isAutoLoginEnabled();
+  Future<void> setAutoLoginEnabled(bool enabled);
+
+  Future<DateTime?> getLastLoginTime();
+  Future<void> setLastLoginTime(DateTime time);
+
   Future<void> clearAllAuthData();
 }
 
@@ -42,23 +48,46 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   Future<UserModel?> getCachedUser() async {
     try {
       final userJson = LocalStorage.getUserData(AppConstants.keyUserData);
-      if (userJson != null) {
-        final userMap = Map<String, dynamic>.from(
-          Uri.decodeFull(userJson).split('&').fold<Map<String, dynamic>>(
-            {},
-                (map, item) {
-              final split = item.split('=');
-              if (split.length == 2) {
-                map[split[0]] = split[1];
+      print('[AuthLocalDataSource] Raw cached user data: $userJson');
+
+      if (userJson != null && userJson.isNotEmpty) {
+        try {
+          // Parse the URL-encoded string
+          final userMap = <String, dynamic>{};
+          final pairs = Uri.decodeFull(userJson).split('&');
+
+          for (final pair in pairs) {
+            final split = pair.split('=');
+            if (split.length == 2) {
+              final key = split[0];
+              final value = Uri.decodeComponent(split[1]);
+
+              // Convert string values back to proper types
+              if (key == 'id') {
+                userMap[key] = int.tryParse(value) ?? 1;
+              } else if (key == 'isEmailVerified' || key == 'isActive') {
+                userMap[key] = value.toLowerCase() == 'true';
+              } else {
+                userMap[key] = value;
               }
-              return map;
-            },
-          ),
-        );
-        return UserModel.fromJson(userMap);
+            }
+          }
+
+          print('[AuthLocalDataSource] Parsed user data: $userMap');
+
+          if (userMap.isNotEmpty) {
+            return UserModel.fromJson(userMap);
+          }
+        } catch (e) {
+          print('[AuthLocalDataSource] Error parsing cached user: $e');
+          // Clear corrupted data
+          await clearCachedUser();
+          return null;
+        }
       }
       return null;
     } catch (e) {
+      print('[AuthLocalDataSource] Error getting cached user: $e');
       throw CacheException.readError();
     }
   }
@@ -66,7 +95,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<void> cacheUser(UserModel user) async {
     try {
-      // Convert user to JSON string and encode
+      // Convert user to JSON string and encode properly
       final userJson = user.toJson().entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value.toString())}')
           .join('&');
@@ -80,7 +109,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<void> clearCachedUser() async {
     try {
-      await LocalStorage.clearUserData();
+      await LocalStorage.saveUserData(AppConstants.keyUserData, '');
     } catch (e) {
       throw CacheException.writeError();
     }
@@ -93,11 +122,11 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       final refreshToken = await _secureStorage.getRefreshToken();
 
       if (accessToken != null) {
-        // Get expiry from cache or default to 1 hour
+        // Get expiry from cache or default to 24 hours
         final expiryString = LocalStorage.getUserData('token_expiry');
-        final expiresAt = expiryString != null
-            ? DateTime.parse(expiryString)
-            : DateTime.now().add(const Duration(hours: 1));
+        final expiresAt = expiryString != null && expiryString.isNotEmpty
+            ? DateTime.tryParse(expiryString) ?? DateTime.now().add(const Duration(hours: 24))
+            : DateTime.now().add(const Duration(hours: 24));
 
         return AuthTokensModel(
           accessToken: accessToken,
@@ -144,8 +173,8 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<bool> isLoggedIn() async {
     try {
-      final tokens = await getAuthTokens();
-      return tokens != null && !tokens.isExpired;
+      final value = LocalStorage.getUserData('is_logged_in');
+      return value == 'true';
     } catch (e) {
       return false;
     }
@@ -158,6 +187,10 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
         'is_logged_in',
         isLoggedIn.toString(),
       );
+
+      if (isLoggedIn) {
+        await setLastLoginTime(DateTime.now());
+      }
     } catch (e) {
       throw StorageException.writeError();
     }
@@ -228,6 +261,50 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   }
 
   @override
+  Future<bool> isAutoLoginEnabled() async {
+    try {
+      final value = LocalStorage.getUserData('auto_login');
+      return value == 'true';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> setAutoLoginEnabled(bool enabled) async {
+    try {
+      await LocalStorage.saveUserData('auto_login', enabled.toString());
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  @override
+  Future<DateTime?> getLastLoginTime() async {
+    try {
+      final timeString = LocalStorage.getUserData('last_login_time');
+      if (timeString != null && timeString.isNotEmpty) {
+        return DateTime.tryParse(timeString);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> setLastLoginTime(DateTime time) async {
+    try {
+      await LocalStorage.saveUserData(
+        'last_login_time',
+        time.toIso8601String(),
+      );
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  @override
   Future<void> clearAllAuthData() async {
     try {
       await Future.wait([
@@ -236,7 +313,9 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
         clearUserCredentials(),
         setBiometricsEnabled(false),
         setRememberMeEnabled(false),
+        setAutoLoginEnabled(false),
         setLoggedIn(false),
+        LocalStorage.saveUserData('last_login_time', ''),
       ]);
     } catch (e) {
       throw StorageException.writeError();

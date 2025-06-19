@@ -11,7 +11,9 @@ abstract class AuthRepository {
     required String password,
     bool rememberMe = false,
   });
+  Future<Either<Failure, User>> getCachedUserDirectly();
 
+  Future<void> setLoggedInStatus(bool isLoggedIn);
   /// Login with username and password
   Future<Either<Failure, User>> loginWithUsername({
     required String username,
@@ -114,4 +116,13 @@ abstract class AuthRepository {
     required String provider,
     required String token,
   });
+
+  /// Check if remember me is enabled
+  Future<bool> isRememberMeEnabled();
+
+  /// Clear remember me settings
+  Future<Either<Failure, void>> clearRememberMe();
+
+  /// Get saved credentials for auto-login
+  Future<Either<Failure, Map<String, String?>>> getSavedCredentials();
 }

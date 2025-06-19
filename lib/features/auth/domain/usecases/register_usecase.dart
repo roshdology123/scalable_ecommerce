@@ -16,7 +16,7 @@ class RegisterUseCase implements UseCase<User, RegisterParams> {
 
   @override
   Future<Either<Failure, User>> call(RegisterParams params) async {
-    // Validate input
+    // Validate input according to API requirements
     final validationResult = _validateParams(params);
     if (validationResult != null) {
       return Left(validationResult);
@@ -42,7 +42,7 @@ class RegisterUseCase implements UseCase<User, RegisterParams> {
       errors['email'] = 'Please enter a valid email address';
     }
 
-    // Username validation
+    // Username validation (API requirement)
     if (params.username.isEmpty) {
       errors['username'] = 'Username is required';
     } else if (params.username.length < 3) {
@@ -53,11 +53,11 @@ class RegisterUseCase implements UseCase<User, RegisterParams> {
       errors['username'] = 'Username can only contain letters, numbers, and underscores';
     }
 
-    // Password validation
+    // Password validation (API requirement)
     if (params.password.isEmpty) {
       errors['password'] = 'Password is required';
-    } else if (!params.password.isStrongPassword) {
-      errors['password'] = 'Password must be at least 6 characters with uppercase, lowercase, and numbers';
+    } else if (params.password.length < 6) {
+      errors['password'] = 'Password must be at least 6 characters';
     }
 
     // Confirm password validation
@@ -67,24 +67,28 @@ class RegisterUseCase implements UseCase<User, RegisterParams> {
       errors['confirmPassword'] = 'Passwords do not match';
     }
 
-    // First name validation
+    // First name validation (API requirement for name.firstname)
     if (params.firstName.isEmpty) {
       errors['firstName'] = 'First name is required';
     } else if (params.firstName.length < 2) {
       errors['firstName'] = 'First name must be at least 2 characters';
+    } else if (params.firstName.length > 50) {
+      errors['firstName'] = 'First name must not exceed 50 characters';
     }
 
-    // Last name validation
+    // Last name validation (API requirement for name.lastname)
     if (params.lastName.isEmpty) {
       errors['lastName'] = 'Last name is required';
     } else if (params.lastName.length < 2) {
       errors['lastName'] = 'Last name must be at least 2 characters';
+    } else if (params.lastName.length > 50) {
+      errors['lastName'] = 'Last name must not exceed 50 characters';
     }
 
-    // Phone validation (optional)
+    // Phone validation (optional but must be valid if provided)
     if (params.phone != null && params.phone!.isNotEmpty) {
-      if (!params.phone!.isValidPhone) {
-        errors['phone'] = 'Please enter a valid phone number';
+      if (!_isValidPhoneFormat(params.phone!)) {
+        errors['phone'] = 'Please enter a valid phone number (e.g., 1-570-236-7033)';
       }
     }
 
@@ -93,6 +97,12 @@ class RegisterUseCase implements UseCase<User, RegisterParams> {
     }
 
     return null;
+  }
+
+  bool _isValidPhoneFormat(String phone) {
+    // API uses format like "1-570-236-7033"
+    final phoneRegex = RegExp(r'^\d{1}-\d{3}-\d{3}-\d{4}$');
+    return phoneRegex.hasMatch(phone) || phone.isValidPhone;
   }
 }
 
@@ -125,4 +135,9 @@ class RegisterParams extends Equatable {
     lastName,
     phone,
   ];
+
+  @override
+  String toString() {
+    return 'RegisterParams(email: $email, username: $username, firstName: $firstName, lastName: $lastName, phone: $phone)';
+  }
 }

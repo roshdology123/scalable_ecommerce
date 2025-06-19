@@ -25,40 +25,85 @@ class AppRouter {
     redirect: (context, state) {
       final authCubit = context.read<AuthCubit>();
       final authState = authCubit.state;
+      final location = state.matchedLocation;
 
-      final isAuthRoute = state.matchedLocation.startsWith('/auth');
-      final isSplashRoute = state.matchedLocation == '/splash';
-      final isOnboardingRoute = state.matchedLocation == '/onboarding';
+      // Debug logging
+      debugPrint('[Router] Redirect check - Location: $location, Auth State: $authState');
+
+      final isAuthRoute = location.startsWith('/auth');
+      final isSplashRoute = location == '/splash';
+      final isOnboardingRoute = location == '/onboarding';
 
       return authState.when(
         initial: () {
-          // Allow splash and onboarding, but redirect others to splash
-          if (isSplashRoute || isOnboardingRoute) {
-            return null; // Allow these routes
-          }
-          return '/splash';
-        },
-        loading: () {
-          // Same logic for loading state
+          debugPrint('[Router] Auth state: initial - Location: $location');
+          // During initial state, allow splash and onboarding
           if (isSplashRoute || isOnboardingRoute) {
             return null;
           }
+          // Redirect everything else to splash for proper initialization
           return '/splash';
         },
-        authenticated: (_) {
-          if (isAuthRoute || isSplashRoute || isOnboardingRoute) {
+
+        loading: () {
+          debugPrint('[Router] Auth state: loading - Location: $location');
+          // During loading, allow splash, onboarding, and auth routes
+          if (isSplashRoute || isOnboardingRoute || isAuthRoute) {
+            return null;
+          }
+          // Keep user on splash during auth check
+          return '/splash';
+        },
+
+        authenticated: (user) {
+          debugPrint('[Router] Auth state: authenticated - User: ${user.email}, Location: $location');
+          // If user is authenticated and tries to access auth routes or splash, redirect to home
+          if (isAuthRoute || isSplashRoute) {
             return '/home';
           }
-          return null;
+          // Allow onboarding in case user wants to see it again from settings
+          if (isOnboardingRoute) {
+            return null;
+          }
+          return null; // Allow all other routes
         },
+
         unauthenticated: () {
+          debugPrint('[Router] Auth state: unauthenticated - Location: $location');
+          // Allow auth routes, splash, and onboarding for unauthenticated users
+          if (isAuthRoute || isSplashRoute || isOnboardingRoute) {
+            return null;
+          }
+          // Redirect protected routes to login
+          return '/auth/login';
+        },
+
+        error: (message, errorCode) {
+          debugPrint('[Router] Auth state: error - $message (Code: $errorCode), Location: $location');
+          // Allow auth routes and splash even on error
           if (isAuthRoute || isSplashRoute || isOnboardingRoute) {
             return null;
           }
           return '/auth/login';
         },
-        error: (_, __) => '/auth/login',
-        forgotPasswordSent: () => '/auth/login',
+
+        forgotPasswordSent: () {
+          debugPrint('[Router] Auth state: forgotPasswordSent - Location: $location');
+          // Stay on auth routes or redirect to login
+          if (isAuthRoute || isSplashRoute) {
+            return null;
+          }
+          return '/auth/login';
+        },
+
+        passwordResetSuccess: () {
+          debugPrint('[Router] Auth state: passwordResetSuccess - Location: $location');
+          // Redirect to login after successful password reset
+          if (isAuthRoute) {
+            return '/auth/login';
+          }
+          return '/auth/login';
+        },
       );
     },
 
@@ -72,35 +117,30 @@ class AppRouter {
       // Onboarding Route
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) =>  BlocProvider(
-  create: (context) => getIt<OnboardingCubit>(),
-  child: const OnboardingPage(),
-),
+        builder: (context, state) => BlocProvider(
+          create: (context) => getIt<OnboardingCubit>(),
+          child: const OnboardingPage(),
+        ),
       ),
 
       // Auth Routes
       GoRoute(
-        path: '/auth',
-        redirect: (context, state) {
-          // Redirect /auth to /auth/login
-          if (state.matchedLocation == '/auth') {
-            return '/auth/login';
-          }
-          return null;
+        path: '/auth/login',
+        builder: (context, state) {
+          debugPrint('[Router] Building LoginPage for: ${state.matchedLocation}');
+          return const LoginPage();
         },
-        routes: [
-          GoRoute(
-            path: 'login',
-            builder: (context, state) => const LoginPage(),
-          ),
-          GoRoute(
-            path: 'signup',
-            builder: (context, state) => const SignupPage(),
-          ),
-        ],
       ),
 
-      // Main App Shell with Bottom Navigation
+      GoRoute(
+        path: '/auth/signup',
+        builder: (context, state) {
+          debugPrint('[Router] Building SignupPage for: ${state.matchedLocation}');
+          return const SignupPage();
+        },
+      ),
+
+      // Protected Routes with Shell
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
@@ -125,13 +165,13 @@ class AppRouter {
           // Search Tab
           GoRoute(
             path: '/search',
-            builder: (context, state) => const Placeholder(),
+            builder: (context, state) => const SearchPage(), // You'll need to create this
           ),
 
           // Favorites Tab
           GoRoute(
             path: '/favorites',
-            builder: (context, state) => const Placeholder(),
+            builder: (context, state) => const FavoritesPage(), // You'll need to create this
           ),
 
           // Cart Tab
@@ -141,7 +181,7 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: 'checkout',
-                builder: (context, state) => const Placeholder(),
+                builder: (context, state) => const CheckoutPage(), // You'll need to create this
               ),
             ],
           ),
@@ -149,11 +189,15 @@ class AppRouter {
           // Profile Tab
           GoRoute(
             path: '/profile',
-            builder: (context, state) => const Placeholder(),
+            builder: (context, state) => const ProfilePage(), // You'll need to create this
             routes: [
               GoRoute(
                 path: 'settings',
-                builder: (context, state) => const Placeholder(),
+                builder: (context, state) => const SettingsPage(), // You'll need to create this
+              ),
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) => const EditProfilePage(), // You'll need to create this
               ),
             ],
           ),
@@ -169,17 +213,14 @@ class AppRouter {
           return ProductDetailPage(productId: productId);
         },
       ),
-
-      // GoRoute(
-      //   path: '/checkout',
-      //   parentNavigatorKey: _rootNavigatorKey,
-      //   builder: (context, state) => const CheckoutPage(),
-      // ),
     ],
 
-    // Error handling
+    // Enhanced error handling
     errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('Page Not Found')),
+      appBar: AppBar(
+        title: const Text('Page Not Found'),
+        backgroundColor: Theme.of(context).colorScheme.errorContainer,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -191,13 +232,25 @@ class AppRouter {
             ),
             const SizedBox(height: 16),
             Text(
-              'Page not found: ${state.matchedLocation}',
-              style: Theme.of(context).textTheme.titleMedium,
+              'Page not found',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.go('/home'),
-              child: const Text('Go Home'),
+            const SizedBox(height: 8),
+            Text(
+              'The page "${state.matchedLocation}" does not exist.',
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                // Check if user is authenticated to determine where to go
+                final authCubit = context.read<AuthCubit>();
+                final isAuthenticated = authCubit.isAuthenticated;
+                context.go(isAuthenticated ? '/home' : '/auth/login');
+              },
+              icon: const Icon(Icons.home),
+              label: const Text('Go Home'),
             ),
           ],
         ),
@@ -206,7 +259,7 @@ class AppRouter {
   );
 }
 
-// Main Shell Widget with Bottom Navigation
+// Your existing MainShell remains the same...
 class MainShell extends StatelessWidget {
   final Widget child;
 
@@ -277,7 +330,7 @@ class MainShell extends StatelessWidget {
   }
 }
 
-// Splash Page
+// Enhanced Splash Page
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -286,6 +339,8 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  bool _isInitializing = true;
+
   @override
   void initState() {
     super.initState();
@@ -293,19 +348,96 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _initializeApp() async {
-    // Simulate initialization time
-    await Future.delayed(const Duration(seconds: 2));
+    debugPrint('[SplashPage] Starting initialization...');
+
+    try {
+      // Minimum splash duration for UX
+      final initFuture = _performInitialization();
+      final minDelayFuture = Future.delayed(const Duration(seconds: 2));
+
+      // Wait for both to complete
+      await Future.wait([initFuture, minDelayFuture]);
+
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[SplashPage] Error during initialization: $e');
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+        // Navigate to login on error
+        context.go('/auth/login');
+      }
+    }
+  }
+
+  Future<void> _performInitialization() async {
+    if (!mounted) return;
+
+    // Check if user has seen onboarding
+    final hasSeenOnboarding = await _checkOnboardingStatus();
+    debugPrint('[SplashPage] Has seen onboarding: $hasSeenOnboarding');
+
+    if (!hasSeenOnboarding) {
+      debugPrint('[SplashPage] Going to onboarding');
+      if (mounted) {
+        context.go('/onboarding');
+      }
+      return;
+    }
+
+    // Check auth status (this will handle auto-login)
+    final authCubit = context.read<AuthCubit>();
+    debugPrint('[SplashPage] Current auth state: ${authCubit.state}');
+
+    // If auth is in initial state, trigger auth check
+    if (authCubit.state == const AuthState.initial()) {
+      debugPrint('[SplashPage] Triggering auth status check...');
+      await authCubit.checkAuthStatus();
+    }
+
+    // Wait a bit more to ensure state has settled
+    await Future.delayed(const Duration(milliseconds: 500));
 
     if (mounted) {
-      // Check if user has seen onboarding
-      final hasSeenOnboarding = await _checkOnboardingStatus();
+      final finalAuthState = authCubit.state;
+      debugPrint('[SplashPage] Final auth state: $finalAuthState');
 
-      if (!hasSeenOnboarding) {
-        context.go('/onboarding');
-      } else {
-        // Let the router redirect handle auth state
-        context.go('/home');
-      }
+      // Navigate based on final auth state
+      finalAuthState.when(
+        initial: () {
+          debugPrint('[SplashPage] Still initial, going to login');
+          context.go('/auth/login');
+        },
+        loading: () {
+          debugPrint('[SplashPage] Still loading, waiting...');
+          // Will be handled by the router redirect
+        },
+        authenticated: (user) {
+          debugPrint('[SplashPage] User authenticated: ${user.email}, going to home');
+          context.go('/home');
+        },
+        unauthenticated: () {
+          debugPrint('[SplashPage] User not authenticated, going to login');
+          context.go('/auth/login');
+        },
+        error: (message, error) {
+          debugPrint('[SplashPage] Auth error: $message, going to login');
+          context.go('/auth/login');
+        },
+        forgotPasswordSent: () {
+          debugPrint('[SplashPage] Password reset sent, going to login');
+          context.go('/auth/login');
+        },
+        passwordResetSuccess: () {
+          debugPrint('[SplashPage] Password reset successful, going to login');
+          context.go('/auth/login');
+        },
+      );
     }
   }
 
@@ -314,40 +446,182 @@ class _SplashPageState extends State<SplashPage> {
       final storageService = getIt<StorageService>();
       return storageService.getOnboardingCompleted();
     } catch (e) {
-      return false;
+      debugPrint('[SplashPage] Error checking onboarding status: $e');
+      return false; // Default to showing onboarding on error
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.shopping_bag,
-              size: 80,
-              color: Theme.of(context).colorScheme.onPrimary,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'E-Commerce',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        debugPrint('[SplashPage] Auth state changed: $state');
+
+        // Only navigate if we're done initializing
+        if (!_isInitializing) {
+          state.when(
+            initial: () {}, // Will be handled by redirect
+            loading: () {}, // Will be handled by redirect
+            authenticated: (user) {
+              if (mounted) context.go('/home');
+            },
+            unauthenticated: () {
+              if (mounted) context.go('/auth/login');
+            },
+            error: (message, error) {
+              if (mounted) context.go('/auth/login');
+            },
+            forgotPasswordSent: () {
+              if (mounted) context.go('/auth/login');
+            },
+            passwordResetSuccess: () {
+              if (mounted) context.go('/auth/login');
+            },
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // App Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.shopping_bag,
+                  size: 80,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: 48),
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).colorScheme.onPrimary,
+              const SizedBox(height: 32),
+
+              // App Name
+              Text(
+                'Scalable E-Commerce',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+              const SizedBox(height: 48),
+
+              // Loading Indicator
+              CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Status Text
+              BlocBuilder<AuthCubit, AuthState>(
+                builder: (context, state) {
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Text(
+                      key: ValueKey(state.runtimeType.toString()),
+                      _getStatusText(state),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.8),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  String _getStatusText(AuthState state) {
+    return state.when(
+      initial: () => 'Initializing application...',
+      loading: () => 'Checking authentication...',
+      authenticated: (user) => 'Welcome back, ${user.firstName}!',
+      unauthenticated: () => 'Setting up login...',
+      error: (message, _) => 'Initialization complete',
+      forgotPasswordSent: () => 'Redirecting to login...',
+      passwordResetSuccess: () => 'Password reset successful!',
+    );
+  }
+}
+
+// Placeholder pages (you'll need to create these)
+class SearchPage extends StatelessWidget {
+  const SearchPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Search Page - Coming Soon')),
+    );
+  }
+}
+
+class FavoritesPage extends StatelessWidget {
+  const FavoritesPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Favorites Page - Coming Soon')),
+    );
+  }
+}
+
+class CheckoutPage extends StatelessWidget {
+  const CheckoutPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Checkout Page - Coming Soon')),
+    );
+  }
+}
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Profile Page - Coming Soon')),
+    );
+  }
+}
+
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Settings Page - Coming Soon')),
+    );
+  }
+}
+
+class EditProfilePage extends StatelessWidget {
+  const EditProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Edit Profile Page - Coming Soon')),
     );
   }
 }

@@ -355,7 +355,7 @@ class ProductsByCategoryPage extends HookWidget {
   }
 
   void _navigateToProductDetail(BuildContext context, Product product) {
-    context.push('/product/${product.id}');
+    context.push('/home/product/${product.id}');
   }
 
   void _toggleFavorite(BuildContext context, Product product) {

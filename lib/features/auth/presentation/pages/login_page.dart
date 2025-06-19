@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
+import 'package:scalable_ecommerce/generated/locale_keys.g.dart';
 
 import '../../../../core/utils/extensions.dart';
 import '../cubit/auth_cubit.dart';
@@ -251,7 +252,7 @@ class LoginPage extends HookWidget {
             const SizedBox(height: 16),
             AuthTextField(
               controller: emailController,
-              labelText: 'auth.email'.tr(),
+              labelText: LocaleKeys.auth_email_or_username.tr(),
               hintText: 'auth.email_hint'.tr(),
               keyboardType: TextInputType.emailAddress,
               prefixIcon: Icons.email_outlined,

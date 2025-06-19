@@ -24,6 +24,7 @@ mixin _$AuthState {
     required TResult Function() unauthenticated,
     required TResult Function(String message, String? code) error,
     required TResult Function() forgotPasswordSent,
+    required TResult Function() passwordResetSuccess,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -34,6 +35,7 @@ mixin _$AuthState {
     TResult? Function()? unauthenticated,
     TResult? Function(String message, String? code)? error,
     TResult? Function()? forgotPasswordSent,
+    TResult? Function()? passwordResetSuccess,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -44,6 +46,7 @@ mixin _$AuthState {
     TResult Function()? unauthenticated,
     TResult Function(String message, String? code)? error,
     TResult Function()? forgotPasswordSent,
+    TResult Function()? passwordResetSuccess,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -55,6 +58,8 @@ mixin _$AuthState {
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthError value) error,
     required TResult Function(AuthForgotPasswordSent value) forgotPasswordSent,
+    required TResult Function(AuthPasswordResetSuccess value)
+        passwordResetSuccess,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -65,6 +70,7 @@ mixin _$AuthState {
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthError value)? error,
     TResult? Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult? Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -75,6 +81,7 @@ mixin _$AuthState {
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthError value)? error,
     TResult Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -121,12 +128,18 @@ class __$$AuthInitialImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthInitialImpl implements AuthInitial {
+class _$AuthInitialImpl with DiagnosticableTreeMixin implements AuthInitial {
   const _$AuthInitialImpl();
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'AuthState.initial()';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty('type', 'AuthState.initial'));
   }
 
   @override
@@ -147,6 +160,7 @@ class _$AuthInitialImpl implements AuthInitial {
     required TResult Function() unauthenticated,
     required TResult Function(String message, String? code) error,
     required TResult Function() forgotPasswordSent,
+    required TResult Function() passwordResetSuccess,
   }) {
     return initial();
   }
@@ -160,6 +174,7 @@ class _$AuthInitialImpl implements AuthInitial {
     TResult? Function()? unauthenticated,
     TResult? Function(String message, String? code)? error,
     TResult? Function()? forgotPasswordSent,
+    TResult? Function()? passwordResetSuccess,
   }) {
     return initial?.call();
   }
@@ -173,6 +188,7 @@ class _$AuthInitialImpl implements AuthInitial {
     TResult Function()? unauthenticated,
     TResult Function(String message, String? code)? error,
     TResult Function()? forgotPasswordSent,
+    TResult Function()? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (initial != null) {
@@ -190,6 +206,8 @@ class _$AuthInitialImpl implements AuthInitial {
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthError value) error,
     required TResult Function(AuthForgotPasswordSent value) forgotPasswordSent,
+    required TResult Function(AuthPasswordResetSuccess value)
+        passwordResetSuccess,
   }) {
     return initial(this);
   }
@@ -203,6 +221,7 @@ class _$AuthInitialImpl implements AuthInitial {
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthError value)? error,
     TResult? Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult? Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
   }) {
     return initial?.call(this);
   }
@@ -216,6 +235,7 @@ class _$AuthInitialImpl implements AuthInitial {
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthError value)? error,
     TResult Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (initial != null) {
@@ -250,12 +270,18 @@ class __$$AuthLoadingImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthLoadingImpl implements AuthLoading {
+class _$AuthLoadingImpl with DiagnosticableTreeMixin implements AuthLoading {
   const _$AuthLoadingImpl();
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'AuthState.loading()';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty('type', 'AuthState.loading'));
   }
 
   @override
@@ -276,6 +302,7 @@ class _$AuthLoadingImpl implements AuthLoading {
     required TResult Function() unauthenticated,
     required TResult Function(String message, String? code) error,
     required TResult Function() forgotPasswordSent,
+    required TResult Function() passwordResetSuccess,
   }) {
     return loading();
   }
@@ -289,6 +316,7 @@ class _$AuthLoadingImpl implements AuthLoading {
     TResult? Function()? unauthenticated,
     TResult? Function(String message, String? code)? error,
     TResult? Function()? forgotPasswordSent,
+    TResult? Function()? passwordResetSuccess,
   }) {
     return loading?.call();
   }
@@ -302,6 +330,7 @@ class _$AuthLoadingImpl implements AuthLoading {
     TResult Function()? unauthenticated,
     TResult Function(String message, String? code)? error,
     TResult Function()? forgotPasswordSent,
+    TResult Function()? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (loading != null) {
@@ -319,6 +348,8 @@ class _$AuthLoadingImpl implements AuthLoading {
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthError value) error,
     required TResult Function(AuthForgotPasswordSent value) forgotPasswordSent,
+    required TResult Function(AuthPasswordResetSuccess value)
+        passwordResetSuccess,
   }) {
     return loading(this);
   }
@@ -332,6 +363,7 @@ class _$AuthLoadingImpl implements AuthLoading {
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthError value)? error,
     TResult? Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult? Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
   }) {
     return loading?.call(this);
   }
@@ -345,6 +377,7 @@ class _$AuthLoadingImpl implements AuthLoading {
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthError value)? error,
     TResult Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (loading != null) {
@@ -393,15 +426,25 @@ class __$$AuthAuthenticatedImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthAuthenticatedImpl implements AuthAuthenticated {
+class _$AuthAuthenticatedImpl
+    with DiagnosticableTreeMixin
+    implements AuthAuthenticated {
   const _$AuthAuthenticatedImpl(this.user);
 
   @override
   final User user;
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'AuthState.authenticated(user: $user)';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty('type', 'AuthState.authenticated'))
+      ..add(DiagnosticsProperty('user', user));
   }
 
   @override
@@ -433,6 +476,7 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
     required TResult Function() unauthenticated,
     required TResult Function(String message, String? code) error,
     required TResult Function() forgotPasswordSent,
+    required TResult Function() passwordResetSuccess,
   }) {
     return authenticated(user);
   }
@@ -446,6 +490,7 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
     TResult? Function()? unauthenticated,
     TResult? Function(String message, String? code)? error,
     TResult? Function()? forgotPasswordSent,
+    TResult? Function()? passwordResetSuccess,
   }) {
     return authenticated?.call(user);
   }
@@ -459,6 +504,7 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
     TResult Function()? unauthenticated,
     TResult Function(String message, String? code)? error,
     TResult Function()? forgotPasswordSent,
+    TResult Function()? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (authenticated != null) {
@@ -476,6 +522,8 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthError value) error,
     required TResult Function(AuthForgotPasswordSent value) forgotPasswordSent,
+    required TResult Function(AuthPasswordResetSuccess value)
+        passwordResetSuccess,
   }) {
     return authenticated(this);
   }
@@ -489,6 +537,7 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthError value)? error,
     TResult? Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult? Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
   }) {
     return authenticated?.call(this);
   }
@@ -502,6 +551,7 @@ class _$AuthAuthenticatedImpl implements AuthAuthenticated {
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthError value)? error,
     TResult Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (authenticated != null) {
@@ -544,12 +594,20 @@ class __$$AuthUnauthenticatedImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
+class _$AuthUnauthenticatedImpl
+    with DiagnosticableTreeMixin
+    implements AuthUnauthenticated {
   const _$AuthUnauthenticatedImpl();
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'AuthState.unauthenticated()';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty('type', 'AuthState.unauthenticated'));
   }
 
   @override
@@ -571,6 +629,7 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
     required TResult Function() unauthenticated,
     required TResult Function(String message, String? code) error,
     required TResult Function() forgotPasswordSent,
+    required TResult Function() passwordResetSuccess,
   }) {
     return unauthenticated();
   }
@@ -584,6 +643,7 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
     TResult? Function()? unauthenticated,
     TResult? Function(String message, String? code)? error,
     TResult? Function()? forgotPasswordSent,
+    TResult? Function()? passwordResetSuccess,
   }) {
     return unauthenticated?.call();
   }
@@ -597,6 +657,7 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
     TResult Function()? unauthenticated,
     TResult Function(String message, String? code)? error,
     TResult Function()? forgotPasswordSent,
+    TResult Function()? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (unauthenticated != null) {
@@ -614,6 +675,8 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthError value) error,
     required TResult Function(AuthForgotPasswordSent value) forgotPasswordSent,
+    required TResult Function(AuthPasswordResetSuccess value)
+        passwordResetSuccess,
   }) {
     return unauthenticated(this);
   }
@@ -627,6 +690,7 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthError value)? error,
     TResult? Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult? Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
   }) {
     return unauthenticated?.call(this);
   }
@@ -640,6 +704,7 @@ class _$AuthUnauthenticatedImpl implements AuthUnauthenticated {
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthError value)? error,
     TResult Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (unauthenticated != null) {
@@ -693,7 +758,7 @@ class __$$AuthErrorImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthErrorImpl implements AuthError {
+class _$AuthErrorImpl with DiagnosticableTreeMixin implements AuthError {
   const _$AuthErrorImpl(this.message, this.code);
 
   @override
@@ -702,8 +767,17 @@ class _$AuthErrorImpl implements AuthError {
   final String? code;
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'AuthState.error(message: $message, code: $code)';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty('type', 'AuthState.error'))
+      ..add(DiagnosticsProperty('message', message))
+      ..add(DiagnosticsProperty('code', code));
   }
 
   @override
@@ -735,6 +809,7 @@ class _$AuthErrorImpl implements AuthError {
     required TResult Function() unauthenticated,
     required TResult Function(String message, String? code) error,
     required TResult Function() forgotPasswordSent,
+    required TResult Function() passwordResetSuccess,
   }) {
     return error(message, code);
   }
@@ -748,6 +823,7 @@ class _$AuthErrorImpl implements AuthError {
     TResult? Function()? unauthenticated,
     TResult? Function(String message, String? code)? error,
     TResult? Function()? forgotPasswordSent,
+    TResult? Function()? passwordResetSuccess,
   }) {
     return error?.call(message, code);
   }
@@ -761,6 +837,7 @@ class _$AuthErrorImpl implements AuthError {
     TResult Function()? unauthenticated,
     TResult Function(String message, String? code)? error,
     TResult Function()? forgotPasswordSent,
+    TResult Function()? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (error != null) {
@@ -778,6 +855,8 @@ class _$AuthErrorImpl implements AuthError {
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthError value) error,
     required TResult Function(AuthForgotPasswordSent value) forgotPasswordSent,
+    required TResult Function(AuthPasswordResetSuccess value)
+        passwordResetSuccess,
   }) {
     return error(this);
   }
@@ -791,6 +870,7 @@ class _$AuthErrorImpl implements AuthError {
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthError value)? error,
     TResult? Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult? Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
   }) {
     return error?.call(this);
   }
@@ -804,6 +884,7 @@ class _$AuthErrorImpl implements AuthError {
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthError value)? error,
     TResult Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (error != null) {
@@ -850,12 +931,20 @@ class __$$AuthForgotPasswordSentImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$AuthForgotPasswordSentImpl implements AuthForgotPasswordSent {
+class _$AuthForgotPasswordSentImpl
+    with DiagnosticableTreeMixin
+    implements AuthForgotPasswordSent {
   const _$AuthForgotPasswordSentImpl();
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'AuthState.forgotPasswordSent()';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty('type', 'AuthState.forgotPasswordSent'));
   }
 
   @override
@@ -877,6 +966,7 @@ class _$AuthForgotPasswordSentImpl implements AuthForgotPasswordSent {
     required TResult Function() unauthenticated,
     required TResult Function(String message, String? code) error,
     required TResult Function() forgotPasswordSent,
+    required TResult Function() passwordResetSuccess,
   }) {
     return forgotPasswordSent();
   }
@@ -890,6 +980,7 @@ class _$AuthForgotPasswordSentImpl implements AuthForgotPasswordSent {
     TResult? Function()? unauthenticated,
     TResult? Function(String message, String? code)? error,
     TResult? Function()? forgotPasswordSent,
+    TResult? Function()? passwordResetSuccess,
   }) {
     return forgotPasswordSent?.call();
   }
@@ -903,6 +994,7 @@ class _$AuthForgotPasswordSentImpl implements AuthForgotPasswordSent {
     TResult Function()? unauthenticated,
     TResult Function(String message, String? code)? error,
     TResult Function()? forgotPasswordSent,
+    TResult Function()? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (forgotPasswordSent != null) {
@@ -920,6 +1012,8 @@ class _$AuthForgotPasswordSentImpl implements AuthForgotPasswordSent {
     required TResult Function(AuthUnauthenticated value) unauthenticated,
     required TResult Function(AuthError value) error,
     required TResult Function(AuthForgotPasswordSent value) forgotPasswordSent,
+    required TResult Function(AuthPasswordResetSuccess value)
+        passwordResetSuccess,
   }) {
     return forgotPasswordSent(this);
   }
@@ -933,6 +1027,7 @@ class _$AuthForgotPasswordSentImpl implements AuthForgotPasswordSent {
     TResult? Function(AuthUnauthenticated value)? unauthenticated,
     TResult? Function(AuthError value)? error,
     TResult? Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult? Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
   }) {
     return forgotPasswordSent?.call(this);
   }
@@ -946,6 +1041,7 @@ class _$AuthForgotPasswordSentImpl implements AuthForgotPasswordSent {
     TResult Function(AuthUnauthenticated value)? unauthenticated,
     TResult Function(AuthError value)? error,
     TResult Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
     required TResult orElse(),
   }) {
     if (forgotPasswordSent != null) {
@@ -957,4 +1053,152 @@ class _$AuthForgotPasswordSentImpl implements AuthForgotPasswordSent {
 
 abstract class AuthForgotPasswordSent implements AuthState {
   const factory AuthForgotPasswordSent() = _$AuthForgotPasswordSentImpl;
+}
+
+/// @nodoc
+abstract class _$$AuthPasswordResetSuccessImplCopyWith<$Res> {
+  factory _$$AuthPasswordResetSuccessImplCopyWith(
+          _$AuthPasswordResetSuccessImpl value,
+          $Res Function(_$AuthPasswordResetSuccessImpl) then) =
+      __$$AuthPasswordResetSuccessImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$AuthPasswordResetSuccessImplCopyWithImpl<$Res>
+    extends _$AuthStateCopyWithImpl<$Res, _$AuthPasswordResetSuccessImpl>
+    implements _$$AuthPasswordResetSuccessImplCopyWith<$Res> {
+  __$$AuthPasswordResetSuccessImplCopyWithImpl(
+      _$AuthPasswordResetSuccessImpl _value,
+      $Res Function(_$AuthPasswordResetSuccessImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of AuthState
+  /// with the given fields replaced by the non-null parameter values.
+}
+
+/// @nodoc
+
+class _$AuthPasswordResetSuccessImpl
+    with DiagnosticableTreeMixin
+    implements AuthPasswordResetSuccess {
+  const _$AuthPasswordResetSuccessImpl();
+
+  @override
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
+    return 'AuthState.passwordResetSuccess()';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+        .add(DiagnosticsProperty('type', 'AuthState.passwordResetSuccess'));
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AuthPasswordResetSuccessImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() initial,
+    required TResult Function() loading,
+    required TResult Function(User user) authenticated,
+    required TResult Function() unauthenticated,
+    required TResult Function(String message, String? code) error,
+    required TResult Function() forgotPasswordSent,
+    required TResult Function() passwordResetSuccess,
+  }) {
+    return passwordResetSuccess();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function()? initial,
+    TResult? Function()? loading,
+    TResult? Function(User user)? authenticated,
+    TResult? Function()? unauthenticated,
+    TResult? Function(String message, String? code)? error,
+    TResult? Function()? forgotPasswordSent,
+    TResult? Function()? passwordResetSuccess,
+  }) {
+    return passwordResetSuccess?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? initial,
+    TResult Function()? loading,
+    TResult Function(User user)? authenticated,
+    TResult Function()? unauthenticated,
+    TResult Function(String message, String? code)? error,
+    TResult Function()? forgotPasswordSent,
+    TResult Function()? passwordResetSuccess,
+    required TResult orElse(),
+  }) {
+    if (passwordResetSuccess != null) {
+      return passwordResetSuccess();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(AuthInitial value) initial,
+    required TResult Function(AuthLoading value) loading,
+    required TResult Function(AuthAuthenticated value) authenticated,
+    required TResult Function(AuthUnauthenticated value) unauthenticated,
+    required TResult Function(AuthError value) error,
+    required TResult Function(AuthForgotPasswordSent value) forgotPasswordSent,
+    required TResult Function(AuthPasswordResetSuccess value)
+        passwordResetSuccess,
+  }) {
+    return passwordResetSuccess(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(AuthInitial value)? initial,
+    TResult? Function(AuthLoading value)? loading,
+    TResult? Function(AuthAuthenticated value)? authenticated,
+    TResult? Function(AuthUnauthenticated value)? unauthenticated,
+    TResult? Function(AuthError value)? error,
+    TResult? Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult? Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
+  }) {
+    return passwordResetSuccess?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(AuthInitial value)? initial,
+    TResult Function(AuthLoading value)? loading,
+    TResult Function(AuthAuthenticated value)? authenticated,
+    TResult Function(AuthUnauthenticated value)? unauthenticated,
+    TResult Function(AuthError value)? error,
+    TResult Function(AuthForgotPasswordSent value)? forgotPasswordSent,
+    TResult Function(AuthPasswordResetSuccess value)? passwordResetSuccess,
+    required TResult orElse(),
+  }) {
+    if (passwordResetSuccess != null) {
+      return passwordResetSuccess(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class AuthPasswordResetSuccess implements AuthState {
+  const factory AuthPasswordResetSuccess() = _$AuthPasswordResetSuccessImpl;
 }

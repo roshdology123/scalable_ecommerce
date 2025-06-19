@@ -34,13 +34,48 @@ class CartModel with _$CartModel {
   }) = _CartModel;
 
   factory CartModel.fromJson(Map<String, dynamic> json) {
+    // Handle Fake Store API response format
+    if (json.containsKey('products')) {
+      return CartModel._fromFakeStoreApiFormat(json);
+    }
+
+    // Handle our internal format
+    return CartModel._fromInternalFormat(json);
+  }
+
+  /// Create CartModel from Fake Store API format
+  /// API Response: { id: 1, userId: 1, date: "2020-03-02T00:00:02.000Z", products: [{ productId: 1, quantity: 4 }] }
+  static CartModel _fromFakeStoreApiFormat(Map<String, dynamic> json) {
+    final productsJson = json['products'] as List<dynamic>? ?? [];
+    final items = productsJson
+        .map((item) => CartItemModel.fromFakeStoreApiProduct(item as Map<String, dynamic>))
+        .toList();
+
+    final summary = CartSummaryModel.calculateFromItems(items);
+
+    return CartModel(
+      id: json['id']?.toString() ?? '',
+      userId: json['userId']?.toString(),
+      items: items,
+      summary: summary,
+      createdAt: json['date'] != null
+          ? DateTime.parse(json['date'])
+          : DateTime.now(),
+      updatedAt: DateTime.now(),
+      lastSyncedAt: DateTime.now(),
+      isSynced: true,
+    );
+  }
+
+  /// Create CartModel from our internal format
+  static CartModel _fromInternalFormat(Map<String, dynamic> json) {
     final itemsJson = json['items'] as List<dynamic>? ?? [];
     final items = itemsJson
-        .map((item) => CartItemModel.fromJson(item as Map<String, dynamic>))
+        .map((item) => CartItemModel.fromJson(_ensureStringKeyMap(item)))
         .toList();
 
     final summaryJson = json['summary'] as Map<String, dynamic>? ?? {};
-    final summary = CartSummaryModel.fromJson(summaryJson);
+    final summary = CartSummaryModel.fromJson(_ensureStringKeyMap(summaryJson));
 
     return CartModel(
       id: json['id']?.toString() ?? '',
@@ -76,7 +111,9 @@ class CartModel with _$CartModel {
           json['shipping_address']?.toString(),
       billingAddress: json['billingAddress']?.toString() ??
           json['billing_address']?.toString(),
-      metadata: json['metadata'] as Map<String, dynamic>?,
+      metadata: json['metadata'] != null
+          ? _ensureStringKeyMap(json['metadata'])
+          : null,
       abandonedAt: json['abandonedAt'] != null
           ? DateTime.parse(json['abandonedAt'])
           : json['abandoned_at'] != null
@@ -94,6 +131,16 @@ class CartModel with _$CartModel {
           ? DateTime.parse(json['expires_at'])
           : null,
     );
+  }
+
+  /// Helper method to ensure Map<String, dynamic> from Map<dynamic, dynamic>
+  static Map<String, dynamic> _ensureStringKeyMap(dynamic map) {
+    if (map == null) return {};
+    if (map is Map<String, dynamic>) return map;
+    if (map is Map) {
+      return Map<String, dynamic>.from(map);
+    }
+    return {};
   }
 
   factory CartModel.fromCart(Cart cart) {
@@ -195,6 +242,15 @@ extension CartModelExtension on CartModel {
       'version': version,
       'conflictingFields': conflictingFields,
       'expiresAt': expiresAt?.toIso8601String(),
+    };
+  }
+
+  /// Convert to Fake Store API format for API calls
+  Map<String, dynamic> toFakeStoreApiFormat() {
+    return {
+      'userId': int.tryParse(userId ?? '0') ?? 0,
+      'date': updatedAt.toIso8601String(),
+      'products': items.map((item) => item.toFakeStoreApiFormat()).toList(),
     };
   }
 }

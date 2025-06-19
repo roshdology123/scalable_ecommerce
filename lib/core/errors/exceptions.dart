@@ -147,14 +147,31 @@ class ApiException extends AppException {
       statusCode: 500,
     );
   }
+  static String extractErrorMessage(dynamic responseData, [String defaultMessage = 'An error occurred']) {
+    if (responseData == null) return defaultMessage;
 
-  factory ApiException.fromResponse(int statusCode, Map<String, dynamic>? data) {
-    String message = 'API Error';
-    String code = 'API_ERROR';
-
-    if (data != null) {
-      message = data['message'] ?? data['error'] ?? message;
+    if (responseData is String) {
+      return responseData.isNotEmpty ? responseData : defaultMessage;
     }
+
+    if (responseData is Map<String, dynamic>) {
+      // Try different common error message fields
+      final message = responseData['message'] ??
+          responseData['error'] ??
+          responseData['detail'] ??
+          responseData['msg'];
+
+      if (message is String && message.isNotEmpty) {
+        return message;
+      }
+    }
+
+    return defaultMessage;
+  }
+
+  factory ApiException.fromResponse(int statusCode, dynamic data) {
+    String message = extractErrorMessage(data, 'API Error');
+    String code = 'API_ERROR';
 
     switch (statusCode) {
       case 400:
@@ -172,7 +189,7 @@ class ApiException extends AppException {
           message: message,
           code: code,
           statusCode: statusCode,
-          responseData: data,
+          responseData: data is Map<String, dynamic> ? data : null,
         );
     }
   }

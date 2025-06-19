@@ -2,11 +2,16 @@ import 'package:json_annotation/json_annotation.dart';
 
 import '../../domain/entities/user.dart';
 
-
 part 'user_model.g.dart';
 
 @JsonSerializable()
 class UserModel extends User {
+  @JsonKey(name: 'name')
+  final NameModel? nameModel;
+
+  @JsonKey(name: 'address')
+  final AddressModel? addressModel;
+
   const UserModel({
     required super.id,
     required super.email,
@@ -20,39 +25,68 @@ class UserModel extends User {
     super.isEmailVerified,
     super.isActive,
     super.additionalData,
+    this.nameModel,
+    this.addressModel,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     // Handle Fake Store API response format
-    if (json.containsKey('name')) {
-      final nameParts = (json['name'] as String).split(' ');
-      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-      final lastName = nameParts.length > 1 ? nameParts.last : '';
+    String firstName = '';
+    String lastName = '';
 
-      return UserModel(
-        id: json['id'] as int,
-        email: json['email'] as String,
-        username: json['username'] as String,
-        firstName: firstName,
-        lastName: lastName,
-        phone: json['phone'] as String?,
-        avatar: json['avatar'] as String?,
-        createdAt: json['createdAt'] != null
-            ? DateTime.parse(json['createdAt'] as String)
-            : null,
-        updatedAt: json['updatedAt'] != null
-            ? DateTime.parse(json['updatedAt'] as String)
-            : null,
-        isEmailVerified: json['isEmailVerified'] as bool? ?? false,
-        isActive: json['isActive'] as bool? ?? true,
-        additionalData: json['additionalData'] as Map<String, dynamic>?,
-      );
+    if (json['name'] != null) {
+      if (json['name'] is Map) {
+        // API returns: {"name": {"firstname": "john", "lastname": "doe"}}
+        final nameData = json['name'] as Map<String, dynamic>;
+        firstName = nameData['firstname']?.toString() ?? '';
+        lastName = nameData['lastname']?.toString() ?? '';
+      } else if (json['name'] is String) {
+        // Fallback for string name
+        final nameParts = (json['name'] as String).split(' ');
+        firstName = nameParts.isNotEmpty ? nameParts.first : '';
+        lastName = nameParts.length > 1 ? nameParts.last : '';
+      }
     }
 
-    return _$UserModelFromJson(json);
+    return UserModel(
+      id: json['id'] as int,
+      email: json['email'] as String,
+      username: json['username'] as String,
+      firstName: firstName,
+      lastName: lastName,
+      phone: json['phone'] as String?,
+      avatar: json['avatar'] as String?,
+      nameModel: json['name'] != null && json['name'] is Map
+          ? NameModel.fromJson(json['name'] as Map<String, dynamic>)
+          : null,
+      addressModel: json['address'] != null
+          ? AddressModel.fromJson(json['address'] as Map<String, dynamic>)
+          : null,
+      additionalData: {
+        if (json['address'] != null) 'address': json['address'],
+        if (json['__v'] != null) '__v': json['__v'],
+      },
+    );
   }
 
-  Map<String, dynamic> toJson() => _$UserModelToJson(this);
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{
+      'id': id,
+      'email': email,
+      'username': username,
+      'phone': phone,
+      'name': {
+        'firstname': firstName,
+        'lastname': lastName,
+      },
+    };
+
+    if (addressModel != null) {
+      json['address'] = addressModel!.toJson();
+    }
+
+    return json;
+  }
 
   factory UserModel.fromUser(User user) {
     return UserModel(
@@ -70,34 +104,58 @@ class UserModel extends User {
       additionalData: user.additionalData,
     );
   }
+}
 
-  UserModel copyWith({
-    int? id,
-    String? email,
-    String? username,
-    String? firstName,
-    String? lastName,
-    String? phone,
-    String? avatar,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-    bool? isEmailVerified,
-    bool? isActive,
-    Map<String, dynamic>? additionalData,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      email: email ?? this.email,
-      username: username ?? this.username,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
-      phone: phone ?? this.phone,
-      avatar: avatar ?? this.avatar,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      isEmailVerified: isEmailVerified ?? this.isEmailVerified,
-      isActive: isActive ?? this.isActive,
-      additionalData: additionalData ?? this.additionalData,
-    );
-  }
+@JsonSerializable()
+class NameModel {
+  final String firstname;
+  final String lastname;
+
+  const NameModel({
+    required this.firstname,
+    required this.lastname,
+  });
+
+  factory NameModel.fromJson(Map<String, dynamic> json) =>
+      _$NameModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$NameModelToJson(this);
+}
+
+@JsonSerializable()
+class AddressModel {
+  final GeolocationModel geolocation;
+  final String city;
+  final String street;
+  final int number;
+  final String zipcode;
+
+  const AddressModel({
+    required this.geolocation,
+    required this.city,
+    required this.street,
+    required this.number,
+    required this.zipcode,
+  });
+
+  factory AddressModel.fromJson(Map<String, dynamic> json) =>
+      _$AddressModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$AddressModelToJson(this);
+}
+
+@JsonSerializable()
+class GeolocationModel {
+  final String lat;
+  final String long;
+
+  const GeolocationModel({
+    required this.lat,
+    required this.long,
+  });
+
+  factory GeolocationModel.fromJson(Map<String, dynamic> json) =>
+      _$GeolocationModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$GeolocationModelToJson(this);
 }

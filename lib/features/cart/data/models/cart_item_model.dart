@@ -40,52 +40,64 @@ class CartItemModel with _$CartItemModel {
   }) = _CartItemModel;
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
+    // Ensure we have a proper Map<String, dynamic>
+    final safeJson = _ensureStringKeyMap(json);
+
     return CartItemModel(
-      id: json['id']?.toString() ?? '',
-      productId: json['productId'] as int? ?? json['product_id'] as int? ?? 0,
-      productTitle: json['productTitle']?.toString() ?? json['product_title']?.toString() ?? '',
-      productImage: json['productImage']?.toString() ?? json['product_image']?.toString() ?? '',
-      price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      originalPrice: (json['originalPrice'] as num?)?.toDouble() ??
-          (json['original_price'] as num?)?.toDouble() ??
-          (json['price'] as num?)?.toDouble() ?? 0.0,
-      quantity: json['quantity'] as int? ?? 1,
-      maxQuantity: json['maxQuantity'] as int? ?? json['max_quantity'] as int? ?? 999,
-      selectedColor: json['selectedColor']?.toString() ?? json['selected_color']?.toString(),
-      selectedSize: json['selectedSize']?.toString() ?? json['selected_size']?.toString(),
-      selectedVariants: Map<String, String>.from(
-        json['selectedVariants'] ?? json['selected_variants'] ?? {},
-      ),
-      isAvailable: json['isAvailable'] as bool? ?? json['is_available'] as bool? ?? true,
-      inStock: json['inStock'] as bool? ?? json['in_stock'] as bool? ?? true,
-      brand: json['brand']?.toString(),
-      category: json['category']?.toString(),
-      sku: json['sku']?.toString(),
-      discountPercentage: (json['discountPercentage'] as num?)?.toDouble() ??
-          (json['discount_percentage'] as num?)?.toDouble(),
-      discountAmount: (json['discountAmount'] as num?)?.toDouble() ??
-          (json['discount_amount'] as num?)?.toDouble(),
-      addedAt: json['addedAt'] != null
-          ? DateTime.parse(json['addedAt'])
-          : json['added_at'] != null
-          ? DateTime.parse(json['added_at'])
-          : DateTime.now(),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : null,
-      lastPriceCheck: json['lastPriceCheck'] != null
-          ? DateTime.parse(json['lastPriceCheck'])
-          : json['last_price_check'] != null
-          ? DateTime.parse(json['last_price_check'])
-          : null,
-      priceChanged: json['priceChanged'] as bool? ?? json['price_changed'] as bool? ?? false,
-      previousPrice: (json['previousPrice'] as num?)?.toDouble() ??
-          (json['previous_price'] as num?)?.toDouble(),
-      isSelected: json['isSelected'] as bool? ?? json['is_selected'] as bool? ?? false,
-      specialOfferId: json['specialOfferId']?.toString() ?? json['special_offer_id']?.toString(),
-      metadata: json['metadata'] as Map<String, dynamic>?,
+      id: safeJson['id']?.toString() ?? '',
+      productId: safeJson['productId'] as int? ?? safeJson['product_id'] as int? ?? 0,
+      productTitle: safeJson['productTitle']?.toString() ?? safeJson['product_title']?.toString() ?? '',
+      productImage: safeJson['productImage']?.toString() ?? safeJson['product_image']?.toString() ?? '',
+      price: (safeJson['price'] as num?)?.toDouble() ?? 0.0,
+      originalPrice: (safeJson['originalPrice'] as num?)?.toDouble() ??
+          (safeJson['original_price'] as num?)?.toDouble() ??
+          (safeJson['price'] as num?)?.toDouble() ?? 0.0,
+      quantity: safeJson['quantity'] as int? ?? 1,
+      maxQuantity: safeJson['maxQuantity'] as int? ?? safeJson['max_quantity'] as int? ?? 999,
+      selectedColor: safeJson['selectedColor']?.toString() ?? safeJson['selected_color']?.toString(),
+      selectedSize: safeJson['selectedSize']?.toString() ?? safeJson['selected_size']?.toString(),
+      selectedVariants: _extractVariants(safeJson),
+      isAvailable: safeJson['isAvailable'] as bool? ?? safeJson['is_available'] as bool? ?? true,
+      inStock: safeJson['inStock'] as bool? ?? safeJson['in_stock'] as bool? ?? true,
+      brand: safeJson['brand']?.toString(),
+      category: safeJson['category']?.toString(),
+      sku: safeJson['sku']?.toString(),
+      discountPercentage: (safeJson['discountPercentage'] as num?)?.toDouble() ??
+          (safeJson['discount_percentage'] as num?)?.toDouble(),
+      discountAmount: (safeJson['discountAmount'] as num?)?.toDouble() ??
+          (safeJson['discount_amount'] as num?)?.toDouble(),
+      addedAt: _parseDateTime(safeJson['addedAt'] ?? safeJson['added_at']) ?? DateTime.now(),
+      updatedAt: _parseDateTime(safeJson['updatedAt'] ?? safeJson['updated_at']),
+      lastPriceCheck: _parseDateTime(safeJson['lastPriceCheck'] ?? safeJson['last_price_check']),
+      priceChanged: safeJson['priceChanged'] as bool? ?? safeJson['price_changed'] as bool? ?? false,
+      previousPrice: (safeJson['previousPrice'] as num?)?.toDouble() ??
+          (safeJson['previous_price'] as num?)?.toDouble(),
+      isSelected: safeJson['isSelected'] as bool? ?? safeJson['is_selected'] as bool? ?? false,
+      specialOfferId: safeJson['specialOfferId']?.toString() ?? safeJson['special_offer_id']?.toString(),
+      metadata: safeJson['metadata'] != null ? _ensureStringKeyMap(safeJson['metadata']) : null,
+    );
+  }
+
+  /// Create CartItemModel from Fake Store API product format
+  /// API format: { productId: 1, quantity: 4 }
+  factory CartItemModel.fromFakeStoreApiProduct(Map<String, dynamic> json) {
+    final productId = json['productId'] as int? ?? json['id'] as int? ?? 0;
+    final quantity = json['quantity'] as int? ?? 1;
+
+    return CartItemModel(
+      id: _generateCartItemId(productId, {}),
+      productId: productId,
+      productTitle: 'Product $productId', // Will be updated when product details are fetched
+      productImage: '',
+      price: 0.0, // Will be updated when product details are fetched
+      originalPrice: 0.0,
+      quantity: quantity,
+      maxQuantity: 999,
+      selectedVariants: {},
+      isAvailable: true,
+      inStock: true,
+      addedAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
   }
 
@@ -163,6 +175,43 @@ class CartItemModel with _$CartItemModel {
         .join('|');
     return '${productId}_${variantString.hashCode}';
   }
+
+  /// Helper methods
+  static Map<String, dynamic> _ensureStringKeyMap(dynamic map) {
+    if (map == null) return {};
+    if (map is Map<String, dynamic>) return map;
+    if (map is Map) {
+      return Map<String, dynamic>.from(map);
+    }
+    return {};
+  }
+
+  static Map<String, String> _extractVariants(Map<String, dynamic> json) {
+    final variants = <String, String>{};
+
+    // Try to get variants from selectedVariants field
+    final selectedVariants = json['selectedVariants'] ?? json['selected_variants'];
+    if (selectedVariants != null) {
+      if (selectedVariants is Map) {
+        variants.addAll(Map<String, String>.from(selectedVariants));
+      }
+    }
+
+    return variants;
+  }
+
+  static DateTime? _parseDateTime(dynamic dateTime) {
+    if (dateTime == null) return null;
+    if (dateTime is DateTime) return dateTime;
+    if (dateTime is String) {
+      try {
+        return DateTime.parse(dateTime);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
 }
 
 // Extension for CartItemModel
@@ -226,6 +275,14 @@ extension CartItemModelExtension on CartItemModel {
       'isSelected': isSelected,
       'specialOfferId': specialOfferId,
       'metadata': metadata,
+    };
+  }
+
+  /// Convert to Fake Store API format
+  Map<String, dynamic> toFakeStoreApiFormat() {
+    return {
+      'productId': productId,
+      'quantity': quantity,
     };
   }
 }

@@ -101,6 +101,7 @@ class AuthInjection {
           getIt<ForgotPasswordUseCase>(),
           getIt<ResetPasswordUseCase>(),
               getIt<UpdateProfileUseCase>(),
+                getIt<AuthRepository>()
         ),
       );
 

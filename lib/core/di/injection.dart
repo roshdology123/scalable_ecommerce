@@ -202,6 +202,7 @@ Future<void> configureDependencies() async {
         getIt<ForgotPasswordUseCase>(),
         getIt<ResetPasswordUseCase>(),
         getIt<UpdateProfileUseCase>(),
+            getIt<AuthRepository>()
       ),
     );
 

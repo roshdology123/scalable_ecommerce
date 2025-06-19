@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hive/hive.dart';
 
 import '../../domain/entities/cart_summary.dart';
+import 'cart_item_model.dart';
 
 part 'cart_summary_model.freezed.dart';
 part 'cart_summary_model.g.dart';
@@ -36,64 +37,47 @@ class CartSummaryModel with _$CartSummaryModel {
   }) = _CartSummaryModel;
 
   factory CartSummaryModel.fromJson(Map<String, dynamic> json) {
+    // Ensure we have a proper Map<String, dynamic>
+    final safeJson = _ensureStringKeyMap(json);
+
     return CartSummaryModel(
-      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
-      totalDiscount: (json['totalDiscount'] as num?)?.toDouble() ??
-          (json['total_discount'] as num?)?.toDouble() ?? 0.0,
-      totalTax: (json['totalTax'] as num?)?.toDouble() ??
-          (json['total_tax'] as num?)?.toDouble() ?? 0.0,
-      shippingCost: (json['shippingCost'] as num?)?.toDouble() ??
-          (json['shipping_cost'] as num?)?.toDouble() ?? 0.0,
-      total: (json['total'] as num?)?.toDouble() ?? 0.0,
-      totalItems: json['totalItems'] as int? ?? json['total_items'] as int? ?? 0,
-      totalQuantity: json['totalQuantity'] as int? ?? json['total_quantity'] as int? ?? 0,
-      appliedCouponCode: json['appliedCouponCode']?.toString() ??
-          json['applied_coupon_code']?.toString(),
-      couponDiscount: (json['couponDiscount'] as num?)?.toDouble() ??
-          (json['coupon_discount'] as num?)?.toDouble(),
-      couponDescription: json['couponDescription']?.toString() ??
-          json['coupon_description']?.toString(),
-      selectedShippingMethod: json['selectedShippingMethod']?.toString() ??
-          json['selected_shipping_method']?.toString(),
-      shippingMethodDescription: json['shippingMethodDescription']?.toString() ??
-          json['shipping_method_description']?.toString(),
-      estimatedDeliveryDays: (json['estimatedDeliveryDays'] as num?)?.toDouble() ??
-          (json['estimated_delivery_days'] as num?)?.toDouble(),
-      taxRate: (json['taxRate'] as num?)?.toDouble() ??
-          (json['tax_rate'] as num?)?.toDouble() ?? 0.0,
-      isFreeShipping: json['isFreeShipping'] as bool? ??
-          json['is_free_shipping'] as bool? ?? false,
-      freeShippingThreshold: (json['freeShippingThreshold'] as num?)?.toDouble() ??
-          (json['free_shipping_threshold'] as num?)?.toDouble(),
-      amountToFreeShipping: (json['amountToFreeShipping'] as num?)?.toDouble() ??
-          (json['amount_to_free_shipping'] as num?)?.toDouble(),
-      taxBreakdown: json['taxBreakdown'] != null
-          ? Map<String, double>.from(
-          (json['taxBreakdown'] as Map).map((k, v) => MapEntry(k.toString(), (v as num).toDouble()))
-      )
-          : json['tax_breakdown'] != null
-          ? Map<String, double>.from(
-          (json['tax_breakdown'] as Map).map((k, v) => MapEntry(k.toString(), (v as num).toDouble()))
-      )
-          : null,
-      discountBreakdown: json['discountBreakdown'] != null
-          ? Map<String, double>.from(
-          (json['discountBreakdown'] as Map).map((k, v) => MapEntry(k.toString(), (v as num).toDouble()))
-      )
-          : json['discount_breakdown'] != null
-          ? Map<String, double>.from(
-          (json['discount_breakdown'] as Map).map((k, v) => MapEntry(k.toString(), (v as num).toDouble()))
-      )
-          : null,
-      lastCalculated: json['lastCalculated'] != null
-          ? DateTime.parse(json['lastCalculated'])
-          : json['last_calculated'] != null
-          ? DateTime.parse(json['last_calculated'])
-          : DateTime.now(),
-      currency: json['currency']?.toString(),
-      currencyCode: json['currencyCode']?.toString() ??
-          json['currency_code']?.toString() ?? 'USD',
-      metadata: json['metadata'] as Map<String, dynamic>?,
+      subtotal: (safeJson['subtotal'] as num?)?.toDouble() ?? 0.0,
+      totalDiscount: (safeJson['totalDiscount'] as num?)?.toDouble() ??
+          (safeJson['total_discount'] as num?)?.toDouble() ?? 0.0,
+      totalTax: (safeJson['totalTax'] as num?)?.toDouble() ??
+          (safeJson['total_tax'] as num?)?.toDouble() ?? 0.0,
+      shippingCost: (safeJson['shippingCost'] as num?)?.toDouble() ??
+          (safeJson['shipping_cost'] as num?)?.toDouble() ?? 0.0,
+      total: (safeJson['total'] as num?)?.toDouble() ?? 0.0,
+      totalItems: safeJson['totalItems'] as int? ?? safeJson['total_items'] as int? ?? 0,
+      totalQuantity: safeJson['totalQuantity'] as int? ?? safeJson['total_quantity'] as int? ?? 0,
+      appliedCouponCode: safeJson['appliedCouponCode']?.toString() ??
+          safeJson['applied_coupon_code']?.toString(),
+      couponDiscount: (safeJson['couponDiscount'] as num?)?.toDouble() ??
+          (safeJson['coupon_discount'] as num?)?.toDouble(),
+      couponDescription: safeJson['couponDescription']?.toString() ??
+          safeJson['coupon_description']?.toString(),
+      selectedShippingMethod: safeJson['selectedShippingMethod']?.toString() ??
+          safeJson['selected_shipping_method']?.toString(),
+      shippingMethodDescription: safeJson['shippingMethodDescription']?.toString() ??
+          safeJson['shipping_method_description']?.toString(),
+      estimatedDeliveryDays: (safeJson['estimatedDeliveryDays'] as num?)?.toDouble() ??
+          (safeJson['estimated_delivery_days'] as num?)?.toDouble(),
+      taxRate: (safeJson['taxRate'] as num?)?.toDouble() ??
+          (safeJson['tax_rate'] as num?)?.toDouble() ?? 0.0,
+      isFreeShipping: safeJson['isFreeShipping'] as bool? ??
+          safeJson['is_free_shipping'] as bool? ?? false,
+      freeShippingThreshold: (safeJson['freeShippingThreshold'] as num?)?.toDouble() ??
+          (safeJson['free_shipping_threshold'] as num?)?.toDouble(),
+      amountToFreeShipping: (safeJson['amountToFreeShipping'] as num?)?.toDouble() ??
+          (safeJson['amount_to_free_shipping'] as num?)?.toDouble(),
+      taxBreakdown: _extractDoubleMap(safeJson['taxBreakdown'] ?? safeJson['tax_breakdown']),
+      discountBreakdown: _extractDoubleMap(safeJson['discountBreakdown'] ?? safeJson['discount_breakdown']),
+      lastCalculated: _parseDateTime(safeJson['lastCalculated'] ?? safeJson['last_calculated']),
+      currency: safeJson['currency']?.toString(),
+      currencyCode: safeJson['currencyCode']?.toString() ??
+          safeJson['currency_code']?.toString() ?? 'USD',
+      metadata: safeJson['metadata'] != null ? _ensureStringKeyMap(safeJson['metadata']) : null,
     );
   }
 
@@ -123,6 +107,79 @@ class CartSummaryModel with _$CartSummaryModel {
       currencyCode: summary.currencyCode,
       metadata: summary.metadata,
     );
+  }
+
+  /// Calculate summary from cart items
+  factory CartSummaryModel.calculateFromItems(List<CartItemModel> items) {
+    final totalQuantity = items.fold<int>(0, (sum, item) => sum + item.quantity);
+    final subtotal = items.fold<double>(0, (sum, item) => sum + (item.price * item.quantity));
+    final totalDiscount = items.fold<double>(0, (sum, item) =>
+    sum + ((item.discountAmount ?? 0) * item.quantity));
+
+    // Simple tax calculation (8% for demo)
+    const taxRate = 0.08;
+    final totalTax = subtotal * taxRate;
+
+    // Free shipping threshold
+    const freeShippingThreshold = 50.0;
+    final shippingCost = subtotal >= freeShippingThreshold ? 0.0 : 10.0;
+    final isFreeShipping = subtotal >= freeShippingThreshold;
+    final amountToFreeShipping = isFreeShipping ? 0.0 : freeShippingThreshold - subtotal;
+
+    final total = subtotal - totalDiscount + totalTax + shippingCost;
+
+    return CartSummaryModel(
+      subtotal: subtotal,
+      totalDiscount: totalDiscount,
+      totalTax: totalTax,
+      shippingCost: shippingCost,
+      total: total,
+      totalItems: items.length,
+      totalQuantity: totalQuantity,
+      taxRate: taxRate,
+      isFreeShipping: isFreeShipping,
+      freeShippingThreshold: freeShippingThreshold,
+      amountToFreeShipping: amountToFreeShipping,
+      lastCalculated: DateTime.now(),
+    );
+  }
+
+  /// Helper methods
+  static Map<String, dynamic> _ensureStringKeyMap(dynamic map) {
+    if (map == null) return {};
+    if (map is Map<String, dynamic>) return map;
+    if (map is Map) {
+      return Map<String, dynamic>.from(map);
+    }
+    return {};
+  }
+
+  static Map<String, double>? _extractDoubleMap(dynamic map) {
+    if (map == null) return null;
+    if (map is Map<String, double>) return map;
+    if (map is Map) {
+      try {
+        return Map<String, double>.from(
+            map.map((k, v) => MapEntry(k.toString(), (v as num).toDouble()))
+        );
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  static DateTime? _parseDateTime(dynamic dateTime) {
+    if (dateTime == null) return null;
+    if (dateTime is DateTime) return dateTime;
+    if (dateTime is String) {
+      try {
+        return DateTime.parse(dateTime);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 }
 

@@ -38,7 +38,7 @@ class ProductPriceWidget extends StatelessWidget {
   }
 
   Widget _buildNormalLayout(BuildContext context, bool hasDiscount, double discountPerc) {
-    return Column(
+    return Row(
       crossAxisAlignment: alignment,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -57,7 +57,6 @@ class ProductPriceWidget extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Original price (strikethrough)
               Text(
                 _formatPrice(originalPrice!),
                 style: (large ? context.textTheme.bodyLarge : context.textTheme.bodyMedium)?.copyWith(
@@ -103,42 +102,54 @@ class ProductPriceWidget extends StatelessWidget {
   }
 
   Widget _buildCompactLayout(BuildContext context, bool hasDiscount, double discountPerc) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Current price
-        Text(
-          _formatPrice(price),
-          style: context.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: hasDiscount ? context.colorScheme.error : null,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Current price
+            Text(
+              _formatPrice(price),
+              style: context.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: hasDiscount ? context.colorScheme.error : null,
+              ),
+            ),
+
+
+
+            // Discount percentage
+
+          ],
         ),
+        Row(
+          children: [
+            // Original price (if on sale)
+            if (hasDiscount) ...[
+              const SizedBox(width: 4),
+              Text(
+                _formatPrice(originalPrice!),
+                style: context.textTheme.bodySmall?.copyWith(
+                  decoration: TextDecoration.lineThrough,
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+            if (hasDiscount && discountPerc > 0) ...[
+              const SizedBox(width: 4),
+              Text(
+                '-${discountPerc.round()}%',
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: context.colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ],
+        )
 
-        // Original price (if on sale)
-        if (hasDiscount) ...[
-          const SizedBox(width: 4),
-          Text(
-            _formatPrice(originalPrice!),
-            style: context.textTheme.bodySmall?.copyWith(
-              decoration: TextDecoration.lineThrough,
-              color: context.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-
-        // Discount percentage
-        if (hasDiscount && discountPerc > 0) ...[
-          const SizedBox(width: 4),
-          Text(
-            '-${discountPerc.round()}%',
-            style: context.textTheme.labelSmall?.copyWith(
-              color: context.colorScheme.error,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
       ],
     );
   }

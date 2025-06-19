@@ -82,6 +82,7 @@ class ProductsPage extends HookWidget {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: false,
         title: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
           child: isSearchExpanded.value
@@ -423,7 +424,7 @@ class ProductsPage extends HookWidget {
   }
 
   void _navigateToProductDetail(BuildContext context, Product product) {
-    context.push('/product/${product.id}');
+    context.push('/home/product/${product.id}');
   }
 
   void _toggleFavorite(BuildContext context, Product product) {

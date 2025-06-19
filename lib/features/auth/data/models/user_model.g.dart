@@ -23,6 +23,12 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
       isEmailVerified: json['isEmailVerified'] as bool? ?? false,
       isActive: json['isActive'] as bool? ?? true,
       additionalData: json['additionalData'] as Map<String, dynamic>?,
+      nameModel: json['name'] == null
+          ? null
+          : NameModel.fromJson(json['name'] as Map<String, dynamic>),
+      addressModel: json['address'] == null
+          ? null
+          : AddressModel.fromJson(json['address'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
@@ -38,4 +44,46 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
       'isEmailVerified': instance.isEmailVerified,
       'isActive': instance.isActive,
       'additionalData': instance.additionalData,
+      'name': instance.nameModel,
+      'address': instance.addressModel,
+    };
+
+NameModel _$NameModelFromJson(Map<String, dynamic> json) => NameModel(
+      firstname: json['firstname'] as String,
+      lastname: json['lastname'] as String,
+    );
+
+Map<String, dynamic> _$NameModelToJson(NameModel instance) => <String, dynamic>{
+      'firstname': instance.firstname,
+      'lastname': instance.lastname,
+    };
+
+AddressModel _$AddressModelFromJson(Map<String, dynamic> json) => AddressModel(
+      geolocation: GeolocationModel.fromJson(
+          json['geolocation'] as Map<String, dynamic>),
+      city: json['city'] as String,
+      street: json['street'] as String,
+      number: (json['number'] as num).toInt(),
+      zipcode: json['zipcode'] as String,
+    );
+
+Map<String, dynamic> _$AddressModelToJson(AddressModel instance) =>
+    <String, dynamic>{
+      'geolocation': instance.geolocation,
+      'city': instance.city,
+      'street': instance.street,
+      'number': instance.number,
+      'zipcode': instance.zipcode,
+    };
+
+GeolocationModel _$GeolocationModelFromJson(Map<String, dynamic> json) =>
+    GeolocationModel(
+      lat: json['lat'] as String,
+      long: json['long'] as String,
+    );
+
+Map<String, dynamic> _$GeolocationModelToJson(GeolocationModel instance) =>
+    <String, dynamic>{
+      'lat': instance.lat,
+      'long': instance.long,
     };

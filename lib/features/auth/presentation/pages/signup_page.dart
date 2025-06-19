@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/utils/extensions.dart';
 import '../cubit/auth_cubit.dart';
 import '../widgets/auth_text_field.dart';
+import '../widgets/phone_input_field.dart';
+import '../widgets/password_strength_indicator.dart';
 import '../widgets/social_login_buttons.dart';
 
 class SignupPage extends HookWidget {
@@ -25,6 +27,7 @@ class SignupPage extends HookWidget {
     final obscurePassword = useState(true);
     final obscureConfirmPassword = useState(true);
     final agreeToTerms = useState(false);
+    final showPasswordStrength = useState(false);
 
     return Scaffold(
       appBar: AppBar(
@@ -96,6 +99,9 @@ class SignupPage extends HookWidget {
                             if (value!.length < 2) {
                               return 'auth.first_name_too_short'.tr();
                             }
+                            if (value.length > 50) {
+                              return 'auth.first_name_too_long'.tr();
+                            }
                             return null;
                           },
                         ),
@@ -114,6 +120,9 @@ class SignupPage extends HookWidget {
                             }
                             if (value!.length < 2) {
                               return 'auth.last_name_too_short'.tr();
+                            }
+                            if (value.length > 50) {
+                              return 'auth.last_name_too_long'.tr();
                             }
                             return null;
                           },
@@ -168,18 +177,16 @@ class SignupPage extends HookWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Phone field (optional)
-                  AuthTextField(
+                  // Phone field with special formatting
+                  PhoneInputField(
                     controller: phoneController,
                     labelText: 'auth.phone'.tr(),
-                    hintText: 'auth.phone_hint'.tr(),
-                    keyboardType: TextInputType.phone,
-                    textInputAction: TextInputAction.next,
-                    prefixIcon: Icons.phone_outlined,
+                    hintText: '1-570-236-7033',
                     validator: (value) {
                       if (value != null && value.isNotEmpty) {
-                        if (!value.isValidPhone) {
-                          return 'auth.invalid_phone'.tr();
+                        final phoneRegex = RegExp(r'^\d{1}-\d{3}-\d{3}-\d{4}$');
+                        if (!phoneRegex.hasMatch(value)) {
+                          return 'auth.invalid_phone_format'.tr();
                         }
                       }
                       return null;
@@ -205,16 +212,26 @@ class SignupPage extends HookWidget {
                         obscurePassword.value = !obscurePassword.value;
                       },
                     ),
+                    onChanged: (value) {
+                      showPasswordStrength.value = value.isNotEmpty;
+                    },
                     validator: (value) {
                       if (value?.isEmpty ?? true) {
                         return 'auth.password_required'.tr();
                       }
-                      if (!value!.isStrongPassword) {
-                        return 'auth.password_weak'.tr();
+                      if (value!.length < 6) {
+                        return 'auth.password_too_short'.tr();
                       }
                       return null;
                     },
                   ),
+
+                  // Password strength indicator
+                  if (showPasswordStrength.value)
+                    PasswordStrengthIndicator(
+                      password: passwordController.text,
+                    ),
+
                   const SizedBox(height: 16),
 
                   // Confirm password field
