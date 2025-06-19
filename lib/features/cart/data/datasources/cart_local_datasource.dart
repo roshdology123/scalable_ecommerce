@@ -82,12 +82,27 @@ class CartLocalDataSourceImpl implements CartLocalDataSource {
       final cartData = LocalStorage.getFromCache(_cartKey);
       if (cartData == null) return null;
 
-      // Convert Map<dynamic, dynamic> to Map<String, dynamic>
-      final Map<String, dynamic> safeCartData = _ensureStringKeyMap(cartData);
+      // Add debug logging
+      print('DEBUG: Retrieved cart data type: ${cartData.runtimeType}');
+      print('DEBUG: Cart data keys: ${cartData.keys}');
+      if (cartData['items'] != null) {
+        print('DEBUG: Items type: ${cartData['items'].runtimeType}');
+        print('DEBUG: Items length: ${(cartData['items'] as List).length}');
+        if ((cartData['items'] as List).isNotEmpty) {
+          print('DEBUG: First item type: ${(cartData['items'] as List)[0].runtimeType}');
+          print('DEBUG: First item: ${(cartData['items'] as List)[0]}');
+        }
+      }
+
+      // Safely convert the data to Map<String, dynamic>
+      final safeCartData = _ensureStringKeyMap(cartData);
 
       _logger.logCacheOperation('get_cart', _cartKey, true);
       return CartModel.fromJson(safeCartData);
     } catch (e, stackTrace) {
+      print('DEBUG: Error in getCart: $e');
+      print('DEBUG: Stack trace: $stackTrace');
+
       _logger.logErrorWithContext(
         'CartLocalDataSource.getCart',
         e,
@@ -98,12 +113,12 @@ class CartLocalDataSourceImpl implements CartLocalDataSource {
     }
   }
 
-  /// Helper method to ensure Map<String, dynamic> from Map<dynamic, dynamic>
-  Map<String, dynamic> _ensureStringKeyMap(dynamic map) {
-    if (map == null) return {};
-    if (map is Map<String, dynamic>) return map;
-    if (map is Map) {
-      return Map<String, dynamic>.from(map);
+  /// Helper method to safely convert Map<dynamic, dynamic> to Map<String, dynamic>
+  Map<String, dynamic> _ensureStringKeyMap(dynamic data) {
+    if (data == null) return {};
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
     }
     return {};
   }
@@ -152,13 +167,14 @@ class CartLocalDataSourceImpl implements CartLocalDataSource {
   Future<void> addCartItem(CartItemModel item) async {
     try {
       final cart = await getCart();
+      CartModel updatedCart;
+
       if (cart == null) {
         // Create new cart with this item
-        final newCart = CartModel.empty().copyWith(
+        updatedCart = CartModel.empty().copyWith(
           items: [item],
           updatedAt: DateTime.now(),
         );
-        await saveCart(newCart);
       } else {
         // Add to existing cart
         final existingIndex = cart.items.indexWhere((i) => i.id == item.id);
@@ -176,13 +192,14 @@ class CartLocalDataSourceImpl implements CartLocalDataSource {
           updatedItems.add(item);
         }
 
-        final updatedCart = cart.copyWith(
+        updatedCart = cart.copyWith(
           items: updatedItems,
           updatedAt: DateTime.now(),
           hasPendingChanges: true,
         );
-        await saveCart(updatedCart);
       }
+
+      await saveCart(updatedCart);
 
       _logger.logUserAction('cart_item_added', {
         'product_id': item.productId,
@@ -403,12 +420,9 @@ class CartLocalDataSourceImpl implements CartLocalDataSource {
   Future<List<CartModel>> getAbandonedCarts() async {
     try {
       final data = LocalStorage.getFromCache(_abandonedCartsKey);
-      if (data == null) return [];
+      if (data == null || data['carts'] == null) return [];
 
-      final safeData = _ensureStringKeyMap(data);
-      if (safeData['carts'] == null) return [];
-
-      final cartsJson = safeData['carts'] as List<dynamic>;
+      final cartsJson = data['carts'] as List<dynamic>;
       return cartsJson
           .map((json) => CartModel.fromJson(_ensureStringKeyMap(json)))
           .toList();
@@ -438,12 +452,9 @@ class CartLocalDataSourceImpl implements CartLocalDataSource {
   Future<DateTime?> getLastSyncTimestamp() async {
     try {
       final data = LocalStorage.getFromCache(_lastSyncKey);
-      if (data == null) return null;
+      if (data == null || data['timestamp'] == null) return null;
 
-      final safeData = _ensureStringKeyMap(data);
-      if (safeData['timestamp'] == null) return null;
-
-      return DateTime.parse(safeData['timestamp']);
+      return DateTime.parse(data['timestamp']);
     } catch (e) {
       _logger.w('Failed to get last sync timestamp: $e');
       return null;
@@ -473,12 +484,9 @@ class CartLocalDataSourceImpl implements CartLocalDataSource {
   Future<List<Map<String, dynamic>>> getPendingChanges() async {
     try {
       final data = LocalStorage.getFromCache(_pendingChangesKey);
-      if (data == null) return [];
+      if (data == null || data['changes'] == null) return [];
 
-      final safeData = _ensureStringKeyMap(data);
-      if (safeData['changes'] == null) return [];
-
-      final changes = safeData['changes'] as List<dynamic>;
+      final changes = data['changes'] as List<dynamic>;
       return changes.map((change) => _ensureStringKeyMap(change)).toList();
     } catch (e) {
       _logger.w('Failed to get pending changes: $e');

@@ -5,7 +5,6 @@ import '../../features/cart/data/models/cart_item_model.dart';
 import '../../features/products/data/models/rating_model.dart';
 import '../constants/app_constants.dart';
 import '../errors/exceptions.dart';
-// import '../../features/cart/data/models/cart_item_model.dart';
 import '../../features/products/data/models/product_model.dart';
 
 @singleton
@@ -43,9 +42,6 @@ class LocalStorage {
   }
 
   static void _registerAdapters() {
-    // if (!Hive.isAdapterRegistered(0)) {
-    //   Hive.registerAdapter(ProductModelAdapter());
-    // }
     if (!Hive.isAdapterRegistered(1)) {
       Hive.registerAdapter(CartItemModelAdapter());
     }
@@ -268,7 +264,7 @@ class LocalStorage {
   // Cache Operations
   static Future<void> saveToCache(String key, Map<String, dynamic> data, {Duration? expiry}) async {
     try {
-      final cacheData = {
+      final cacheData = <dynamic, dynamic>{
         'data': data,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
         'expiry': expiry?.inMilliseconds,
@@ -295,10 +291,22 @@ class LocalStorage {
         }
       }
 
-      return Map<String, dynamic>.from(cacheData['data']);
+      // Safely convert the data to Map<String, dynamic>
+      final data = cacheData['data'];
+      return _ensureStringKeyMap(data);
     } catch (e) {
       return null;
     }
+  }
+
+  /// Helper method to safely convert Map<dynamic, dynamic> to Map<String, dynamic>
+  static Map<String, dynamic> _ensureStringKeyMap(dynamic data) {
+    if (data == null) return {};
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {};
   }
 
   static Future<void> clearCache() async {
@@ -384,7 +392,6 @@ class LocalStorage {
     try {
       await Future.wait([
         _productsBox.clear(),
-        // _cartBox.clear(),
         _favoritesBox.clear(),
         _settingsBox.clear(),
         _cacheBox.clear(),
@@ -400,7 +407,6 @@ class LocalStorage {
     try {
       await Future.wait([
         _productsBox.close(),
-        // _cartBox.close(),
         _favoritesBox.close(),
         _settingsBox.close(),
         _cacheBox.close(),

@@ -74,8 +74,9 @@ class CartModel with _$CartModel {
         .map((item) => CartItemModel.fromJson(_ensureStringKeyMap(item)))
         .toList();
 
-    final summaryJson = json['summary'] as Map<String, dynamic>? ?? {};
-    final summary = CartSummaryModel.fromJson(_ensureStringKeyMap(summaryJson));
+    // FIX: Don't cast - use the helper method directly
+    final summaryData = json['summary']; // Get the raw data
+    final summary = CartSummaryModel.fromJson(_ensureStringKeyMap(summaryData));
 
     return CartModel(
       id: json['id']?.toString() ?? '',
@@ -102,11 +103,7 @@ class CartModel with _$CartModel {
           json['has_pending_changes'] as bool? ?? false,
       status: json['status']?.toString() ?? 'active',
       sessionId: json['sessionId']?.toString() ?? json['session_id']?.toString(),
-      appliedCoupons: json['appliedCoupons'] != null
-          ? Map<String, String>.from(json['appliedCoupons'])
-          : json['applied_coupons'] != null
-          ? Map<String, String>.from(json['applied_coupons'])
-          : null,
+      appliedCoupons: _extractStringStringMap(json['appliedCoupons'] ?? json['applied_coupons']),
       shippingAddress: json['shippingAddress']?.toString() ??
           json['shipping_address']?.toString(),
       billingAddress: json['billingAddress']?.toString() ??
@@ -120,11 +117,7 @@ class CartModel with _$CartModel {
           ? DateTime.parse(json['abandoned_at'])
           : null,
       version: json['version'] as int? ?? 0,
-      conflictingFields: json['conflictingFields'] != null
-          ? List<String>.from(json['conflictingFields'])
-          : json['conflicting_fields'] != null
-          ? List<String>.from(json['conflicting_fields'])
-          : null,
+      conflictingFields: _extractStringList(json['conflictingFields'] ?? json['conflicting_fields']),
       expiresAt: json['expiresAt'] != null
           ? DateTime.parse(json['expiresAt'])
           : json['expires_at'] != null
@@ -141,6 +134,34 @@ class CartModel with _$CartModel {
       return Map<String, dynamic>.from(map);
     }
     return {};
+  }
+
+  /// Helper method to safely extract Map<String, String>
+  static Map<String, String>? _extractStringStringMap(dynamic map) {
+    if (map == null) return null;
+    if (map is Map<String, String>) return map;
+    if (map is Map) {
+      try {
+        return Map<String, String>.from(map);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /// Helper method to safely extract List<String>
+  static List<String>? _extractStringList(dynamic list) {
+    if (list == null) return null;
+    if (list is List<String>) return list;
+    if (list is List) {
+      try {
+        return List<String>.from(list);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 
   factory CartModel.fromCart(Cart cart) {

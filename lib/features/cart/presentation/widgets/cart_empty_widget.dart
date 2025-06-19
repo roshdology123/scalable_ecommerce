@@ -39,53 +39,55 @@ class CartEmptyWidget extends StatelessWidget {
       );
     }
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Empty Cart Illustration
-            _buildEmptyCartIllustration(context),
+    return SingleChildScrollView(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Empty Cart Illustration
+              _buildEmptyCartIllustration(context),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Title
-            Text(
-              'Your cart is empty',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+              // Title
+              Text(
+                'Your cart is empty',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
 
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-            // Message
-            Text(
-              message ?? 'Looks like you haven\'t added anything to your cart yet.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              // Message
+              Text(
+                message ?? 'Looks like you haven\'t added anything to your cart yet.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
 
-            const SizedBox(height: 32),
-
-            // Continue Shopping Button
-            if (onContinueShopping != null)
-              _buildContinueShoppingButton(context, logger),
-
-            // Suggested Categories
-            if (showRecommendations) ...[
               const SizedBox(height: 32),
-              _buildSuggestedCategories(context, logger),
-            ],
 
-            // Benefits Section
-            const SizedBox(height: 32),
-            _buildBenefitsSection(context),
-          ],
+              // Continue Shopping Button
+              if (onContinueShopping != null)
+                _buildContinueShoppingButton(context, logger),
+
+              // Suggested Categories
+              if (showRecommendations) ...[
+                const SizedBox(height: 32),
+                _buildSuggestedCategories(context, logger),
+              ],
+
+              // Benefits Section
+              const SizedBox(height: 32),
+              _buildBenefitsSection(context),
+            ],
+          ),
         ),
       ),
     );
