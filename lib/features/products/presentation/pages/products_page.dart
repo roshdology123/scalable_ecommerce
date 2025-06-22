@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scalable_ecommerce/features/cart/presentation/cubit/cart_cubit.dart';
+import 'package:scalable_ecommerce/features/favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
 
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/debouncer.dart';
@@ -428,16 +429,176 @@ class ProductsPage extends HookWidget {
     context.push('/home/product/${product.id}');
   }
 
-  void _toggleFavorite(BuildContext context, Product product) {
-    // This would be handled by a favorites cubit
-    context.showSnackBar('products.favorite_toggle'.tr(args: [product.title]));
+  Future<void> _toggleFavorite(BuildContext context, Product product) async {
+    debugPrint('[ProductsPage] Toggling favorite for product ${product.id} by roshdology123 at 2025-06-22 12:02:22');
+
+    final favoritesCubit = context.read<FavoritesCubit>();
+
+    // 🔥 Get current state BEFORE the toggle
+    final wasAlreadyFavorite = favoritesCubit.currentFavorites.any(
+            (favorite) => favorite.productId == product.id
+    );
+
+    try {
+      // 🔥 Show immediate feedback based on current state
+      _showImmediateFeedback(context, product, !wasAlreadyFavorite);
+
+      // 🔥 Perform the toggle operation
+      final isNowFavorite = await favoritesCubit.toggleFavorite(
+        product,
+        enablePriceTracking: false,
+      );
+
+      // 🔥 If the result doesn't match our optimistic update, show correction
+      if (isNowFavorite != !wasAlreadyFavorite) {
+        _showCorrectionFeedback(context, product, isNowFavorite);
+      }
+
+    } catch (e) {
+      debugPrint('[ProductsPage] Error toggling favorite for roshdology123: $e');
+
+      // 🔥 Show error and suggest retry
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Failed to update favorites. Please try again.'),
+          backgroundColor: Colors.red,
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: () => _toggleFavorite(context, product),
+          ),
+        ),
+      );
+    }
+  }
+  void _showImmediateFeedback(BuildContext context, Product product, bool isBeingAdded) {
+    if (isBeingAdded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.favorite, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${product.title} added to favorites!',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'View',
+            textColor: Colors.white,
+            onPressed: () => context.push('/favorites'),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.heart_broken, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${product.title} removed from favorites',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'Undo',
+            textColor: Colors.white,
+            onPressed: () async {
+              await context.read<FavoritesCubit>().toggleFavorite(product);
+            },
+          ),
+        ),
+      );
+    }
   }
 
-  void _addToCart(BuildContext context, Product product) {
-    context.read<CartCubit>().addToCart(productId: product.id, productTitle: product.title, productImage: product.image, price: product.price, quantity: 1,
-
-
-
+  void _showCorrectionFeedback(BuildContext context, Product product, bool actualState) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          actualState
+              ? '${product.title} is now in favorites'
+              : '${product.title} removed from favorites',
+        ),
+        backgroundColor: Colors.blue,
+        duration: const Duration(seconds: 1),
+      ),
     );
+  }
+  // 🔥 PROPER ADD TO CART IMPLEMENTATION using your CartCubit signature
+  void _addToCart(BuildContext context, Product product) {
+    debugPrint('[ProductsPage] Adding product ${product.id} to cart for roshdology123 at 2025-06-22 11:50:08');
+
+    final cartCubit = context.read<CartCubit>();
+
+    try {
+      // Use your exact CartCubit.addToCart method signature
+      cartCubit.addToCart(
+        productId: product.id,
+        productTitle: product.title,
+        productImage: product.image,
+        price: product.price,
+        quantity: 1, // Default quantity
+        selectedColor: product.colors.isNotEmpty == true
+            ? product.colors.first
+            : null,
+        selectedSize: product.colors.isNotEmpty == true
+            ? product.colors.first
+            : null,
+        additionalVariants: null, // Can be extended later
+        maxQuantity: product.stock > 0 ? product.stock : 999,
+        brand: product.brand,
+        category: product.category,
+        sku: product.sku,
+        originalPrice: product.originalPrice ?? product.price,
+        discountPercentage: product.discountPercentage,
+      );
+
+      // Show success feedback
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.shopping_cart, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${product.title} added to cart!',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'View Cart',
+            textColor: Colors.white,
+            onPressed: () => context.push('/cart'),
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[ProductsPage] Error adding to cart for roshdology123: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to add to cart. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

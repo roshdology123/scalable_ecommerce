@@ -151,10 +151,30 @@ class ProductsRemoteDataSourceImpl implements ProductsRemoteDataSource {
       final response = await _dioClient.get(ApiConstants.categories);
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data as List<dynamic>;
-        return data
-            .map((category) => CategoryModel.fromJson(category))
-            .toList();
+        final data = response.data;
+
+        // Handle the FakeStore API response which returns simple string array
+        if (data is List) {
+          return (data).asMap().entries.map((entry) {
+            final index = entry.key;
+            final categoryName = entry.value.toString();
+
+            return CategoryModel.fromString(categoryName, index: index);
+          }).toList();
+        }
+
+        // Fallback for other API formats that return objects
+        if (data is Map && data['categories'] is List) {
+          final List<dynamic> categoriesData = data['categories'];
+          return categoriesData
+              .map((json) => CategoryModel.fromJson(json as Map<String, dynamic>))
+              .toList();
+        }
+
+        throw const ApiException(
+          message: 'Unexpected categories response format',
+          code: 'CATEGORIES_FORMAT_ERROR',
+        );
       }
 
       throw ApiException.fromResponse(
@@ -167,6 +187,52 @@ class ProductsRemoteDataSourceImpl implements ProductsRemoteDataSource {
         message: 'Failed to get categories: ${e.toString()}',
         code: 'GET_CATEGORIES_ERROR',
       );
+    }
+  }
+
+// Helper methods for the ProductsRemoteDataSource class
+  String _formatCategoryName(String name) {
+    if (name.isEmpty) return name;
+    return name.split(' ').map((word) =>
+    word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}' : word
+    ).join(' ');
+  }
+
+  String _getCategoryImage(String categoryName) {
+    final category = categoryName.toLowerCase();
+    switch (category) {
+      case 'electronics':
+        return 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400';
+      case 'jewelery':
+      case 'jewelry':
+        return 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400';
+      case "men's clothing":
+      case 'mens clothing':
+        return 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400';
+      case "women's clothing":
+      case 'womens clothing':
+        return 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400';
+      default:
+        return 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400';
+    }
+  }
+
+  String _getCategoryIcon(String categoryName) {
+    final category = categoryName.toLowerCase();
+    switch (category) {
+      case 'electronics':
+        return 'electronics';
+      case 'jewelery':
+      case 'jewelry':
+        return 'diamond';
+      case "men's clothing":
+      case 'mens clothing':
+        return 'man';
+      case "women's clothing":
+      case 'womens clothing':
+        return 'woman';
+      default:
+        return 'category';
     }
   }
 

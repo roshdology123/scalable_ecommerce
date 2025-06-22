@@ -16,6 +16,18 @@ import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/products/presentation/pages/products_page.dart';
 import '../../features/products/presentation/pages/product_detail_page.dart';
 import '../../features/cart/presentation/pages/cart_page.dart';
+import '../../features/profile/presentation/cubit/profile/profile_cubit.dart';
+import '../../features/profile/presentation/cubit/profile_preferences/profile_preferences_cubit.dart';
+import '../../features/profile/presentation/cubit/profile_stats/profile_stats_cubit.dart';
+import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/profile/presentation/pages/settings_page.dart';
+import '../../features/profile/presentation/pages/notification_settings_page.dart'; // Add this
+import '../../features/profile/presentation/pages/privacy_settings_page.dart'; // Add this
+import '../../features/profile/presentation/pages/change_password_page.dart'; // Add this
+import '../../features/profile/presentation/pages/delete_account_page.dart'; // Add this
+import '../../features/search/presentation/pages/search_page.dart';
+import '../themes/theme_cubit.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -31,8 +43,8 @@ class AppRouter {
       final authState = authCubit.state;
       final location = state.matchedLocation;
 
-      // Debug logging
-      debugPrint('[Router] Redirect check - Location: $location, Auth State: $authState');
+      // Debug logging for roshdology123
+      debugPrint('[Router] 2025-06-22 09:52:53 - Redirect check for roshdology123 - Location: $location, Auth State: $authState');
 
       final isAuthRoute = location.startsWith('/auth');
       final isSplashRoute = location == '/splash';
@@ -40,7 +52,7 @@ class AppRouter {
 
       return authState.when(
         initial: () {
-          debugPrint('[Router] Auth state: initial - Location: $location');
+          debugPrint('[Router] Auth state: initial for roshdology123 - Location: $location');
           // During initial state, allow splash and onboarding
           if (isSplashRoute || isOnboardingRoute) {
             return null;
@@ -50,7 +62,7 @@ class AppRouter {
         },
 
         loading: () {
-          debugPrint('[Router] Auth state: loading - Location: $location');
+          debugPrint('[Router] Auth state: loading for roshdology123 - Location: $location');
           // During loading, allow splash, onboarding, and auth routes
           if (isSplashRoute || isOnboardingRoute || isAuthRoute) {
             return null;
@@ -60,7 +72,7 @@ class AppRouter {
         },
 
         authenticated: (user) {
-          debugPrint('[Router] Auth state: authenticated - User: ${user.email}, Location: $location');
+          debugPrint('[Router] Auth state: authenticated for roshdology123 - User: ${user.email}, Location: $location');
           // If user is authenticated and tries to access auth routes or splash, redirect to home
           if (isAuthRoute || isSplashRoute) {
             return '/home';
@@ -73,7 +85,7 @@ class AppRouter {
         },
 
         unauthenticated: () {
-          debugPrint('[Router] Auth state: unauthenticated - Location: $location');
+          debugPrint('[Router] Auth state: unauthenticated for roshdology123 - Location: $location');
           // Allow auth routes, splash, and onboarding for unauthenticated users
           if (isAuthRoute || isSplashRoute || isOnboardingRoute) {
             return null;
@@ -83,7 +95,7 @@ class AppRouter {
         },
 
         error: (message, errorCode) {
-          debugPrint('[Router] Auth state: error - $message (Code: $errorCode), Location: $location');
+          debugPrint('[Router] Auth state: error for roshdology123 - $message (Code: $errorCode), Location: $location');
           // Allow auth routes and splash even on error
           if (isAuthRoute || isSplashRoute || isOnboardingRoute) {
             return null;
@@ -92,7 +104,7 @@ class AppRouter {
         },
 
         forgotPasswordSent: () {
-          debugPrint('[Router] Auth state: forgotPasswordSent - Location: $location');
+          debugPrint('[Router] Auth state: forgotPasswordSent for roshdology123 - Location: $location');
           // Stay on auth routes or redirect to login
           if (isAuthRoute || isSplashRoute) {
             return null;
@@ -101,7 +113,7 @@ class AppRouter {
         },
 
         passwordResetSuccess: () {
-          debugPrint('[Router] Auth state: passwordResetSuccess - Location: $location');
+          debugPrint('[Router] Auth state: passwordResetSuccess for roshdology123 - Location: $location');
           // Redirect to login after successful password reset
           if (isAuthRoute) {
             return '/auth/login';
@@ -131,7 +143,7 @@ class AppRouter {
       GoRoute(
         path: '/auth/login',
         builder: (context, state) {
-          debugPrint('[Router] Building LoginPage for: ${state.matchedLocation}');
+          debugPrint('[Router] Building LoginPage for roshdology123: ${state.matchedLocation}');
           return const LoginPage();
         },
       ),
@@ -139,7 +151,7 @@ class AppRouter {
       GoRoute(
         path: '/auth/signup',
         builder: (context, state) {
-          debugPrint('[Router] Building SignupPage for: ${state.matchedLocation}');
+          debugPrint('[Router] Building SignupPage for roshdology123: ${state.matchedLocation}');
           return const SignupPage();
         },
       ),
@@ -169,7 +181,7 @@ class AppRouter {
           // Search Tab
           GoRoute(
             path: '/search',
-            builder: (context, state) => const SearchPage(), // You'll need to create this
+            builder: (context, state) => const SearchPage(),
           ),
 
           // Favorites Tab
@@ -179,12 +191,12 @@ class AppRouter {
               final extra = state.extra as Map<String, dynamic>?;
 
               return BlocProvider(
-  create: (context) => getIt<FavoritesCollectionsCubit>()..loadCollections(),
-  child: FavoritesPage(
-                initialCollectionId: extra?['collectionId'],
-                initialCategory: extra?['category'],
-              ),
-);
+                create: (context) => getIt<FavoritesCollectionsCubit>()..loadCollections(),
+                child: FavoritesPage(
+                  initialCollectionId: extra?['collectionId'],
+                  initialCategory: extra?['category'],
+                ),
+              );
             },
           ),
 
@@ -202,23 +214,139 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: 'checkout',
-                builder: (context, state) => const CheckoutPage(), // You'll need to create this
+                builder: (context, state) => const CheckoutPage(),
               ),
             ],
           ),
 
-          // Profile Tab
+          // Profile Tab with ALL PROFILE PROVIDERS HERE 🔥
           GoRoute(
             path: '/profile',
-            builder: (context, state) => const ProfilePage(), // You'll need to create this
+            builder: (context, state) {
+              debugPrint('[Router] Building ProfilePage for roshdology123 at 2025-06-22 09:52:53');
+
+              return MultiBlocProvider(
+                providers: [
+                  // 🔥 PROFILE PROVIDERS GO HERE 🔥
+                  BlocProvider<ProfileCubit>(
+                    create: (context) => getIt<ProfileCubit>()..loadProfile(),
+                  ),
+                  BlocProvider<ProfilePreferencesCubit>(
+                    create: (context) => getIt<ProfilePreferencesCubit>()..loadPreferences(),
+                  ),
+                  BlocProvider<ProfileStatsCubit>(
+                    create: (context) => getIt<ProfileStatsCubit>()..loadStats(),
+                  ),
+                ],
+                child: const ProfilePage(),
+              );
+            },
             routes: [
+              // Settings Route with Profile Providers
               GoRoute(
                 path: 'settings',
-                builder: (context, state) => const SettingsPage(), // You'll need to create this
+                builder: (context, state) {
+                  debugPrint('[Router] Building SettingsPage for roshdology123 at 2025-06-22 09:52:53');
+
+                  return MultiBlocProvider(
+                    providers: [
+                      BlocProvider<ProfilePreferencesCubit>(
+                        create: (context) => getIt<ProfilePreferencesCubit>()..loadPreferences(),
+                      ),
+                      // ThemeCubit is available globally
+                    ],
+                    child: const SettingsPage(),
+                  );
+                },
+                routes: [
+                  // Notification Settings
+                  GoRoute(
+                    path: 'notifications',
+                    builder: (context, state) {
+                      debugPrint('[Router] Building NotificationSettingsPage for roshdology123 at 2025-06-22 09:52:53');
+
+                      return BlocProvider<ProfilePreferencesCubit>(
+                        create: (context) => getIt<ProfilePreferencesCubit>()..loadPreferences(),
+                        child: const NotificationSettingsPage(),
+                      );
+                    },
+                  ),
+
+                  // Privacy Settings
+                  GoRoute(
+                    path: 'privacy',
+                    builder: (context, state) {
+                      debugPrint('[Router] Building PrivacySettingsPage for roshdology123 at 2025-06-22 09:52:53');
+
+                      return BlocProvider<ProfilePreferencesCubit>(
+                        create: (context) => getIt<ProfilePreferencesCubit>()..loadPreferences(),
+                        child: const PrivacySettingsPage(),
+                      );
+                    },
+                  ),
+
+                  // Theme Settings (uses global ThemeCubit, no provider needed)
+                  GoRoute(
+                    path: 'theme',
+                    builder: (context, state) {
+                      debugPrint('[Router] Building ThemeSettingsPage for roshdology123 at 2025-06-22 09:52:53');
+                      // ThemeCubit is available globally, no need for provider
+                      return const ThemeSettingsPage(); // You'll need to create this page
+                    },
+                  ),
+                ],
               ),
+
+              // Edit Profile Route with Profile Providers
               GoRoute(
                 path: 'edit',
-                builder: (context, state) => const EditProfilePage(), // You'll need to create this
+                builder: (context, state) {
+                  debugPrint('[Router] Building EditProfilePage for roshdology123 at 2025-06-22 09:52:53');
+
+                  return BlocProvider<ProfileCubit>(
+                    create: (context) => getIt<ProfileCubit>()..loadProfile(),
+                    child: const EditProfilePage(),
+                  );
+                },
+              ),
+
+              // Change Password Route
+              GoRoute(
+                path: 'change-password',
+                builder: (context, state) {
+                  debugPrint('[Router] Building ChangePasswordPage for roshdology123 at 2025-06-22 09:52:53');
+
+                  return BlocProvider<ProfileCubit>(
+                    create: (context) => getIt<ProfileCubit>(),
+                    child: const ChangePasswordPage(),
+                  );
+                },
+              ),
+
+              // Delete Account Route
+              GoRoute(
+                path: 'delete-account',
+                builder: (context, state) {
+                  debugPrint('[Router] Building DeleteAccountPage for roshdology123 at 2025-06-22 09:52:53');
+
+                  return BlocProvider<ProfileCubit>(
+                    create: (context) => getIt<ProfileCubit>(),
+                    child: const DeleteAccountPage(),
+                  );
+                },
+              ),
+
+              // Profile Stats Route (if you want a dedicated stats page)
+              GoRoute(
+                path: 'stats',
+                builder: (context, state) {
+                  debugPrint('[Router] Building ProfileStatsPage for roshdology123 at 2025-06-22 09:52:53');
+
+                  return BlocProvider<ProfileStatsCubit>(
+                    create: (context) => getIt<ProfileStatsCubit>()..loadStats(),
+                    child: const ProfileStatsPage(), // You can create this page if needed
+                  );
+                },
               ),
             ],
           ),
@@ -258,7 +386,7 @@ class AppRouter {
             ),
             const SizedBox(height: 8),
             Text(
-              'The page "${state.matchedLocation}" does not exist.',
+              'The page "${state.matchedLocation}" does not exist for roshdology123.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -280,7 +408,141 @@ class AppRouter {
   );
 }
 
-// Your existing MainShell remains the same...
+// Create this new theme settings page
+class ThemeSettingsPage extends StatelessWidget {
+  const ThemeSettingsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Theme Settings'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      body: BlocBuilder<ThemeCubit, ThemeState>(
+        builder: (context, state) {
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Choose Theme',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Card(
+                  child: Column(
+                    children: [
+                      RadioListTile<ThemeMode>(
+                        title: const Text('System Default'),
+                        subtitle: const Text('Follow device settings'),
+                        value: ThemeMode.system,
+                        groupValue: state.themeMode,
+                        onChanged: (value) {
+                          if (value != null) {
+                            context.read<ThemeCubit>().setSystemTheme();
+                          }
+                        },
+                      ),
+                      const Divider(height: 1),
+                      RadioListTile<ThemeMode>(
+                        title: const Text('Light'),
+                        subtitle: const Text('Light theme'),
+                        value: ThemeMode.light,
+                        groupValue: state.themeMode,
+                        onChanged: (value) {
+                          if (value != null) {
+                            context.read<ThemeCubit>().setLightTheme();
+                          }
+                        },
+                      ),
+                      const Divider(height: 1),
+                      RadioListTile<ThemeMode>(
+                        title: const Text('Dark'),
+                        subtitle: const Text('Dark theme'),
+                        value: ThemeMode.dark,
+                        groupValue: state.themeMode,
+                        onChanged: (value) {
+                          if (value != null) {
+                            context.read<ThemeCubit>().setDarkTheme();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Current Settings for roshdology123:',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Theme Mode: ${context.read<ThemeCubit>().themeModeString}',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      Text(
+                        'Last Updated: 2025-06-22 09:52:53',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Create this profile stats page if you want a dedicated one
+class ProfileStatsPage extends StatelessWidget {
+  const ProfileStatsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile Statistics'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      body: const Center(
+        child: Text('Detailed Profile Statistics for roshdology123 - Coming Soon'),
+      ),
+    );
+  }
+}
+
+// Your existing classes remain the same...
 class MainShell extends StatelessWidget {
   final Widget child;
 
@@ -351,7 +613,7 @@ class MainShell extends StatelessWidget {
   }
 }
 
-// Enhanced Splash Page
+// Your existing SplashPage remains the same...
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -369,7 +631,7 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _initializeApp() async {
-    debugPrint('[SplashPage] Starting initialization...');
+    debugPrint('[SplashPage] Starting initialization for roshdology123 at 2025-06-22 09:52:53...');
 
     try {
       // Minimum splash duration for UX
@@ -385,7 +647,7 @@ class _SplashPageState extends State<SplashPage> {
         });
       }
     } catch (e) {
-      debugPrint('[SplashPage] Error during initialization: $e');
+      debugPrint('[SplashPage] Error during initialization for roshdology123: $e');
       if (mounted) {
         setState(() {
           _isInitializing = false;
@@ -401,10 +663,10 @@ class _SplashPageState extends State<SplashPage> {
 
     // Check if user has seen onboarding
     final hasSeenOnboarding = await _checkOnboardingStatus();
-    debugPrint('[SplashPage] Has seen onboarding: $hasSeenOnboarding');
+    debugPrint('[SplashPage] Has seen onboarding for roshdology123: $hasSeenOnboarding');
 
     if (!hasSeenOnboarding) {
-      debugPrint('[SplashPage] Going to onboarding');
+      debugPrint('[SplashPage] Going to onboarding for roshdology123');
       if (mounted) {
         context.go('/onboarding');
       }
@@ -413,11 +675,11 @@ class _SplashPageState extends State<SplashPage> {
 
     // Check auth status (this will handle auto-login)
     final authCubit = context.read<AuthCubit>();
-    debugPrint('[SplashPage] Current auth state: ${authCubit.state}');
+    debugPrint('[SplashPage] Current auth state for roshdology123: ${authCubit.state}');
 
     // If auth is in initial state, trigger auth check
     if (authCubit.state == const AuthState.initial()) {
-      debugPrint('[SplashPage] Triggering auth status check...');
+      debugPrint('[SplashPage] Triggering auth status check for roshdology123...');
       await authCubit.checkAuthStatus();
     }
 
@@ -426,36 +688,36 @@ class _SplashPageState extends State<SplashPage> {
 
     if (mounted) {
       final finalAuthState = authCubit.state;
-      debugPrint('[SplashPage] Final auth state: $finalAuthState');
+      debugPrint('[SplashPage] Final auth state for roshdology123: $finalAuthState');
 
       // Navigate based on final auth state
       finalAuthState.when(
         initial: () {
-          debugPrint('[SplashPage] Still initial, going to login');
+          debugPrint('[SplashPage] Still initial for roshdology123, going to login');
           context.go('/auth/login');
         },
         loading: () {
-          debugPrint('[SplashPage] Still loading, waiting...');
+          debugPrint('[SplashPage] Still loading for roshdology123, waiting...');
           // Will be handled by the router redirect
         },
         authenticated: (user) {
-          debugPrint('[SplashPage] User authenticated: ${user.email}, going to home');
+          debugPrint('[SplashPage] User authenticated: ${user.email} (roshdology123), going to home');
           context.go('/home');
         },
         unauthenticated: () {
-          debugPrint('[SplashPage] User not authenticated, going to login');
+          debugPrint('[SplashPage] User not authenticated (roshdology123), going to login');
           context.go('/auth/login');
         },
         error: (message, error) {
-          debugPrint('[SplashPage] Auth error: $message, going to login');
+          debugPrint('[SplashPage] Auth error for roshdology123: $message, going to login');
           context.go('/auth/login');
         },
         forgotPasswordSent: () {
-          debugPrint('[SplashPage] Password reset sent, going to login');
+          debugPrint('[SplashPage] Password reset sent for roshdology123, going to login');
           context.go('/auth/login');
         },
         passwordResetSuccess: () {
-          debugPrint('[SplashPage] Password reset successful, going to login');
+          debugPrint('[SplashPage] Password reset successful for roshdology123, going to login');
           context.go('/auth/login');
         },
       );
@@ -467,7 +729,7 @@ class _SplashPageState extends State<SplashPage> {
       final storageService = getIt<StorageService>();
       return storageService.getOnboardingCompleted();
     } catch (e) {
-      debugPrint('[SplashPage] Error checking onboarding status: $e');
+      debugPrint('[SplashPage] Error checking onboarding status for roshdology123: $e');
       return false; // Default to showing onboarding on error
     }
   }
@@ -476,7 +738,7 @@ class _SplashPageState extends State<SplashPage> {
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
-        debugPrint('[SplashPage] Auth state changed: $state');
+        debugPrint('[SplashPage] Auth state changed for roshdology123: $state');
 
         // Only navigate if we're done initializing
         if (!_isInitializing) {
@@ -569,25 +831,13 @@ class _SplashPageState extends State<SplashPage> {
 
   String _getStatusText(AuthState state) {
     return state.when(
-      initial: () => 'Initializing application...',
+      initial: () => 'Initializing application',
       loading: () => 'Checking authentication...',
       authenticated: (user) => 'Welcome back, ${user.firstName}!',
-      unauthenticated: () => 'Setting up login...',
+      unauthenticated: () => 'Setting up login',
       error: (message, _) => 'Initialization complete',
       forgotPasswordSent: () => 'Redirecting to login...',
       passwordResetSuccess: () => 'Password reset successful!',
-    );
-  }
-}
-
-// Placeholder pages (you'll need to create these)
-class SearchPage extends StatelessWidget {
-  const SearchPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Search Page - Coming Soon')),
     );
   }
 }
@@ -598,40 +848,7 @@ class CheckoutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: Text('Checkout Page - Coming Soon')),
-    );
-  }
-}
-
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Profile Page - Coming Soon')),
-    );
-  }
-}
-
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Settings Page - Coming Soon')),
-    );
-  }
-}
-
-class EditProfilePage extends StatelessWidget {
-  const EditProfilePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Edit Profile Page - Coming Soon')),
+      body: Center(child: Text('Checkout Page - Coming Soon for roshdology123')),
     );
   }
 }

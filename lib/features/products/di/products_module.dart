@@ -15,8 +15,6 @@ import '../domain/usecases/search_products_usecase.dart';
 
 @module
 abstract class ProductsModule {
-  // Note: ProductsLocalDataSource is already registered with @LazySingleton
-  // Note: ProductsRemoteDataSource needs to be implemented
 
   @LazySingleton(as: ProductsRepository)
   ProductsRepositoryImpl productsRepository(

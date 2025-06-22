@@ -24,22 +24,22 @@ class FavoritesAppBar extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.only(top: 126),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title and actions
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'My Favorites',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+          Expanded(
+            child: Text(
+              'My Favorites',
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
               IconButton(
                 onPressed: onCollectionsTap,
                 icon: const Icon(

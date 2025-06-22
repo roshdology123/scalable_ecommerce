@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
+import '../../../favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
+import '../../../favorites/presentation/cubit/favorites_cubit/favorites_state.dart';
 import '../../domain/entities/product.dart';
 import 'product_card.dart';
 import 'product_list_item.dart';
@@ -36,6 +39,8 @@ class ProductGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[ProductGrid] Building grid for ${products.length} products for roshdology123 at 2025-06-22 12:02:22');
+
     if (crossAxisCount == 1) {
       // List view
       return _buildListView();
@@ -49,91 +54,128 @@ class ProductGrid extends StatelessWidget {
   }
 
   Widget _buildListView() {
-    return ListView.builder(
-      controller: scrollController,
-      padding: padding ?? const EdgeInsets.all(16),
-      itemCount: products.length + (isLoadingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index >= products.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+    return BlocBuilder<FavoritesCubit, FavoritesState>(
+      builder: (context, favoritesState) {
+        return ListView.builder(
+          controller: scrollController,
+          padding: padding ?? const EdgeInsets.all(16),
+          itemCount: products.length + (isLoadingMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index >= products.length) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-        final product = products[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: ProductListItem(
-            product: product,
-            onTap: () => onProductTap?.call(product),
-            onFavoriteTap: () => onFavoriteTap?.call(product),
-            onAddToCartTap: () => onAddToCartTap?.call(product),
-          ),
+            final product = products[index];
+
+            // 🔥 Use synchronous method that checks current favorites in memory
+            final isFavorite = _isProductFavorite(context, product.id, favoritesState);
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: ProductListItem(
+                product: product,
+                isFavorite: isFavorite,
+                onTap: () => onProductTap?.call(product),
+                onFavoriteTap: () => onFavoriteTap?.call(product),
+                onAddToCartTap: () => onAddToCartTap?.call(product),
+              ),
+            );
+          },
         );
       },
     );
   }
 
   Widget _buildGridView() {
-    return GridView.builder(
-      controller: scrollController,
-      padding: padding ?? const EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        childAspectRatio: childAspectRatio ?? 0.48,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: products.length + (isLoadingMore ? crossAxisCount : 0),
-      itemBuilder: (context, index) {
-        if (index >= products.length) {
-          return const LoadingProductCard();
-        }
+    return BlocBuilder<FavoritesCubit, FavoritesState>(
+      builder: (context, favoritesState) {
+        return GridView.builder(
+          controller: scrollController,
+          padding: padding ?? const EdgeInsets.all(16),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: childAspectRatio ?? 0.48,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          itemCount: products.length + (isLoadingMore ? crossAxisCount : 0),
+          itemBuilder: (context, index) {
+            if (index >= products.length) {
+              return const LoadingProductCard();
+            }
 
-        final product = products[index];
-        return ProductCard(
-          product: product,
-          onTap: () => onProductTap?.call(product),
-          onFavoriteTap: () => onFavoriteTap?.call(product),
-          onAddToCartTap: () => onAddToCartTap?.call(product),
+            final product = products[index];
+
+            // 🔥 Use synchronous method that checks current favorites in memory
+            final isFavorite = _isProductFavorite(context, product.id, favoritesState);
+
+            return ProductCard(
+              product: product,
+              isFavorite: isFavorite,
+              onTap: () => onProductTap?.call(product),
+              onFavoriteTap: () => onFavoriteTap?.call(product),
+              onAddToCartTap: () => onAddToCartTap?.call(product),
+            );
+          },
         );
       },
     );
   }
 
   Widget _buildStaggeredGrid() {
-    return MasonryGridView.builder(
-      controller: scrollController,
-      padding: padding ?? const EdgeInsets.all(16),
-      gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-      ),
-      itemCount: products.length + (isLoadingMore ? crossAxisCount : 0),
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      itemBuilder: (context, index) {
-        if (index >= products.length) {
-          return const LoadingProductCard();
-        }
+    return BlocBuilder<FavoritesCubit, FavoritesState>(
+      builder: (context, favoritesState) {
+        return MasonryGridView.builder(
+          controller: scrollController,
+          padding: padding ?? const EdgeInsets.all(16),
+          gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+          ),
+          itemCount: products.length + (isLoadingMore ? crossAxisCount : 0),
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          itemBuilder: (context, index) {
+            if (index >= products.length) {
+              return const LoadingProductCard();
+            }
 
-        final product = products[index];
+            final product = products[index];
 
-        // Calculate dynamic height based on product info
-        double height = 280; // Base height
+            // Calculate dynamic height based on product info
+            double height = 280; // Base height
 
-        if (product.brand != null) height += 20;
-        if (product.title.length > 50) height += 20;
-        if (product.isOnSale) height += 10;
+            if (product.brand != null) height += 20;
+            if (product.title.length > 50) height += 20;
+            if (product.isOnSale) height += 10;
 
-        return ProductCard(
-          product: product,
-          height: height,
-          onTap: () => onProductTap?.call(product),
-          onFavoriteTap: () => onFavoriteTap?.call(product),
-          onAddToCartTap: () => onAddToCartTap?.call(product),
+            // 🔥 Use synchronous method that checks current favorites in memory
+            final isFavorite = _isProductFavorite(context, product.id, favoritesState);
+
+            return ProductCard(
+              product: product,
+              height: height,
+              isFavorite: isFavorite,
+              onTap: () => onProductTap?.call(product),
+              onFavoriteTap: () => onFavoriteTap?.call(product),
+              onAddToCartTap: () => onAddToCartTap?.call(product),
+            );
+          },
         );
       },
     );
+  }
+
+  // 🔥 Helper method to check if product is favorite from current state
+  bool _isProductFavorite(BuildContext context, int productId, FavoritesState favoritesState) {
+    // Check from current favorites list in memory (instant)
+    final currentFavorites = context.read<FavoritesCubit>().currentFavorites;
+    final isInCurrentList = currentFavorites.any((favorite) => favorite.productId == productId);
+
+    debugPrint('[ProductGrid] Checking favorite status for product $productId for roshdology123: $isInCurrentList at 2025-06-22 12:02:22');
+
+    return isInCurrentList;
   }
 }

@@ -33,6 +33,8 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[ProductCard] Building card for product ${product.id} (favorite: $isFavorite) for roshdology123 at 2025-06-22 11:57:28');
+
     return SizedBox(
       width: width,
       height: height,
@@ -91,7 +93,7 @@ class ProductCard extends StatelessWidget {
                       child: _buildBadges(context),
                     ),
 
-                    // Favorite button
+                    // Favorite button with enhanced animation
                     if (showFavoriteButton)
                       Positioned(
                         top: 8,
@@ -242,19 +244,36 @@ class ProductCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
         shape: BoxShape.circle,
+        boxShadow: isFavorite ? [
+          BoxShadow(
+            color: Colors.red.withOpacity(0.3),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ] : null,
       ),
       child: IconButton(
-        icon: Icon(
-          isFavorite ? Icons.favorite : Icons.favorite_border,
-          color: isFavorite ? Colors.red : context.colorScheme.onSurface,
-          size: 20,
+        icon: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: Icon(
+            isFavorite ? Icons.favorite : Icons.favorite_border,
+            key: ValueKey(isFavorite),
+            color: isFavorite ? Colors.red : context.colorScheme.onSurface,
+            size: 20,
+          ),
         ),
-        onPressed: onFavoriteTap,
+        onPressed: () {
+          debugPrint('[ProductCard] Favorite button tapped for product ${product.id} by roshdology123 at 2025-06-22 11:57:28');
+          onFavoriteTap?.call();
+        },
         padding: const EdgeInsets.all(4),
         constraints: const BoxConstraints(
           minWidth: 32,
           minHeight: 32,
         ),
+        tooltip: isFavorite
+            ? 'products.remove_from_favorites'.tr()
+            : 'products.add_to_favorites'.tr(),
       ),
     );
   }
@@ -271,12 +290,16 @@ class ProductCard extends StatelessWidget {
           color: context.colorScheme.onPrimary,
           size: 16,
         ),
-        onPressed: onAddToCartTap,
+        onPressed: () {
+          debugPrint('[ProductCard] Add to cart button tapped for product ${product.id} by roshdology123 at 2025-06-22 11:57:28');
+          onAddToCartTap?.call();
+        },
         padding: const EdgeInsets.all(4),
         constraints: const BoxConstraints(
           minWidth: 28,
           minHeight: 28,
         ),
+        tooltip: 'products.add_to_cart'.tr(),
       ),
     );
   }

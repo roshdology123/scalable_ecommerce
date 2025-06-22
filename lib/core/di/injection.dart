@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:scalable_ecommerce/features/favorites/di/favorites_module.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../app/themes/theme_cubit.dart';
 import '../../features/favorites/data/datasources/favorites_local_datastore.dart';
 import '../../features/favorites/data/datasources/favorites_remote_datastore.dart';
 import '../../features/favorites/domain/usecases/add_to_favorite_usecase.dart';
@@ -12,6 +13,37 @@ import '../../features/favorites/domain/usecases/remove_favorite_usecase.dart';
 import '../../features/favorites/presentation/cubit/favorites_collections/favorites_collection_cubit.dart';
 import '../../features/favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import '../../features/profile/data/datasources/profile_local_datasource.dart';
+import '../../features/profile/data/datasources/profile_remote_datasource.dart';
+import '../../features/profile/data/repositories/profile_repository_impl.dart';
+import '../../features/profile/domain/repositories/profile_repository.dart';
+import '../../features/profile/domain/usecases/delete_account_usecase.dart';
+import '../../features/profile/domain/usecases/delete_profile_usecase.dart';
+import '../../features/profile/domain/usecases/export_user_data_usecase.dart';
+import '../../features/profile/domain/usecases/get_profile_stats_usecase.dart';
+import '../../features/profile/domain/usecases/get_profile_usecase.dart';
+import '../../features/profile/domain/usecases/get_user_preference_usecase.dart';
+import '../../features/profile/domain/usecases/update_profile_image_usecase.dart';
+import '../../features/profile/domain/usecases/update_profile_info_usecase.dart';
+import '../../features/profile/domain/usecases/update_user_preference_usecase.dart';
+import '../../features/profile/domain/usecases/verify_email_usecase.dart';
+import '../../features/profile/domain/usecases/verify_phone_usecase.dart';
+import '../../features/profile/presentation/cubit/profile/profile_cubit.dart';
+import '../../features/profile/presentation/cubit/profile_preferences/profile_preferences_cubit.dart';
+import '../../features/profile/presentation/cubit/profile_stats/profile_stats_cubit.dart';
+import '../../features/search/data/datasources/search_local_datastore.dart';
+import '../../features/search/data/datasources/search_remote_datasource.dart';
+import '../../features/search/data/repositories/search_repository_impl.dart';
+import '../../features/search/domain/repositories/search_repository.dart';
+import '../../features/search/domain/usecases/clear_search_history_usecase.dart';
+import '../../features/search/domain/usecases/get_popular_searches_usecase.dart';
+import '../../features/search/domain/usecases/get_search_history_usecase.dart';
+import '../../features/search/domain/usecases/get_search_suggestions_usecase.dart';
+import '../../features/search/domain/usecases/save_search_query_usecase.dart';
+import '../../features/search/presentation/cubit/search_cubit/search_cubit.dart';
+import '../../features/search/presentation/cubit/search_filter/search_filter_cubit.dart';
+import '../../features/search/presentation/cubit/search_history_cubit/search_history_cubit.dart';
+import '../../features/search/presentation/cubit/search_suggestion_cubit/search_suggestions_cubit.dart';
 import '../network/dio_client.dart';
 import '../network/network_info.dart';
 import '../storage/local_storage.dart';
@@ -205,9 +237,7 @@ Future<void> configureDependencies() async {
     getIt.registerSingleton<ResetPasswordUseCase>(
       ResetPasswordUseCase(getIt<AuthRepository>()),
     );
-    getIt.registerSingleton<ChangePasswordUseCase>(
-      ChangePasswordUseCase(getIt<AuthRepository>()),
-    );
+
     getIt.registerSingleton<UpdateProfileUseCase>(
       UpdateProfileUseCase(getIt<AuthRepository>()),
     );
@@ -483,20 +513,217 @@ Future<void> configureDependencies() async {
       },
     );
 
+
+    // =====================================================================
+    // STEP 7: REGISTER SEARCH FEATURE
+    // =====================================================================
+
+    logger.logBusinessLogic(
+      'search_feature_registration_started',
+      'system_init',
+      {
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 07:08:38',
+      },
+    );
+
+    // Data Sources
+    getIt.registerSingleton<SearchLocalDataSource>(
+      SearchLocalDataSourceImpl(),
+    );
+    getIt.registerSingleton<SearchRemoteDataSource>(
+      SearchRemoteDataSourceImpl(getIt<DioClient>()),
+    );
+
+    // Repository
+    getIt.registerSingleton<SearchRepository>(
+      SearchRepositoryImpl(
+        getIt<SearchRemoteDataSource>(),
+         getIt<SearchLocalDataSource>(),
+         getIt<NetworkInfo>(),
+      ),
+    );
+
+    getIt.registerSingleton<GetSearchSuggestionsUseCase>(
+      GetSearchSuggestionsUseCase(getIt<SearchRepository>()),
+    );
+    getIt.registerSingleton<SaveSearchQueryUseCase>(
+      SaveSearchQueryUseCase(getIt<SearchRepository>()),
+    );
+    getIt.registerSingleton<GetSearchHistoryUseCase>(
+      GetSearchHistoryUseCase(getIt<SearchRepository>()),
+    );
+    getIt.registerSingleton<ClearSearchHistoryUseCase>(
+      ClearSearchHistoryUseCase(getIt<SearchRepository>()),
+    );
+    getIt.registerSingleton<GetPopularSearchesUseCase>(
+      GetPopularSearchesUseCase(getIt<SearchRepository>()),
+    );
+
+    // Cubits (as factories)
+    getIt.registerFactory<SearchCubit>(
+          () => SearchCubit(
+
+         getIt<SearchProductsUseCase>(),
+      ),
+    );
+    getIt.registerFactory<SearchSuggestionsCubit>(
+          () => SearchSuggestionsCubit(
+        getIt<GetProductsUseCase>(),
+        getIt<GetCategoriesUseCase>(),
+      ),
+    );
+    getIt.registerFactory<SearchHistoryCubit>(
+          () => SearchHistoryCubit(),
+    );
+    getIt.registerFactory<SearchFilterCubit>(
+          () => SearchFilterCubit(getIt<GetCategoriesUseCase>()),
+    );
+
+    // Verify search feature initialization
+    await _verifySearchFeature();
+
+    logger.logBusinessLogic(
+      'search_feature_registered',
+      'system_init',
+      {
+        'data_sources': 2,
+        'use_cases': 6,
+        'cubits': 4,
+        'total_registered': getIt.allReadySync(),
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 07:08:38',
+      },
+    );
+
+
+    // =====================================================================
+    // STEP 8: REGISTER PROFILE FEATURE
+    // =====================================================================
+
+    logger.logBusinessLogic(
+      'profile_feature_registration_started',
+      'system_init',
+      {
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 09:41:12',
+      },
+    );
+
+    // Data Sources
+    getIt.registerSingleton<ProfileLocalDataSource>(
+      ProfileLocalDataSourceImpl(getIt<SecureStorage>()),
+    );
+    getIt.registerSingleton<ProfileRemoteDataSource>(
+      ProfileRemoteDataSourceImpl(getIt<DioClient>()),
+    );
+
+    // Repository
+    getIt.registerSingleton<ProfileRepository>(
+      ProfileRepositoryImpl(
+      remoteDataSource:    getIt<ProfileRemoteDataSource>(),
+       localDataSource:  getIt<ProfileLocalDataSource>(),
+       networkInfo:  getIt<NetworkInfo>(),
+      ),
+    );
+    getIt.registerSingleton<UpdateProfileInfoUseCase>(
+      UpdateProfileInfoUseCase(getIt<ProfileRepository>()),
+    );
+    // Use Cases
+    getIt.registerSingleton<GetProfileUseCase>(
+      GetProfileUseCase(getIt<ProfileRepository>()),
+    );
+    getIt.registerSingleton<UploadProfileImageUseCase>(
+      UploadProfileImageUseCase(getIt<ProfileRepository>()),
+    );
+    getIt.registerSingleton<DeleteProfileImageUseCase>(
+      DeleteProfileImageUseCase(getIt<ProfileRepository>()),
+    );
+    getIt.registerSingleton<ChangePasswordUseCase>(
+      ChangePasswordUseCase(getIt<AuthRepository>()),
+    );
+    getIt.registerSingleton<VerifyEmailUseCase>(
+      VerifyEmailUseCase(getIt<ProfileRepository>()),
+    );
+    getIt.registerSingleton<VerifyPhoneUseCase>(
+      VerifyPhoneUseCase(getIt<ProfileRepository>()),
+    );
+    getIt.registerSingleton<DeleteAccountUseCase>(
+      DeleteAccountUseCase(getIt<ProfileRepository>()),
+    );
+    getIt.registerSingleton<ExportUserDataUseCase>(
+      ExportUserDataUseCase(getIt<ProfileRepository>()),
+    );
+    getIt.registerSingleton<GetUserPreferencesUseCase>(
+      GetUserPreferencesUseCase(getIt<ProfileRepository>()),
+    );
+    getIt.registerSingleton<UpdateUserPreferencesUseCase>(
+      UpdateUserPreferencesUseCase(getIt<ProfileRepository>()),
+    );
+    getIt.registerSingleton<GetProfileStatsUseCase>(
+      GetProfileStatsUseCase(getIt<ProfileRepository>()),
+    );
+
+    // Theme Cubit (Singleton for app-wide theme state)
+    getIt.registerSingleton<ThemeCubit>(
+      ThemeCubit(),
+    );
+
+    // Profile Cubits (as factories)
+    getIt.registerFactory<ProfileCubit>(
+          () => ProfileCubit(
+        getProfileUseCase: getIt<GetProfileUseCase>(),
+        updateProfileInfoUseCase: getIt<UpdateProfileInfoUseCase>(),
+        uploadProfileImageUseCase: getIt<UploadProfileImageUseCase>(),
+        deleteProfileImageUseCase: getIt<DeleteProfileImageUseCase>(),
+        changePasswordUseCase: getIt<ChangePasswordUseCase>(),
+        verifyEmailUseCase: getIt<VerifyEmailUseCase>(),
+        verifyPhoneUseCase: getIt<VerifyPhoneUseCase>(),
+        deleteAccountUseCase: getIt<DeleteAccountUseCase>(),
+        exportUserDataUseCase: getIt<ExportUserDataUseCase>(),
+      ),
+    );
+    getIt.registerFactory<ProfilePreferencesCubit>(
+          () => ProfilePreferencesCubit(
+        getUserPreferencesUseCase: getIt<GetUserPreferencesUseCase>(),
+        updateUserPreferencesUseCase: getIt<UpdateUserPreferencesUseCase>(),
+      ),
+    );
+    getIt.registerFactory<ProfileStatsCubit>(
+          () => ProfileStatsCubit(
+        getProfileStatsUseCase: getIt<GetProfileStatsUseCase>(),
+      ),
+    );
+
+    // Verify profile feature initialization
+    await _verifyProfileFeature();
+
+    logger.logBusinessLogic(
+      'profile_feature_registered',
+      'system_init',
+      {
+        'data_sources': 2,
+        'use_cases': 12,
+        'cubits': 4, // Including ThemeCubit
+        'total_registered': getIt.allReadySync(),
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 09:41:12',
+      },
+    );
+
     // =====================================================================
     // STEP 7: FINAL VERIFICATION AND SUCCESS LOG
     // =====================================================================
 
     await _performFinalVerification();
-
     logger.logBusinessLogic(
       'manual_dependency_injection_completed',
       'system_init',
       {
         'total_services': getIt.allReadySync(),
-        'features_registered': ['auth', 'products', 'cart', 'favorites'],
+        'features_registered': ['auth', 'products', 'cart', 'favorites', 'search', 'profile'], // Add profile here
         'user': 'roshdology123',
-        'timestamp': '2025-06-19 14:14:14',
+        'timestamp': '2025-06-22 09:41:12',
         'initialization_successful': true,
       },
     );
@@ -516,6 +743,108 @@ Future<void> configureDependencies() async {
   }
 }
 
+// Helper function to verify profile feature
+Future<void> _verifyProfileFeature() async {
+  final logger = AppLogger();
+
+  try {
+    // Test that all critical profile services are available
+    final profileRepo = getIt<ProfileRepository>();
+    final profileCubit = getIt<ProfileCubit>();
+    final preferencesCubit = getIt<ProfilePreferencesCubit>();
+    final statsCubit = getIt<ProfileStatsCubit>();
+    final themeCubit = getIt<ThemeCubit>();
+
+    if (profileRepo == null ||
+        profileCubit == null ||
+        preferencesCubit == null ||
+        statsCubit == null ||
+        themeCubit == null) {
+      throw Exception('Critical profile dependencies missing');
+    }
+
+    // Test profile use cases
+    final getProfileUseCase = getIt<GetProfileUseCase>();
+    final updateProfileUseCase = getIt<UpdateProfileUseCase>();
+    final getStatsUseCase = getIt<GetProfileStatsUseCase>();
+
+    logger.logBusinessLogic(
+      'profile_feature_verified',
+      'system_init',
+      {
+        'repository_ready': true,
+        'cubits_ready': true,
+        'use_cases_ready': true,
+        'theme_cubit_ready': true,
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 09:41:12',
+      },
+    );
+
+  } catch (e, stackTrace) {
+    logger.logErrorWithContext(
+      '_verifyProfileFeature',
+      e,
+      stackTrace,
+      {
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 09:41:12',
+      },
+    );
+    rethrow;
+  }
+}
+
+// Helper function to verify search feature
+Future<void> _verifySearchFeature() async {
+  final logger = AppLogger();
+
+  try {
+    // Test that all critical search services are available
+    final searchRepo = getIt<SearchRepository>();
+    final searchCubit = getIt<SearchCubit>();
+    final suggestionsCubit = getIt<SearchSuggestionsCubit>();
+    final historyCubit = getIt<SearchHistoryCubit>();
+    final filterCubit = getIt<SearchFilterCubit>();
+
+    if (searchRepo == null ||
+        searchCubit == null ||
+        suggestionsCubit == null ||
+        historyCubit == null ||
+        filterCubit == null) {
+      throw Exception('Critical search dependencies missing');
+    }
+
+    // Test local storage for search history
+    final localDataSource = getIt<SearchLocalDataSource>();
+    final testHistory = await localDataSource.getSearchHistory();
+
+    logger.logBusinessLogic(
+      'search_feature_verified',
+      'system_init',
+      {
+        'repository_ready': true,
+        'cubits_ready': true,
+        'local_storage_ready': true,
+        'current_search_history_count': testHistory.queries.length,
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 07:08:38',
+      },
+    );
+
+  } catch (e, stackTrace) {
+    logger.logErrorWithContext(
+      '_verifySearchFeature',
+      e,
+      stackTrace,
+      {
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 07:08:38',
+      },
+    );
+    rethrow;
+  }
+}
 // Helper function to verify favorites feature
 Future<void> _verifyFavoritesFeature() async {
   final logger = AppLogger();
@@ -572,10 +901,12 @@ Future<void> _performFinalVerification() async {
       'ProductsRepository',
       'CartRepository',
       'FavoritesRepository',
+      'SearchRepository',
       'AuthCubit',
       'ProductsCubit',
       'CartCubit',
       'FavoritesCubit',
+      'SearchCubit',
     ];
 
     for (final serviceName in criticalServices) {
@@ -603,6 +934,11 @@ Future<void> _performFinalVerification() async {
           break;
         case 'FavoritesCubit':
           getIt<FavoritesCubit>();
+        case 'SearchRepository':
+          getIt<SearchRepository>();
+          break;
+        case 'SearchCubit':
+          getIt<SearchCubit>();
           break;
       }
     }
@@ -632,11 +968,25 @@ Future<void> _performFinalVerification() async {
   }
 }
 
-// Extension for easy access to favorites services
 extension FavoritesGetItExtensions on GetIt {
+  // Existing favorites extensions
   FavoritesCubit get favoritesCubit => get<FavoritesCubit>();
   FavoritesCollectionsCubit get favoritesCollectionsCubit => get<FavoritesCollectionsCubit>();
   FavoritesRepository get favoritesRepository => get<FavoritesRepository>();
+
+  // Search extensions
+  SearchCubit get searchCubit => get<SearchCubit>();
+  SearchSuggestionsCubit get searchSuggestionsCubit => get<SearchSuggestionsCubit>();
+  SearchHistoryCubit get searchHistoryCubit => get<SearchHistoryCubit>();
+  SearchFilterCubit get searchFilterCubit => get<SearchFilterCubit>();
+  SearchRepository get searchRepository => get<SearchRepository>();
+
+  // Profile extensions
+  ProfileCubit get profileCubit => get<ProfileCubit>();
+  ProfilePreferencesCubit get profilePreferencesCubit => get<ProfilePreferencesCubit>();
+  ProfileStatsCubit get profileStatsCubit => get<ProfileStatsCubit>();
+  ProfileRepository get profileRepository => get<ProfileRepository>();
+  ThemeCubit get themeCubit => get<ThemeCubit>();
 
   // Quick check for favorites feature availability
   bool get isFavoritesReady {
@@ -644,6 +994,34 @@ extension FavoritesGetItExtensions on GetIt {
       get<FavoritesRepository>();
       get<FavoritesCubit>();
       get<FavoritesCollectionsCubit>();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Quick check for search feature availability
+  bool get isSearchReady {
+    try {
+      get<SearchRepository>();
+      get<SearchCubit>();
+      get<SearchSuggestionsCubit>();
+      get<SearchHistoryCubit>();
+      get<SearchFilterCubit>();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Quick check for profile feature availability
+  bool get isProfileReady {
+    try {
+      get<ProfileRepository>();
+      get<ProfileCubit>();
+      get<ProfilePreferencesCubit>();
+      get<ProfileStatsCubit>();
+      get<ThemeCubit>();
       return true;
     } catch (e) {
       return false;

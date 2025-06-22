@@ -32,7 +32,7 @@ class ProductShimmerLoading extends StatelessWidget {
       padding: padding ?? const EdgeInsets.all(16),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
-        childAspectRatio: childAspectRatio ?? 0.75,
+        childAspectRatio: childAspectRatio ?? 0.48,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),

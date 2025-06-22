@@ -157,4 +157,30 @@ class AppConstants {
   static const bool enableLogging = !isProduction;
   static const String logFileName = 'app_logs.txt';
   static const int maxLogFileSize = 5 * 1024 * 1024; // 5MB
+
+
+// Profile Cache Keys
+  static const String keyCachedProfile = 'cached_profile';
+  static const String keyCachedUserPreferences = 'cached_user_preferences';
+  static const String keyCachedProfileStats = 'cached_profile_stats';
+
+  // Profile Settings Keys
+  static const String keyProfileImageUrl = 'profile_image_url';
+  static const String keyProfileBio = 'profile_bio';
+  static const String keyProfileCompleted = 'profile_completed';
+
+  // User Session Keys
+  static const String keyCurrentUserId = 'current_user_id';
+  static const String keyCurrentUsername = 'current_username';
+  static const String keyLastProfileUpdate = 'last_profile_update';
+
+  // Profile Cache Expiry
+  static const Duration profileCacheExpiry = Duration(hours: 24);
+  static const Duration preferencesCacheExpiry = Duration(days: 7);
+  static const Duration statsCacheExpiry = Duration(hours: 6);
+
+  // Current User Info (roshdology123)
+  static const String currentUserId = '11';
+  static const String currentUsername = 'roshdology123';
+  static const String currentUserEmail = 'roshdology123@example.com';
 }

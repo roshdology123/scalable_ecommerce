@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/bloc_providers.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -516,7 +517,7 @@ class _CartPageState extends State<CartPage>
       widget.onCheckoutPressed!();
     } else {
       // Default checkout navigation
-      Navigator.pushNamed(context, '/checkout');
+      context.push('/cart/checkout');
     }
   }
 

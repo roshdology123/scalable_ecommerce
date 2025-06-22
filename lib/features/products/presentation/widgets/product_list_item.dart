@@ -25,6 +25,8 @@ class ProductListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[ProductListItem] Building list item for product ${product.id} (favorite: $isFavorite) for roshdology123 at 2025-06-22 11:58:45');
+
     return Card(
       elevation: 2,
       clipBehavior: Clip.antiAlias,
@@ -169,43 +171,130 @@ class ProductListItem extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-
                       ],
                     ),
+
+                    const SizedBox(height: 8),
+
+                    // Stock info
                     _buildStockInfo(context),
                   ],
                 ),
               ),
 
-              // Action buttons
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Favorite button
-                  IconButton(
-                    icon: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: isFavorite ? Colors.red : null,
-                    ),
-                    onPressed: onFavoriteTap,
-                  ),
-
-                  // Add to cart button
-                  if (product.inStock)
-                    IconButton(
-                      icon: const Icon(Icons.add_shopping_cart),
-                      onPressed: onAddToCartTap,
-                      style: IconButton.styleFrom(
-                        backgroundColor: context.colorScheme.primary,
-                        foregroundColor: context.colorScheme.onPrimary,
-                      ),
-                    ),
-                ],
-              ),
+              // Action buttons - Enhanced with better styling and animations
+              _buildActionButtons(context),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Enhanced Favorite button with animation and better styling
+        Container(
+          decoration: BoxDecoration(
+            color: isFavorite
+                ? Colors.red.withOpacity(0.1)
+                : context.colorScheme.surface,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isFavorite
+                  ? Colors.red.withOpacity(0.3)
+                  : context.colorScheme.outline.withOpacity(0.2),
+              width: 1,
+            ),
+            boxShadow: isFavorite ? [
+              BoxShadow(
+                color: Colors.red.withOpacity(0.2),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ] : null,
+          ),
+          child: IconButton(
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+                key: ValueKey(isFavorite),
+                color: isFavorite ? Colors.red : context.colorScheme.onSurface,
+                size: 22,
+              ),
+            ),
+            onPressed: () {
+              debugPrint('[ProductListItem] Favorite button tapped for product ${product.id} by roshdology123 at 2025-06-22 11:58:45');
+              onFavoriteTap?.call();
+            },
+            tooltip: isFavorite
+                ? 'products.remove_from_favorites'.tr()
+                : 'products.add_to_favorites'.tr(),
+            padding: const EdgeInsets.all(8),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Enhanced Add to cart button
+        if (product.inStock)
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  context.colorScheme.primary,
+                  context.colorScheme.primary.withOpacity(0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: context.colorScheme.primary.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(
+                Icons.add_shopping_cart,
+                size: 20,
+              ),
+              onPressed: () {
+                debugPrint('[ProductListItem] Add to cart button tapped for product ${product.id} by roshdology123 at 2025-06-22 11:58:45');
+                onAddToCartTap?.call();
+              },
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: context.colorScheme.onPrimary,
+                padding: const EdgeInsets.all(12),
+              ),
+              tooltip: 'products.add_to_cart'.tr(),
+            ),
+          )
+        else
+        // Out of stock button
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: context.colorScheme.errorContainer.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: context.colorScheme.error.withOpacity(0.3),
+              ),
+            ),
+            child: Icon(
+              Icons.not_interested,
+              color: context.colorScheme.error,
+              size: 20,
+            ),
+          ),
+      ],
     );
   }
 
@@ -216,13 +305,27 @@ class ProductListItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.colorScheme.errorContainer,
           borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          'products.out_of_stock'.tr(),
-          style: context.textTheme.labelSmall?.copyWith(
-            color: context.colorScheme.onErrorContainer,
-            fontWeight: FontWeight.w600,
+          border: Border.all(
+            color: context.colorScheme.error.withOpacity(0.3),
           ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 12,
+              color: context.colorScheme.onErrorContainer,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'products.out_of_stock'.tr(),
+              style: context.textTheme.labelSmall?.copyWith(
+                color: context.colorScheme.onErrorContainer,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       );
     } else if (product.lowStock) {
@@ -231,13 +334,27 @@ class ProductListItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.orange.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          'products.low_stock'.tr(args: [product.stock.toString()]),
-          style: context.textTheme.labelSmall?.copyWith(
-            color: Colors.orange.shade700,
-            fontWeight: FontWeight.w600,
+          border: Border.all(
+            color: Colors.orange.withOpacity(0.3),
           ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.warning_outlined,
+              size: 12,
+              color: Colors.orange.shade700,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'products.low_stock'.tr(args: [product.stock.toString()]),
+              style: context.textTheme.labelSmall?.copyWith(
+                color: Colors.orange.shade700,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       );
     } else {
@@ -246,13 +363,27 @@ class ProductListItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.green.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          'products.in_stock'.tr(),
-          style: context.textTheme.labelSmall?.copyWith(
-            color: Colors.green.shade700,
-            fontWeight: FontWeight.w600,
+          border: Border.all(
+            color: Colors.green.withOpacity(0.3),
           ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              size: 12,
+              color: Colors.green.shade700,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'products.in_stock'.tr(),
+              style: context.textTheme.labelSmall?.copyWith(
+                color: Colors.green.shade700,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       );
     }

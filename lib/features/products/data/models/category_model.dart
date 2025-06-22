@@ -54,6 +54,24 @@ class CategoryModel with _$CategoryModel {
     );
   }
 
+  // Factory method for creating from simple string (for FakeStore API)
+  factory CategoryModel.fromString(String categoryName, {int? index}) {
+    final id = (index != null ? index + 1 : 1).toString();
+    return CategoryModel(
+      id: id,
+      name: categoryName,
+      displayName: _formatCategoryName(categoryName),
+      description: 'Products in $categoryName category',
+      image: _getCategoryImage(categoryName),
+      icon: _getCategoryIcon(categoryName),
+      productCount: 0,
+      isActive: true,
+      sortOrder: index ?? 0,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   factory CategoryModel.fromCategory(Category category) {
     return CategoryModel(
       id: category.id,
@@ -135,18 +153,18 @@ extension CategoryModelExtension on CategoryModel {
   }
 
   Map<String, dynamic> toJson() {
-      return {
-        'id': id,
-        'name': name,
-        'displayName': displayName,
-        'description': description,
-        'image': image,
-        'icon': icon,
-        'productCount': productCount,
-        'isActive': isActive,
-        'sortOrder': sortOrder,
-        'createdAt': createdAt?.toIso8601String(),
-        'updatedAt': updatedAt?.toIso8601String(),
-      };
-    }
+    return {
+      'id': id,
+      'name': name,
+      'displayName': displayName,
+      'description': description,
+      'image': image,
+      'icon': icon,
+      'productCount': productCount,
+      'isActive': isActive,
+      'sortOrder': sortOrder,
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+    };
+  }
 }

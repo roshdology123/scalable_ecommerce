@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -175,6 +176,7 @@ class _FavoritesPageState extends State<FavoritesPage>
                 // App Bar
                 SliverAppBar(
                   expandedHeight: _getAppBarHeight(state),
+                  stretch: true,
                   floating: true,
                   pinned: true,
                   snap: false,
@@ -549,7 +551,7 @@ class _FavoritesPageState extends State<FavoritesPage>
 
   // Navigation methods
   void _navigateToCollections() {
-    Navigator.of(context).pushNamed('/favorites/collections');
+    context.push('/favorites/collections');
 
     _logger.logUserAction('navigate_to_collections', {
       'user': _userContext,
@@ -558,7 +560,7 @@ class _FavoritesPageState extends State<FavoritesPage>
   }
 
   void _navigateToProducts() {
-    Navigator.of(context).pushNamed('/products');
+    context.push('/home');
 
     _logger.logUserAction('navigate_to_products', {
       'user': _userContext,

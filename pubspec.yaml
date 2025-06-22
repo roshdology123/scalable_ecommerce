@@ -49,6 +49,7 @@ dependencies:
   injectable: ^2.5.0
   logger: ^2.0.2+1
   path_provider: ^2.1.1
+  image_picker: ^1.1.2
   # Push Notifications
   firebase_messaging: ^15.2.7
   firebase_core: ^3.14.0
