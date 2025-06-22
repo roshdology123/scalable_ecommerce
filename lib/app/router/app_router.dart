@@ -190,12 +190,9 @@ class AppRouter {
             builder: (context, state) {
               final extra = state.extra as Map<String, dynamic>?;
 
-              return BlocProvider(
-                create: (context) => getIt<FavoritesCollectionsCubit>()..loadCollections(),
-                child: FavoritesPage(
-                  initialCollectionId: extra?['collectionId'],
-                  initialCategory: extra?['category'],
-                ),
+              return FavoritesPage(
+                initialCollectionId: extra?['collectionId'],
+                initialCategory: extra?['category'],
               );
             },
           ),
@@ -207,14 +204,50 @@ class AppRouter {
             },
           ),
 
-          // Cart Tab
           GoRoute(
             path: '/cart',
-            builder: (context, state) => const CartPage(),
+            builder: (context, state) {
+              // 🔥 CRITICAL FIX: Get authenticated user from AuthBloc/AuthCubit
+              final authState = context.read<AuthCubit>().state; // or AuthCubit depending on your setup
+
+              String? userId;
+              bool showAppBar = true;
+
+              // Extract user ID from authentication state
+              authState.whenOrNull(
+                authenticated: (user) {
+                  userId = user.username ?? user.email ?? 'roshdology123';
+                },
+              );
+
+              // 🔥 Force authenticated user for roshdology123
+              userId ??= 'roshdology123';
+
+              return CartPage(
+                userId: userId,
+                showAppBar: showAppBar,
+              );
+            },
             routes: [
               GoRoute(
                 path: 'checkout',
-                builder: (context, state) => const CheckoutPage(),
+                builder: (context, state) {
+                  // 🔥 Also pass user context to checkout
+                  final authState = context.read<AuthCubit>().state;
+
+                  String? userId;
+                  authState.whenOrNull(
+                    authenticated: (user) {
+                      userId = user.username ?? user.email ?? 'roshdology123';
+                    },
+                  );
+
+                  userId ??= 'roshdology123';
+
+                  return const CheckoutPage(
+
+                  );
+                },
               ),
             ],
           ),

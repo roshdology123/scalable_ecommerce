@@ -14,6 +14,7 @@ import 'features/cart/presentation/cubit/cart_summary_cubit.dart';
 import 'features/favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
 import 'features/favorites/presentation/cubit/favorites_collections/favorites_collection_cubit.dart';
 import 'features/products/presentation/cubit/categories_cubit.dart';
+import 'features/products/presentation/cubit/product_detail_cubit.dart';
 import 'features/products/presentation/cubit/products_cubit.dart';
 import 'features/profile/presentation/cubit/profile/profile_cubit.dart';
 import 'features/profile/presentation/cubit/profile_preferences/profile_preferences_cubit.dart';
@@ -228,8 +229,21 @@ class MyApp extends StatelessWidget {
             return getIt<CartSummaryCubit>();
           },
         ),
+        // 🛍️ Product Detail Cubit
 
-
+        BlocProvider<ProductDetailCubit>(
+          create: (context) {
+            logger.logBusinessLogic(
+              'product_detail_cubit_initialized',
+              'ui_lifecycle',
+              {
+                'user': 'roshdology123',
+                'timestamp': '2025-06-22 11:18:18',
+              },
+            );
+            return getIt<ProductDetailCubit>();
+          },
+        ),
         // ❤️ Favorites Cubit
         BlocProvider<FavoritesCubit>(
           create: (context) {

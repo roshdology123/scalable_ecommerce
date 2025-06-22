@@ -51,6 +51,39 @@ class CartSummary extends Equatable {
     this.metadata,
   });
 
+  /// Factory method to create an empty CartSummary
+  static CartSummary empty({
+    String currencyCode = 'USD',
+    String? currency,
+    DateTime? lastCalculated,
+  }) {
+    return CartSummary(
+      subtotal: 0.0,
+      totalDiscount: 0.0,
+      totalTax: 0.0,
+      shippingCost: 0.0,
+      total: 0.0,
+      totalItems: 0,
+      totalQuantity: 0,
+      appliedCouponCode: null,
+      couponDiscount: null,
+      couponDescription: null,
+      selectedShippingMethod: null,
+      shippingMethodDescription: null,
+      estimatedDeliveryDays: null,
+      taxRate: 0.0,
+      isFreeShipping: false,
+      freeShippingThreshold: null,
+      amountToFreeShipping: null,
+      taxBreakdown: null,
+      discountBreakdown: null,
+      lastCalculated: lastCalculated,
+      currency: currency,
+      currencyCode: currencyCode,
+      metadata: null,
+    );
+  }
+
   /// Business Logic Methods
 
   /// Check if cart is empty

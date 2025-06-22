@@ -552,87 +552,53 @@ class CartRepositoryImpl implements CartRepository {
     String? userId,
   }) async {
     try {
-      _logger.logUserAction('apply_coupon_started', {
+      _logger.logUserAction('apply_coupon_repository_started', {
         'coupon_code': couponCode,
-        'user_id': userId ?? 'guest',
+        'user_id': userId ?? 'roshdology123',
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 13:21:20',
       });
 
-      if (userId == null) {
-        return const Left(ValidationFailure(
-          message: 'User must be logged in to apply coupons',
-          code: 'USER_NOT_AUTHENTICATED',
-          fieldErrors: {'user_id': 'User must be logged in to apply coupons'},
-        ));
-      }
+      // 🔥 USE LOCAL SIMULATION INSTEAD OF REMOTE API
+      final currentCart = await _getCurrentCart(userId ?? 'roshdology123');
 
-      if (!await _networkInfo.isConnected) {
-        return const Left(NetworkFailure(
-          message: 'Internet connection required to apply coupons',
-          code: 'NO_INTERNET_CONNECTION',
-          data: {'network': 'Internet connection required to apply coupons'},
-        ));
-      }
+      // Apply coupon using local simulation
+      final updatedCartModel = await _localDataSource.applyCouponToCart(
+          CartModel.fromCart(currentCart),
+          couponCode
+      );
 
-      final updatedCart = await _remoteDataSource.applyCoupon(userId, couponCode);
-      await _localDataSource.saveCart(updatedCart);
+      // Convert back to entity
+      final updatedCart = updatedCartModel.toCart();
 
-      _logger.logUserAction('apply_coupon_success', {
-        'coupon_code': couponCode,
-        'user_id': userId,
-        'discount_amount': updatedCart.summary.couponDiscount,
-      });
-
-      return Right(updatedCart.toCart());
-    } catch (e, stackTrace) {
-      _logger.logErrorWithContext(
-        'CartRepository.applyCoupon',
-        e,
-        stackTrace,
+      _logger.logBusinessLogic(
+        'apply_coupon_repository_success',
+        'simulated',
         {
           'coupon_code': couponCode,
-          'user_id': userId,
+          'discount_amount': updatedCart.summary.couponDiscount,
+          'new_total': updatedCart.summary.total,
           'user': 'roshdology123',
         },
       );
 
-      if (e is ApiException) {
-        if (e.code == 'INVALID_COUPON') {
-          return const Left(ValidationFailure(
-            message: 'Invalid coupon code',
-            code: 'INVALID_COUPON',
-            fieldErrors: {'coupon_code': 'The coupon code is invalid or expired'},
-          ));
-        } else if (e.code == 'COUPON_ALREADY_USED') {
-          return const Left(ValidationFailure(
-            message: 'Coupon has already been applied to this cart',
-            code: 'COUPON_ALREADY_USED',
-            fieldErrors: {'coupon_code': 'This coupon has already been applied to your cart'},
-          ));
-        } else if (e.code == 'MINIMUM_ORDER_NOT_MET') {
-          return const Left(ValidationFailure(
-            message: 'Minimum order amount not met for this coupon',
-            code: 'MINIMUM_ORDER_NOT_MET',
-            fieldErrors: {'coupon_code': 'Your cart total does not meet the minimum required for this coupon'},
-          ));
-        }
-        return Left(ServerFailure(
-          message: e.message,
-          code: e.code,
-          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
-        ));
-      } else if (e is NetworkException) {
-        return Left(NetworkFailure(
-          message: e.message,
-          code: e.code,
-          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
-        ));
-      } else {
-        return Left(UnknownFailure(
-          message: 'Failed to apply coupon: ${e.toString()}',
-          code: 'APPLY_COUPON_ERROR',
-          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
-        ));
+      return Right(updatedCart);
+
+    } catch (e) {
+      _logger.logBusinessLogic(
+        'apply_coupon_repository_failed',
+        'error',
+        {
+          'error': e.toString(),
+          'coupon_code': couponCode,
+          'user': 'roshdology123',
+        },
+      );
+
+      if (e is AppException) {
+        return Left(ServerFailure(message: e.message, code: e.code));
       }
+      return Left(ServerFailure(message: 'Failed to apply coupon: ${e.toString()}'));
     }
   }
 
@@ -642,70 +608,66 @@ class CartRepositoryImpl implements CartRepository {
     String? userId,
   }) async {
     try {
-      _logger.logUserAction('remove_coupon_started', {
+      _logger.logUserAction('remove_coupon_repository_started', {
         'coupon_code': couponCode,
-        'user_id': userId ?? 'guest',
+        'user_id': userId ?? 'roshdology123',
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 13:21:20',
       });
 
-      if (userId == null) {
-        return const Left(ValidationFailure(
-          message: 'User must be logged in to remove coupons',
-          code: 'USER_NOT_AUTHENTICATED',
-          fieldErrors: {'user_id': 'User must be logged in to remove coupons'},
-        ));
-      }
+      // Get current cart
+      final currentCart = await _getCurrentCart(userId ?? 'roshdology123');
 
-      if (!await _networkInfo.isConnected) {
-        return const Left(NetworkFailure(
-          message: 'Internet connection required to remove coupons',
-          code: 'NO_INTERNET_CONNECTION',
-          data: {'network': 'Internet connection required to remove coupons'},
-        ));
-      }
+      // Remove coupon using local simulation
+      final updatedCartModel = await _localDataSource.removeCouponFromCart(
+          CartModel.fromCart(currentCart),
+          couponCode
+      );
 
-      final updatedCart = await _remoteDataSource.removeCoupon(userId, couponCode);
-      await _localDataSource.saveCart(updatedCart);
+      // Convert back to entity
+      final updatedCart = updatedCartModel.toCart();
 
-      _logger.logUserAction('remove_coupon_success', {
-        'coupon_code': couponCode,
-        'user_id': userId,
-      });
-
-      return Right(updatedCart.toCart());
-    } catch (e, stackTrace) {
-      _logger.logErrorWithContext(
-        'CartRepository.removeCoupon',
-        e,
-        stackTrace,
+      _logger.logBusinessLogic(
+        'remove_coupon_repository_success',
+        'simulated',
         {
           'coupon_code': couponCode,
-          'user_id': userId,
+          'new_total': updatedCart.summary.total,
           'user': 'roshdology123',
         },
       );
 
-      if (e is ApiException) {
-        return Left(ServerFailure(
-          message: e.message,
-          code: e.code,
-          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
-        ));
-      } else if (e is NetworkException) {
-        return Left(NetworkFailure(
-          message: e.message,
-          code: e.code,
-          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
-        ));
-      } else {
-        return Left(UnknownFailure(
-          message: 'Failed to remove coupon: ${e.toString()}',
-          code: 'REMOVE_COUPON_ERROR',
-          data: {'coupon_code': couponCode, 'user_id': userId, 'user': 'roshdology123'},
-        ));
+      return Right(updatedCart);
+
+    } catch (e) {
+      _logger.logBusinessLogic(
+        'remove_coupon_repository_failed',
+        'error',
+        {
+          'error': e.toString(),
+          'coupon_code': couponCode,
+          'user': 'roshdology123',
+        },
+      );
+
+      if (e is AppException) {
+        return Left(ServerFailure(message: e.message, code: e.code));
       }
+      return Left(ServerFailure(message: 'Failed to remove coupon: ${e.toString()}'));
     }
   }
 
+// Helper method to get current cart
+  Future<Cart> _getCurrentCart(String userId) async {
+    final result = await getCart(userId);
+    return result.fold(
+          (failure) {
+        // If cart doesn't exist, create empty cart
+        return Cart.empty(id: userId);
+      },
+          (cart) => cart,
+    );
+  }
   @override
   Future<Either<Failure, CartSummary>> calculateCartTotals({
     String? shippingMethodId,

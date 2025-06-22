@@ -3,22 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/favorite_item.dart';
 import '../cubit/favorites_collections/favorites_collection_cubit.dart';
 import '../cubit/favorites_cubit/favorites_cubit.dart';
 import '../cubit/favorites_cubit/favorites_state.dart';
-import '../widgets/favorite_search_bar.dart';
-import '../widgets/favorites_app_bar.dart';
-import '../widgets/favorites_batch_icon.dart';
-import '../widgets/favorites_filter_chips.dart';
-import '../widgets/favorites_grid.dart';
-import '../widgets/favorites_empty_state.dart';
-import '../widgets/favorites_shimmer_loading.dart';
-import '../widgets/favorites_action_bar.dart';
-import '../widgets/favorites_sort_bottom_sheet.dart';
-import '../widgets/favorites_filter_bottom_sheet.dart';
 
 class FavoritesPage extends StatefulWidget {
   final String? initialCollectionId;
@@ -38,7 +27,7 @@ class _FavoritesPageState extends State<FavoritesPage>
     with TickerProviderStateMixin, WidgetsBindingObserver {
 
   static const String _userContext = 'roshdology123';
-  static const String _currentTimestamp = '2025-06-19T13:02:59Z';
+  static const String _currentTimestamp = '2025-06-22 12:29:28';
 
   final AppLogger _logger = AppLogger();
   final ScrollController _scrollController = ScrollController();
@@ -116,12 +105,33 @@ class _FavoritesPageState extends State<FavoritesPage>
   }
 
   void _loadInitialData() {
-    // Load favorites and collections
-    context.read<FavoritesCubit>().loadFavorites(
-      collectionId: widget.initialCollectionId,
-      category: widget.initialCategory,
-    );
-    context.read<FavoritesCollectionsCubit>().loadCollections();
+    debugPrint('[FavoritesPage] Loading initial data for roshdology123 at $_currentTimestamp');
+
+    try {
+      // Load favorites and collections with error handling
+      final favoritesCubit = context.read<FavoritesCubit>();
+      final collectionsCubit = context.read<FavoritesCollectionsCubit>();
+
+      favoritesCubit.loadFavorites(
+        collectionId: widget.initialCollectionId,
+        category: widget.initialCategory,
+      );
+      collectionsCubit.loadCollections();
+
+      _logger.logUserAction('favorites_initial_load_started', {
+        'user': _userContext,
+        'timestamp': _currentTimestamp,
+        'favorites_count': favoritesCubit.currentFavorites.length,
+      });
+    } catch (e) {
+      debugPrint('[FavoritesPage] Error loading initial data: $e');
+      _logger.logErrorWithContext(
+        'FavoritesPage._loadInitialData',
+        e,
+        StackTrace.current,
+        {'user': _userContext},
+      );
+    }
   }
 
   @override
@@ -145,103 +155,87 @@ class _FavoritesPageState extends State<FavoritesPage>
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.resumed) {
-      // Refresh favorites when app comes back to foreground
-      context.read<FavoritesCubit>().refresh();
-
-      _logger.logUserAction('favorites_page_resumed', {
-        'user': _userContext,
-        'timestamp': _currentTimestamp,
-      });
+      try {
+        context.read<FavoritesCubit>().refresh();
+        _logger.logUserAction('favorites_page_resumed', {
+          'user': _userContext,
+          'timestamp': _currentTimestamp,
+        });
+      } catch (e) {
+        debugPrint('[FavoritesPage] Error on resume: $e');
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<FavoritesCubit>.value(
-          value: getIt<FavoritesCubit>(),
-        ),
-        BlocProvider<FavoritesCollectionsCubit>.value(
-          value: getIt<FavoritesCollectionsCubit>(),
-        ),
-      ],
-      child: Scaffold(
-        body: BlocConsumer<FavoritesCubit, FavoritesState>(
-          listener: _handleStateChanges,
-          builder: (context, state) {
-            return CustomScrollView(
+    debugPrint('[FavoritesPage] Building favorites page for roshdology123 at $_currentTimestamp');
+
+    return Scaffold(
+      body: BlocConsumer<FavoritesCubit, FavoritesState>(
+        listener: _handleStateChanges,
+        builder: (context, state) {
+          debugPrint('[FavoritesPage] Current favorites state: ${state.runtimeType} for roshdology123');
+
+          return SafeArea(
+            top: false,
+            child: CustomScrollView(
               controller: _scrollController,
               slivers: [
-                // App Bar
+                // Simple App Bar (avoiding complex custom widgets that might cause null errors)
                 SliverAppBar(
-                  expandedHeight: _getAppBarHeight(state),
-                  stretch: true,
+                  expandedHeight: 120,
                   floating: true,
                   pinned: true,
-                  snap: false,
-                  elevation: 0,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Theme.of(context).primaryColor,
-                            Theme.of(context).primaryColor.withOpacity(0.8),
-                          ],
+                  backgroundColor: Theme.of(context).primaryColor,
+                  title: const Text(
+                    'Favorites',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  actions: [
+                    IconButton(
+                      onPressed: _navigateToProducts,
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      tooltip: 'Browse Products',
+                    ),
+                    IconButton(
+                      onPressed: _navigateToCollections,
+                      icon: const Icon(Icons.folder, color: Colors.white),
+                      tooltip: 'Collections',
+                    ),
+                  ],
+                ),
+
+                // Search Bar
+                SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search favorites...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: _clearSearch,
+                        )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        filled: true,
+                        fillColor: Theme.of(context).colorScheme.surface,
                       ),
+                      onChanged: _handleSearchChanged,
                     ),
-                    title: FavoritesAppBar(
-                      searchController: _searchController,
-                      onSearchChanged: _handleSearchChanged,
-                      onFilterTap: _showFilterBottomSheet,
-                      onSortTap: _showSortBottomSheet,
-                      onViewModeToggle: _handleViewModeToggle,
-                      onCollectionsTap: _navigateToCollections,
-                    ),
-                    titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
                   ),
                 ),
 
-                // Search Bar (visible when not in selection mode)
-                if (!_isSelectionMode(state))
-                  SliverToBoxAdapter(
-                    child: FavoritesSearchBar(
-                      controller: _searchController,
-                      onChanged: _handleSearchChanged,
-                      onClear: _clearSearch,
-                    ),
-                  ),
-
-                // Filter Chips
-                if (_hasActiveFilters() || _searchQuery.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: FavoritesFilterChips(
-                      searchQuery: _searchQuery,
-                      filters: _currentFilters,
-                      onFilterRemoved: _removeFilter,
-                      onClearAll: _clearAllFilters,
-                    ),
-                  ),
-
-                // Action Bar (selection mode)
-                if (_isSelectionMode(state))
-                  SliverToBoxAdapter(
-                    child: SlideTransition(
-                      position: _selectionSlideAnimation,
-                      child: FavoritesActionBar(
-                        selectedCount: _getSelectedCount(state),
-                        onSelectAll: _selectAll,
-                        onClearSelection: _clearSelection,
-                        onExitSelectionMode: _exitSelectionMode,
-                      ),
-                    ),
-                  ),
-
-                // Content
+                // Content based on state
                 _buildContent(context, state),
 
                 // Bottom padding for FAB
@@ -249,177 +243,325 @@ class _FavoritesPageState extends State<FavoritesPage>
                   child: SizedBox(height: 80),
                 ),
               ],
-            );
-          },
-        ),
-
-        // Floating Action Buttons
-        floatingActionButton: _buildFloatingActionButtons(context),
-
-        // Batch Actions (selection mode)
-        bottomSheet: BlocBuilder<FavoritesCubit, FavoritesState>(
-          builder: (context, state) {
-            if (_isSelectionMode(state) && _getSelectedCount(state) > 0) {
-              return FavoritesBatchActions(
-                selectedCount: _getSelectedCount(state),
-                onDelete: _deleteSelected,
-                onAddToCollection: _addSelectedToCollection,
-                onShare: _shareSelected,
-                onExport: _exportSelected,
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
+            ),
+          );
+        },
       ),
+
+      // Floating Action Button
+      floatingActionButton: _buildFloatingActionButton(context),
     );
   }
 
   Widget _buildContent(BuildContext context, FavoritesState state) {
     return state.when(
-      initial: () => const SliverToBoxAdapter(
-        child: SizedBox.shrink(),
-      ),
-      loading: () => const SliverToBoxAdapter(
-        child: FavoritesShimmerLoading(),
-      ),
-      loaded: (favorites, totalCount, searchQuery, category, sortBy, sortOrder,
-          isGridView, isSelectionMode, selectedIds, filters) {
-        return FavoritesGrid(
-          favorites: favorites,
-          isGridView: isGridView,
-          isSelectionMode: isSelectionMode,
-          selectedIds: selectedIds,
-          onFavoriteToggle: _toggleFavoriteSelection,
-          onFavoriteTap: _handleFavoriteTap,
-          onFavoriteLongPress: _handleFavoriteLongPress,
-          scrollController: _scrollController,
+      initial: () {
+        debugPrint('[FavoritesPage] State: initial - loading favorites for roshdology123');
+        return const SliverToBoxAdapter(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(64),
+              child: Column(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading your favorites...'),
+                ],
+              ),
+            ),
+          ),
         );
       },
-      empty: (searchQuery, category, filters) => SliverToBoxAdapter(
-        child: FavoritesEmptyState(
-          hasSearch: searchQuery.isNotEmpty,
-          hasFilters: filters?.isNotEmpty ?? false,
-          onClearFilters: _clearAllFilters,
-          onExploreProducts: _navigateToProducts,
+      loading: () {
+        debugPrint('[FavoritesPage] State: loading for roshdology123');
+        return const SliverToBoxAdapter(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(64),
+              child: Column(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading favorites...'),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      loaded: (favorites, totalCount, searchQuery, category, sortBy, sortOrder,
+          isGridView, isSelectionMode, selectedIds, filters) {
+        debugPrint('[FavoritesPage] State: loaded with ${favorites.length} favorites for roshdology123');
+
+        if (favorites.isEmpty) {
+          return _buildEmptyState(context, searchQuery, filters);
+        }
+
+        return _buildFavoritesList(context, favorites, isGridView ?? true);
+      },
+      empty: (searchQuery, category, filters) {
+        debugPrint('[FavoritesPage] State: empty for roshdology123');
+        return _buildEmptyState(context, searchQuery, filters);
+      },
+      error: (message, code, searchQuery, category) {
+        debugPrint('[FavoritesPage] State: error - $message for roshdology123');
+        return _buildErrorState(context, message, code);
+      },
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, String? searchQuery, Map<String, dynamic>? filters) {
+    final hasSearch = searchQuery?.isNotEmpty ?? false;
+    final hasFilters = filters?.isNotEmpty ?? false;
+
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              hasSearch || hasFilters ? Icons.search_off : Icons.favorite_border,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              hasSearch || hasFilters
+                  ? 'No favorites found'
+                  : 'No favorites yet',
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              hasSearch || hasFilters
+                  ? 'Try adjusting your search or filters'
+                  : 'Start adding products to your favorites',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            if (hasSearch || hasFilters)
+              FilledButton.icon(
+                onPressed: _clearAllFilters,
+                icon: const Icon(Icons.clear),
+                label: const Text('Clear Filters'),
+              )
+            else
+              FilledButton.icon(
+                onPressed: _navigateToProducts,
+                icon: const Icon(Icons.shopping_bag),
+                label: const Text('Browse Products'),
+              ),
+          ],
         ),
-      ),
-      error: (message, code, searchQuery, category) => SliverToBoxAdapter(
-        child: _buildErrorState(context, message, code),
       ),
     );
   }
 
   Widget _buildErrorState(BuildContext context, String message, String? code) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Oops! Something went wrong',
-            style: Theme.of(context).textTheme.headlineSmall,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          if (code != null) ...[
-            const SizedBox(height: 4),
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 16),
             Text(
-              'Error code: $code',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+              'Something went wrong',
+              style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            if (code != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Error code: $code',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _retry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+            ),
           ],
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: _retry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Try Again'),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildFloatingActionButtons(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Scroll to top FAB
-        if (_showScrollToTop)
-          ScaleTransition(
-            scale: _fabScaleAnimation,
-            child: FloatingActionButton.small(
-              onPressed: _scrollToTop,
-              heroTag: 'scroll_to_top',
-              child: const Icon(Icons.keyboard_arrow_up),
-            ),
-          ),
-
-        if (_showScrollToTop) const SizedBox(height: 16),
-
-        // Main FAB
-        FloatingActionButton.extended(
-          onPressed: _navigateToProducts,
-          icon: const Icon(Icons.add),
-          label: const Text('Browse Products'),
-          heroTag: 'browse_products',
+  Widget _buildFavoritesList(BuildContext context, List<FavoriteItem> favorites, bool isGridView) {
+    return SliverPadding(
+      padding: const EdgeInsets.all(16),
+      sliver: isGridView
+          ? SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.75,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
         ),
-      ],
+        delegate: SliverChildBuilderDelegate(
+              (context, index) {
+            final favorite = favorites[index];
+            return _buildFavoriteCard(context, favorite);
+          },
+          childCount: favorites.length,
+        ),
+      )
+          : SliverList(
+        delegate: SliverChildBuilderDelegate(
+              (context, index) {
+            final favorite = favorites[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildFavoriteListItem(context, favorite),
+            );
+          },
+          childCount: favorites.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFavoriteCard(BuildContext context, FavoriteItem favorite) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _navigateToProductDetails(favorite.id),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product image
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                child: favorite.productImage?.isNotEmpty == true
+                    ? Image.network(
+                  favorite.productImage!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.image_not_supported,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    );
+                  },
+                )
+                    : Icon(
+                  Icons.favorite,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            // Product info
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      favorite.productTitle ?? 'Unknown Product',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    if (favorite.price != null)
+                      Text(
+                        '\$${favorite.price!.toStringAsFixed(2)}',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFavoriteListItem(BuildContext context, FavoriteItem favorite) {
+    return Card(
+      child: ListTile(
+        leading: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: Theme.of(context).colorScheme.surfaceVariant,
+          ),
+          child: favorite.productImage?.isNotEmpty == true
+              ? ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              favorite.productImage!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(
+                  Icons.image_not_supported,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                );
+              },
+            ),
+          )
+              : Icon(
+            Icons.favorite,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        title: Text(
+          favorite.productTitle ?? 'Unknown Product',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: favorite.price != null
+            ? Text('\$${favorite.price!.toStringAsFixed(2)}')
+            : null,
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () => _navigateToProductDetails(favorite.id),
+      ),
+    );
+  }
+
+  Widget _buildFloatingActionButton(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: _navigateToProducts,
+      icon: const Icon(Icons.add),
+      label: const Text('Browse Products'),
     );
   }
 
   // Helper methods
-  double _getAppBarHeight(FavoritesState state) {
-    return state.maybeWhen(
-      loaded: (_, __, ___, ____, _____, ______, _______, isSelectionMode, ________, _________) {
-        return isSelectionMode ? 120 : 180;
-      },
-      orElse: () => 180,
-    );
-  }
-
-  bool _isSelectionMode(FavoritesState state) {
-    return state.maybeWhen(
-      loaded: (_, __, ___, ____, _____, ______, _______, isSelectionMode, ________, _________) => isSelectionMode,
-      orElse: () => false,
-    );
-  }
-
-  int _getSelectedCount(FavoritesState state) {
-    return state.maybeWhen(
-      loaded: (_, __, ___, ____, _____, ______, _______, ________, selectedIds, _________) => selectedIds.length,
-      orElse: () => 0,
-    );
-  }
-
-  bool _hasActiveFilters() {
-    return _currentFilters.isNotEmpty;
-  }
-
-  // Event handlers
   void _handleStateChanges(BuildContext context, FavoritesState state) {
     state.maybeWhen(
-      loaded: (_, __, ___, ____, _____, ______, _______, isSelectionMode, ________, _________) {
-        if (isSelectionMode) {
-          _selectionAnimationController.forward();
-        } else {
-          _selectionAnimationController.reverse();
-        }
-      },
       error: (message, code, _, __) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -443,80 +585,23 @@ class _FavoritesPageState extends State<FavoritesPage>
     // Debounce search
     Future.delayed(const Duration(milliseconds: 500), () {
       if (_searchQuery == query && mounted) {
-        context.read<FavoritesCubit>().searchFavorites(query);
-
-        _logger.logUserAction('favorites_search', {
-          'user': _userContext,
-          'query': query,
-          'query_length': query.length,
-        });
+        try {
+          context.read<FavoritesCubit>().searchFavorites(query);
+          _logger.logUserAction('favorites_search', {
+            'user': _userContext,
+            'query': query,
+            'query_length': query.length,
+          });
+        } catch (e) {
+          debugPrint('[FavoritesPage] Error searching: $e');
+        }
       }
     });
-  }
-
-  void _handleViewModeToggle() {
-    context.read<FavoritesCubit>().toggleViewMode();
-
-    _logger.logUserAction('favorites_view_mode_toggled', {
-      'user': _userContext,
-      'timestamp': _currentTimestamp,
-    });
-  }
-
-  void _handleFavoriteTap(String favoriteId) {
-    final cubit = context.read<FavoritesCubit>();
-
-    if (cubit.isSelectionMode) {
-      cubit.toggleFavoriteSelection(favoriteId);
-    } else {
-      // Navigate to product details
-      _navigateToProductDetails(favoriteId);
-    }
-  }
-
-  void _handleFavoriteLongPress(String favoriteId) {
-    final cubit = context.read<FavoritesCubit>();
-
-    if (!cubit.isSelectionMode) {
-      cubit.toggleSelectionMode();
-    }
-    cubit.toggleFavoriteSelection(favoriteId);
-
-    // Haptic feedback
-    HapticFeedback.selectionClick();
-
-    _logger.logUserAction('favorite_long_pressed', {
-      'user': _userContext,
-      'favorite_id': favoriteId,
-    });
-  }
-
-  void _toggleFavoriteSelection(String favoriteId) {
-    context.read<FavoritesCubit>().toggleFavoriteSelection(favoriteId);
-  }
-
-  void _selectAll() {
-    context.read<FavoritesCubit>().selectAllFavorites();
-  }
-
-  void _clearSelection() {
-    context.read<FavoritesCubit>().clearSelection();
-  }
-
-  void _exitSelectionMode() {
-    context.read<FavoritesCubit>().toggleSelectionMode();
   }
 
   void _clearSearch() {
     _searchController.clear();
     _handleSearchChanged('');
-  }
-
-  void _removeFilter(String filterKey) {
-    setState(() {
-      _currentFilters.remove(filterKey);
-    });
-    context.read<FavoritesCubit>().applyFilters(_currentFilters);
   }
 
   void _clearAllFilters() {
@@ -525,34 +610,29 @@ class _FavoritesPageState extends State<FavoritesPage>
       _searchQuery = '';
     });
     _searchController.clear();
-    context.read<FavoritesCubit>().applyFilters({});
-  }
-
-  void _scrollToTop() {
-    _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-
-    _logger.logUserAction('favorites_scroll_to_top', {
-      'user': _userContext,
-    });
+    try {
+      context.read<FavoritesCubit>().applyFilters({});
+    } catch (e) {
+      debugPrint('[FavoritesPage] Error clearing filters: $e');
+    }
   }
 
   void _retry() {
-    context.read<FavoritesCubit>().refresh();
-
-    _logger.logUserAction('favorites_retry', {
-      'user': _userContext,
-      'timestamp': _currentTimestamp,
-    });
+    debugPrint('[FavoritesPage] Retrying favorites load for roshdology123 at $_currentTimestamp');
+    try {
+      context.read<FavoritesCubit>().refresh();
+      _logger.logUserAction('favorites_retry', {
+        'user': _userContext,
+        'timestamp': _currentTimestamp,
+      });
+    } catch (e) {
+      debugPrint('[FavoritesPage] Error on retry: $e');
+    }
   }
 
   // Navigation methods
   void _navigateToCollections() {
     context.push('/favorites/collections');
-
     _logger.logUserAction('navigate_to_collections', {
       'user': _userContext,
       'from_page': 'favorites',
@@ -561,7 +641,6 @@ class _FavoritesPageState extends State<FavoritesPage>
 
   void _navigateToProducts() {
     context.push('/home');
-
     _logger.logUserAction('navigate_to_products', {
       'user': _userContext,
       'from_page': 'favorites',
@@ -569,128 +648,25 @@ class _FavoritesPageState extends State<FavoritesPage>
   }
 
   void _navigateToProductDetails(String favoriteId) {
-    // Get the favorite item and navigate to its product details
-    final favorite = context.read<FavoritesCubit>().currentFavorites
-        .cast<FavoriteItem?>()
-        .firstWhere(
-          (f) => f?.id == favoriteId,
-      orElse: () => null,
-    );
-
-    if (favorite != null) {
-      Navigator.of(context).pushNamed(
-        '/products/${favorite.productId}',
-        arguments: {'from_favorites': true},
+    try {
+      final favorite = context.read<FavoritesCubit>().currentFavorites
+          .cast<FavoriteItem?>()
+          .firstWhere(
+            (f) => f?.id == favoriteId,
+        orElse: () => null,
       );
 
-      _logger.logUserAction('navigate_to_product_details', {
-        'user': _userContext,
-        'product_id': favorite.productId,
-        'favorite_id': favoriteId,
-        'from_page': 'favorites',
-      });
+      if (favorite?.productId != null) {
+        context.push('/home/product/${favorite!.productId}');
+        _logger.logUserAction('navigate_to_product_details', {
+          'user': _userContext,
+          'product_id': favorite.productId,
+          'favorite_id': favoriteId,
+          'from_page': 'favorites',
+        });
+      }
+    } catch (e) {
+      debugPrint('[FavoritesPage] Error navigating to product details: $e');
     }
-  }
-
-  // Bottom sheet methods
-  void _showFilterBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FavoritesFilterBottomSheet(
-        currentFilters: _currentFilters,
-        onFiltersApplied: (filters) {
-          setState(() {
-            _currentFilters = filters;
-          });
-          context.read<FavoritesCubit>().applyFilters(filters);
-        },
-      ),
-    );
-
-    _logger.logUserAction('favorites_filter_opened', {
-      'user': _userContext,
-      'current_filters_count': _currentFilters.length,
-    });
-  }
-
-  void _showSortBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FavoritesSortBottomSheet(
-        currentSortBy: context.read<FavoritesCubit>().state.maybeWhen(
-          loaded: (_, __, ___, ____, sortBy, _____, ______, _______, ________, _________) => sortBy,
-          orElse: () => 'date_added',
-        ),
-        currentSortOrder: context.read<FavoritesCubit>().state.maybeWhen(
-          loaded: (_, __, ___, ____, _____, sortOrder, ______, _______, ________, _________) => sortOrder,
-          orElse: () => 'desc',
-        ),
-        onSortChanged: (sortBy, sortOrder) {
-          context.read<FavoritesCubit>().changeSortOrder(sortBy, sortOrder);
-        },
-      ),
-    );
-
-    _logger.logUserAction('favorites_sort_opened', {
-      'user': _userContext,
-    });
-  }
-
-  // Batch action methods
-  void _deleteSelected() {
-    final selectedCount = _getSelectedCount(context.read<FavoritesCubit>().state);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove Selected Favorites'),
-        content: Text(
-          'Are you sure you want to remove $selectedCount selected ${selectedCount == 1 ? 'favorite' : 'favorites'}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.read<FavoritesCubit>().removeSelectedFavorites();
-
-              _logger.logUserAction('favorites_batch_delete_confirmed', {
-                'user': _userContext,
-                'deleted_count': selectedCount,
-              });
-            },
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _addSelectedToCollection() {
-    // Show collection selector bottom sheet
-    _logger.logUserAction('favorites_add_to_collection_started', {
-      'user': _userContext,
-      'selected_count': _getSelectedCount(context.read<FavoritesCubit>().state),
-    });
-  }
-
-  void _shareSelected() {
-    _logger.logUserAction('favorites_share_started', {
-      'user': _userContext,
-      'selected_count': _getSelectedCount(context.read<FavoritesCubit>().state),
-    });
-  }
-
-  void _exportSelected() {
-    _logger.logUserAction('favorites_export_started', {
-      'user': _userContext,
-      'selected_count': _getSelectedCount(context.read<FavoritesCubit>().state),
-    });
   }
 }

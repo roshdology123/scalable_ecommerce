@@ -280,7 +280,7 @@ class _CouponInputWidgetState extends State<CouponInputWidget>
     final popularCoupons = [
       {'code': 'SAVE10', 'description': '10% off'},
       {'code': 'FREESHIP', 'description': 'Free shipping'},
-      {'code': 'FIRST20', 'description': '20% off first order'},
+      {'code': 'SAVE20', 'description': '20% off first order'},
     ];
 
     return Column(

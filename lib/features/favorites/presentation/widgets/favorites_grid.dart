@@ -132,7 +132,7 @@ class _FavoritesGridState extends State<FavoritesGrid>
                   child: Opacity(
                     opacity: animation.value,
                     child: FavoriteProductCard(
-                      favorite: favorite,
+                      favoriteItem: favorite,
                       isSelected: isSelected,
                       isSelectionMode: widget.isSelectionMode,
                       onTap: () => widget.onFavoriteTap(favorite.id),
@@ -177,10 +177,9 @@ class _FavoritesGridState extends State<FavoritesGrid>
                       index == widget.favorites.length - 1 ? 16 : 8,
                     ),
                     child: FavoriteProductCard(
-                      favorite: favorite,
+                      favoriteItem: favorite,
                       isSelected: isSelected,
                       isSelectionMode: widget.isSelectionMode,
-                      isListView: true,
                       onTap: () => widget.onFavoriteTap(favorite.id),
                       onLongPress: () => widget.onFavoriteLongPress(favorite.id),
                       onToggleSelection: () => widget.onFavoriteToggle(favorite.id),

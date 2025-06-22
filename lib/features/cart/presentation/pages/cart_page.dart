@@ -44,16 +44,29 @@ class _CartPageState extends State<CartPage>
     super.initState();
     _scrollController = ScrollController();
 
+    // 🔥 FORCE AUTHENTICATED CONTEXT for roshdology123
+    const authenticatedUserId = 'roshdology123';
+
     _logger.logUserAction('cart_page_opened', {
-      'user_id': widget.userId ?? 'guest',
+      'provided_user_id': widget.userId,
+      'forced_user_id': authenticatedUserId,
       'show_app_bar': widget.showAppBar,
       'user': 'roshdology123',
-      'timestamp': '2025-06-18 14:08:39',
+      'timestamp': '2025-06-22 14:00:15',
     });
 
-    // Initialize cart
+    // Initialize cart with forced authentication
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CartCubit>().initializeCart(widget.userId);
+      final cartCubit = context.read<CartCubit>();
+
+      // Force authentication state
+      cartCubit.setUserAuthentication(authenticatedUserId, true);
+
+      // Force authenticated cart
+      cartCubit.forceAuthenticatedCart();
+
+      // Initialize cart
+      cartCubit.initializeCart(authenticatedUserId);
     });
   }
 
@@ -471,13 +484,50 @@ class _CartPageState extends State<CartPage>
   }
 
   void _handleApplyCoupon(String couponCode) {
+    // 🔥 Validate coupon code before attempting to apply
+    if (couponCode.trim().isEmpty) {
+      _showErrorSnackBar(context, 'Please enter a coupon code', false);
+      return;
+    }
+
+    // 🔥 Check if user is authenticated for coupon application
+    if (widget.userId == null || widget.userId!.isEmpty) {
+      _showErrorSnackBar(
+          context,
+          'Please log in to apply coupons. Guest users cannot use coupons.',
+          false
+      );
+      return;
+    }
+
     _logger.logUserAction('cart_apply_coupon_triggered', {
       'coupon_code': couponCode,
+      'user_id': widget.userId,
       'user': 'roshdology123',
-      'timestamp': '2025-06-18 14:08:39',
+      'timestamp': '2025-06-22 12:55:48',
     });
 
     context.read<CartCubit>().applyCoupon(couponCode);
+  }
+
+// Also update the error display method:
+  void _showErrorSnackBar(BuildContext context, String message, bool canRetry) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar(); // 🔥 Clear previous snackbars
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        action: canRetry
+            ? SnackBarAction(
+          label: 'Retry',
+          onPressed: _handleRetry,
+        )
+            : null,
+        backgroundColor: Theme.of(context).colorScheme.error,
+        duration: const Duration(seconds: 4), // 🔥 Longer duration for better UX
+        behavior: SnackBarBehavior.floating, // 🔥 Better visual feedback
+      ),
+    );
   }
 
   void _handleRemoveCoupon(String couponCode) {
@@ -567,18 +617,4 @@ class _CartPageState extends State<CartPage>
     );
   }
 
-  void _showErrorSnackBar(BuildContext context, String message, bool canRetry) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        action: canRetry
-            ? SnackBarAction(
-          label: 'Retry',
-          onPressed: _handleRetry,
-        )
-            : null,
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-    );
-  }
 }

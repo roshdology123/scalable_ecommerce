@@ -190,8 +190,48 @@ class CartModel with _$CartModel {
 
   factory CartModel.empty({String? userId, String? sessionId}) {
     final now = DateTime.now();
+    String generateCartId(String? userId, String? sessionId) {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final identifier = userId ?? sessionId ?? 'guest';
+      return 'cart_${identifier}_$timestamp';
+    }
     return CartModel(
-      id: _generateCartId(userId, sessionId),
+      id: generateCartId(userId, sessionId),
+      userId: userId,
+      items: [],
+      summary: const CartSummaryModel(
+        subtotal: 0.0,
+        totalDiscount: 0.0,
+        totalTax: 0.0,
+        shippingCost: 0.0,
+        total: 0.0,
+        totalItems: 0,
+        totalQuantity: 0,
+      ),
+      createdAt: now,
+      updatedAt: now,
+      sessionId: sessionId,
+    );
+
+  }
+
+
+
+}
+
+// Extension for CartModel
+extension CartModelExtension on CartModel {
+
+  /// Static helper to create an empty cart with optional userId and sessionId
+   CartModel empty({String? userId, String? sessionId}) {
+     String generateCartId(String? userId, String? sessionId) {
+       final timestamp = DateTime.now().millisecondsSinceEpoch;
+       final identifier = userId ?? sessionId ?? 'guest';
+       return 'cart_${identifier}_$timestamp';
+     }
+    final now = DateTime.now();
+    return CartModel(
+      id: generateCartId(userId, sessionId),
       userId: userId,
       items: [],
       summary: const CartSummaryModel(
@@ -209,15 +249,7 @@ class CartModel with _$CartModel {
     );
   }
 
-  static String _generateCartId(String? userId, String? sessionId) {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final identifier = userId ?? sessionId ?? 'guest';
-    return 'cart_${identifier}_$timestamp';
-  }
-}
 
-// Extension for CartModel
-extension CartModelExtension on CartModel {
   Cart toCart() {
     return Cart(
       id: id,

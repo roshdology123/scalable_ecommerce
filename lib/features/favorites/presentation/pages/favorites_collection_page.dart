@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/favorites_collection.dart';
 import '../cubit/favorites_collections/favorites_collection_cubit.dart';
@@ -20,7 +19,7 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
     with TickerProviderStateMixin {
 
   static const String _userContext = 'roshdology123';
-  static const String _currentTimestamp = '2025-06-19T13:25:19Z';
+  static const String _currentTimestamp = '2025-06-22 12:10:32'; // Updated timestamp
   final AppLogger _logger = AppLogger();
 
   late AnimationController _fabAnimationController;
@@ -31,7 +30,11 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
   void initState() {
     super.initState();
     _initializeAnimations();
-    _loadCollections();
+
+    // 🔥 Load collections using global cubit
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCollections();
+    });
 
     _logger.logUserAction('collections_page_opened', {
       'user': _userContext,
@@ -57,6 +60,7 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
   }
 
   void _loadCollections() {
+    debugPrint('[FavoritesCollectionsPage] Loading collections for roshdology123 at $_currentTimestamp');
     context.read<FavoritesCollectionsCubit>().loadCollections();
   }
 
@@ -67,6 +71,7 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
 
     _logger.logUserAction('collections_page_closed', {
       'user': _userContext,
+      'timestamp': _currentTimestamp,
     });
 
     super.dispose();
@@ -74,59 +79,59 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<FavoritesCollectionsCubit>.value(
-      value: getIt<FavoritesCollectionsCubit>(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Collections'),
-          elevation: 0,
-          actions: [
-            IconButton(
-              onPressed: _showCreateCollectionDialog,
-              icon: const Icon(Icons.add),
-              tooltip: 'Create collection',
-            ),
-          ],
-        ),
-        body: BlocConsumer<FavoritesCollectionsCubit, FavoritesCollectionsState>(
-          listener: _handleStateChanges,
-          builder: (context, state) {
-            return state.when(
-              initial: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              loaded: (collections, smartCollections, selectedCollection, isCreating, isEditing) {
-                return _buildCollectionsContent(
-                  context,
-                  collections,
-                  smartCollections,
-                );
-              },
-              error: (message, code) => _buildErrorState(context, message, code),
-              creating: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              editing: (collection) => const Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          },
-        ),
-        floatingActionButton: ScaleTransition(
-          scale: _fabAnimation,
-          child: FloatingActionButton.extended(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Collections'),
+        elevation: 0,
+        actions: [
+          IconButton(
             onPressed: _showCreateCollectionDialog,
             icon: const Icon(Icons.add),
-            label: const Text('New Collection'),
+            tooltip: 'Create collection',
           ),
+        ],
+      ),
+      body: BlocConsumer<FavoritesCollectionsCubit, FavoritesCollectionsState>(
+        listener: _handleStateChanges,
+        builder: (context, state) {
+          debugPrint('[FavoritesCollectionsPage] Building with state: ${state.runtimeType} for roshdology123');
+
+          return state.when(
+            initial: () => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            loading: () => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            loaded: (collections, smartCollections, selectedCollection, isCreating, isEditing) {
+              return _buildCollectionsContent(
+                context,
+                collections,
+                smartCollections,
+              );
+            },
+            error: (message, code) => _buildErrorState(context, message, code),
+            creating: () => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            editing: (collection) => const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        },
+      ),
+      floatingActionButton: ScaleTransition(
+        scale: _fabAnimation,
+        child: FloatingActionButton.extended(
+          onPressed: _showCreateCollectionDialog,
+          icon: const Icon(Icons.add),
+          label: const Text('New Collection'),
         ),
       ),
     );
   }
 
+  // Rest of the methods remain the same...
   Widget _buildCollectionsContent(
       BuildContext context,
       List<FavoritesCollection> collections,
@@ -162,7 +167,7 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
           SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 1.5,
+              childAspectRatio: 1,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
             ),
@@ -227,27 +232,18 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
           SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 1.5,
+              childAspectRatio: 1,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
             ),
             delegate: SliverChildBuilderDelegate(
                   (context, index) {
                 final collection = collections[index];
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    index % 2 == 0 ? 16 : 0,
-                    0,
-                    index % 2 == 1 ? 16 : 0,
-                    index == collections.length - 1 ||
-                        index == collections.length - 2 ? 100 : 0,
-                  ),
-                  child: FavoriteCollectionCard(
-                    collection: collection,
-                    onTap: () => _navigateToCollection(collection),
-                    onEdit: () => _editCollection(collection),
-                    onDelete: () => _deleteCollection(collection),
-                  ),
+                return FavoriteCollectionCard(
+                  collection: collection,
+                  onTap: () => _navigateToCollection(collection),
+                  onEdit: () => _editCollection(collection),
+                  onDelete: () => _deleteCollection(collection),
                 );
               },
               childCount: collections.length,
@@ -262,6 +258,7 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
     );
   }
 
+  // Rest of the methods remain the same...
   Widget _buildEmptyCollections(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -408,6 +405,7 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
       'collection_id': collection.id,
       'collection_name': collection.name,
       'is_smart_collection': collection.isSmartCollection,
+      'timestamp': _currentTimestamp,
     });
   }
 
@@ -418,6 +416,7 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
       'user': _userContext,
       'collection_id': collection.id,
       'collection_name': collection.name,
+      'timestamp': _currentTimestamp,
     });
   }
 
@@ -443,6 +442,7 @@ class _FavoritesCollectionsPageState extends State<FavoritesCollectionsPage>
                 'user': _userContext,
                 'collection_id': collection.id,
                 'collection_name': collection.name,
+                'timestamp': _currentTimestamp,
               });
             },
             child: const Text('Delete'),

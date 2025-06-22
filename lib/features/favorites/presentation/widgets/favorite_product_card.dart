@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 
-import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../domain/entities/favorite_item.dart';
 
 class FavoriteProductCard extends StatefulWidget {
-  final FavoriteItem favorite;
+  final FavoriteItem favoriteItem;
   final bool isSelected;
   final bool isSelectionMode;
-  final bool isListView;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onFavoriteTap;
+  final VoidCallback? onAddToCartTap;
   final VoidCallback? onToggleSelection;
 
   const FavoriteProductCard({
     super.key,
-    required this.favorite,
+    required this.favoriteItem,
     this.isSelected = false,
     this.isSelectionMode = false,
-    this.isListView = false,
     this.onTap,
     this.onLongPress,
+    this.onFavoriteTap,
+    this.onAddToCartTap,
     this.onToggleSelection,
   });
 
@@ -32,115 +35,192 @@ class _FavoriteProductCardState extends State<FavoriteProductCard>
     with TickerProviderStateMixin {
 
   static const String _userContext = 'roshdology123';
-  static const String _currentTimestamp = '2025-06-19T13:06:23Z';
-  final AppLogger _logger = AppLogger();
+  static const String _currentTimestamp = '2025-06-22 12:14:02';
 
+  late AnimationController _pulseController;
   late AnimationController _selectionController;
-  late AnimationController _pressController;
+  late Animation<double> _pulseAnimation;
   late Animation<double> _selectionAnimation;
-  late Animation<double> _pressAnimation;
-  late Animation<Color?> _backgroundAnimation;
+  late Animation<Color?> _selectionColorAnimation;
 
-  bool _isPressed = false;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
+
+    // 🔥 Initialize controllers without Theme.of() calls
+    _initializeControllers();
+
+    debugPrint('[FavoriteProductCard] Initialized for product ${widget.favoriteItem.productId} by $_userContext at $_currentTimestamp');
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // 🔥 Initialize animations here when Theme is available
+    if (!_isInitialized) {
+      _initializeAnimations();
+      _isInitialized = true;
+    }
+  }
+
+  void _initializeControllers() {
+    // Initialize animation controllers without theme-dependent values
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _selectionController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    // Basic animations without colors
+    _pulseAnimation = Tween<double>(
+      begin: 0.95,
+      end: 1.05,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
+
+    _selectionAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _selectionController,
+      curve: Curves.easeInOut,
+    ));
   }
 
   void _initializeAnimations() {
-    _selectionController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
+    // 🔥 Initialize theme-dependent animations in didChangeDependencies
+    final theme = Theme.of(context);
 
-    _pressController = AnimationController(
-      duration: const Duration(milliseconds: 100),
-      vsync: this,
-    );
-
-    _selectionAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
+    _selectionColorAnimation = ColorTween(
+      begin: Colors.transparent,
+      end: theme.colorScheme.primary.withOpacity(0.2),
     ).animate(CurvedAnimation(
       parent: _selectionController,
       curve: Curves.easeInOut,
     ));
 
-    _pressAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _pressController,
-      curve: Curves.easeInOut,
-    ));
+    // Set initial animation states
+    if (widget.isSelectionMode) {
+      _selectionController.forward();
+    }
 
-    _backgroundAnimation = ColorTween(
-      begin: Colors.transparent,
-      end: Theme.of(context).primaryColor.withOpacity(0.1),
-    ).animate(_selectionController);
+    // Start pulse animation if item has price tracking
+    if (widget.favoriteItem.isPriceTrackingEnabled) {
+      _pulseController.repeat(reverse: true);
+    }
   }
 
   @override
   void didUpdateWidget(FavoriteProductCard oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.isSelected != oldWidget.isSelected) {
-      if (widget.isSelected) {
+    // Handle selection mode changes
+    if (widget.isSelectionMode != oldWidget.isSelectionMode) {
+      if (widget.isSelectionMode) {
         _selectionController.forward();
       } else {
         _selectionController.reverse();
+      }
+    }
+
+    // Handle selection state changes
+    if (widget.isSelected != oldWidget.isSelected) {
+      if (widget.isSelected) {
+        _selectionController.forward();
+      } else if (!widget.isSelectionMode) {
+        _selectionController.reverse();
+      }
+    }
+
+    // Handle price tracking animation
+    if (widget.favoriteItem.isPriceTrackingEnabled != oldWidget.favoriteItem.isPriceTrackingEnabled) {
+      if (widget.favoriteItem.isPriceTrackingEnabled) {
+        _pulseController.repeat(reverse: true);
+      } else {
+        _pulseController.stop();
+        _pulseController.reset();
       }
     }
   }
 
   @override
   void dispose() {
+    _pulseController.dispose();
     _selectionController.dispose();
-    _pressController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    if (!_isInitialized) {
+      // Return a simple card while waiting for initialization
+      return _buildSimpleCard(context);
+    }
 
     return AnimatedBuilder(
-      animation: Listenable.merge([_selectionAnimation, _pressAnimation, _backgroundAnimation]),
+      animation: Listenable.merge([_pulseController, _selectionController]),
       builder: (context, child) {
         return Transform.scale(
-          scale: _isPressed ? _pressAnimation.value : _selectionAnimation.value,
-          child: GestureDetector(
-            onTap: widget.onTap,
-            onLongPress: widget.onLongPress,
-            onTapDown: (_) => _handleTapDown(),
-            onTapUp: (_) => _handleTapUp(),
-            onTapCancel: _handleTapUp,
-            child: Container(
-              decoration: BoxDecoration(
-                color: widget.isSelected
-                    ? colorScheme.primaryContainer.withOpacity(0.3)
-                    : colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: widget.isSelected
-                      ? colorScheme.primary
-                      : colorScheme.outline.withOpacity(0.2),
-                  width: widget.isSelected ? 2 : 1,
+          scale: widget.favoriteItem.isPriceTrackingEnabled ? _pulseAnimation.value : 1.0,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: _selectionColorAnimation.value,
+              border: widget.isSelected
+                  ? Border.all(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              )
+                  : null,
+            ),
+            child: Card(
+              elevation: widget.isSelected ? 8 : 2,
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: widget.isSelectionMode ? widget.onToggleSelection : widget.onTap,
+                onLongPress: widget.onLongPress,
+                child: Stack(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Product image
+                        Expanded(
+                          flex: 3,
+                          child: _buildProductImage(context),
+                        ),
+
+                        // Product information
+                        Expanded(
+                          flex: 2,
+                          child: _buildProductInfo(context),
+                        ),
+                      ],
+                    ),
+
+                    // Selection overlay
+                    if (widget.isSelectionMode)
+                      _buildSelectionOverlay(context),
+
+                    // Selection checkbox
+                    if (widget.isSelectionMode)
+                      _buildSelectionCheckbox(context),
+
+                    // Price tracking indicator
+                    if (widget.favoriteItem.isPriceTrackingEnabled)
+                      _buildPriceTrackingIndicator(context),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.shadow.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
-              child: widget.isListView
-                  ? _buildListCard(context)
-                  : _buildGridCard(context),
             ),
           ),
         );
@@ -148,471 +228,354 @@ class _FavoriteProductCardState extends State<FavoriteProductCard>
     );
   }
 
-  Widget _buildGridCard(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Image and selection indicator
-        Stack(
+  Widget _buildSimpleCard(BuildContext context) {
+    return Card(
+      elevation: 2,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: widget.isSelectionMode ? widget.onToggleSelection : widget.onTap,
+        onLongPress: widget.onLongPress,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product Image
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: AspectRatio(
-                aspectRatio: 1.0,
+            // Simple product image
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceVariant,
+                ),
                 child: CachedNetworkImage(
-                  imageUrl: widget.favorite.productImage,
+                  imageUrl: widget.favoriteItem.productImage,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: colorScheme.surfaceVariant.withOpacity(0.3),
-                    child: Center(
-                      child: Icon(
-                        Icons.image,
-                        size: 48,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+                  placeholder: (context, url) => const Center(
+                    child: CircularProgressIndicator(),
                   ),
-                  errorWidget: (context, url, error) => Container(
-                    color: colorScheme.errorContainer.withOpacity(0.3),
-                    child: Center(
-                      child: Icon(
-                        Icons.broken_image,
-                        size: 48,
-                        color: colorScheme.error,
-                      ),
-                    ),
+                  errorWidget: (context, url, error) => Icon(
+                    Icons.image_not_supported,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
             ),
 
-            // Selection Mode Overlay
-            if (widget.isSelectionMode)
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: widget.isSelected
-                        ? colorScheme.primary.withOpacity(0.3)
-                        : Colors.black.withOpacity(0.2),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      widget.isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                      size: 32,
-                      color: widget.isSelected ? colorScheme.primary : Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-
-            // Status badges
-            Positioned(
-              top: 8,
-              left: 8,
-              child: _buildStatusBadges(context),
-            ),
-
-            // Price change indicator
-            if (widget.favorite.priceChangeIndicator.isNotEmpty)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: _buildPriceChangeIndicator(context),
-              ),
-          ],
-        ),
-
-        // Content
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title
-              Text(
-                widget.favorite.productTitle,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              const SizedBox(height: 4),
-
-              // Category and Brand
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.favorite.category.toUpperCase(),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w500,
+            // Simple product info
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.favoriteItem.productTitle,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  if (widget.favorite.brand != null) ...[
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.verified,
-                      size: 12,
-                      color: colorScheme.primary,
+                    const Spacer(),
+                    Text(
+                      '\$${widget.favoriteItem.price.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ],
-                ],
+                ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-              const SizedBox(height: 8),
-
-              // Rating
-              Row(
-                children: [
-                  Icon(
-                    Icons.star,
-                    size: 16,
-                    color: Colors.amber,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    widget.favorite.rating.toStringAsFixed(1),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              // Price
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildPriceSection(context),
-                  ),
-                  // Quick action button
-                  IconButton(
-                    onPressed: widget.isSelectionMode ? widget.onToggleSelection : null,
-                    icon: Icon(
-                      widget.isSelectionMode
-                          ? (widget.isSelected ? Icons.check_circle : Icons.add_circle_outline)
-                          : Icons.shopping_cart_outlined,
-                      color: colorScheme.primary,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
-                    padding: EdgeInsets.zero,
-                  ),
-                ],
-              ),
-            ],
+  Widget _buildProductImage(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        CachedNetworkImage(
+          imageUrl: widget.favoriteItem.productImage,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Container(
+            color: context.colorScheme.surfaceVariant,
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
           ),
+          errorWidget: (context, url, error) => Container(
+            color: context.colorScheme.surfaceVariant,
+            child: Icon(
+              Icons.image_not_supported,
+              color: context.colorScheme.onSurfaceVariant,
+              size: 48,
+            ),
+          ),
+        ),
+
+        // Gradient overlay for badges
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.center,
+              colors: [
+                Colors.black.withOpacity(0.3),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
+
+        // Favorite button (only visible when not in selection mode)
+        if (!widget.isSelectionMode)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: _buildFavoriteButton(context),
+          ),
+
+        // Date added badge
+        Positioned(
+          top: 8,
+          left: 8,
+          child: _buildDateBadge(context),
         ),
       ],
     );
   }
 
-  Widget _buildListCard(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      height: 120,
-      child: Row(
+  Widget _buildProductInfo(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
-                child: SizedBox(
-                  width: 120,
-                  height: double.infinity,
-                  child: CachedNetworkImage(
-                    imageUrl: widget.favorite.productImage,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: colorScheme.surfaceVariant.withOpacity(0.3),
-                      child: Center(
-                        child: Icon(
-                          Icons.image,
-                          size: 32,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: colorScheme.errorContainer.withOpacity(0.3),
-                      child: Center(
-                        child: Icon(
-                          Icons.broken_image,
-                          size: 32,
-                          color: colorScheme.error,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Selection overlay
-              if (widget.isSelectionMode)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: widget.isSelected
-                          ? colorScheme.primary.withOpacity(0.3)
-                          : Colors.black.withOpacity(0.2),
-                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        widget.isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                        size: 24,
-                        color: widget.isSelected ? colorScheme.primary : Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+          // Product title
+          Text(
+            widget.favoriteItem.productTitle,
+            style: context.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
 
-          // Content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    widget.favorite.productTitle,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+          const SizedBox(height: 4),
 
-                  const SizedBox(height: 4),
-
-                  // Category and rating
-                  Row(
-                    children: [
-                      Text(
-                        widget.favorite.category.toUpperCase(),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.star,
-                        size: 14,
-                        color: Colors.amber,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        widget.favorite.rating.toStringAsFixed(1),
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-
-                  const Spacer(),
-
-                  // Price and actions
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildPriceSection(context),
-                      ),
-                      if (widget.isSelectionMode)
-                        IconButton(
-                          onPressed: widget.onToggleSelection,
-                          icon: Icon(
-                            widget.isSelected ? Icons.check_circle : Icons.add_circle_outline,
-                            color: colorScheme.primary,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                          padding: EdgeInsets.zero,
-                        ),
-                    ],
-                  ),
-                ],
+          // Notes (if any)
+          if (widget.favoriteItem.notes != null && widget.favoriteItem.notes!.isNotEmpty) ...[
+            Text(
+              widget.favoriteItem.notes!,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
+            const SizedBox(height: 4),
+          ],
+
+          const Spacer(),
+
+          // Price and actions
+          Row(
+            children: [
+              Expanded(
+                child: _buildPriceInfo(context),
+              ),
+
+              if (!widget.isSelectionMode) ...[
+                const SizedBox(width: 8),
+                _buildAddToCartButton(context),
+              ],
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatusBadges(BuildContext context) {
-    final theme = Theme.of(context);
-    final badges = <Widget>[];
-
-    if (!widget.favorite.inStock) {
-      badges.add(_buildBadge(
-        context,
-        'OUT OF STOCK',
-        theme.colorScheme.error,
-        Colors.white,
-      ));
-    } else if (widget.favorite.isOnSale) {
-      badges.add(_buildBadge(
-        context,
-        'SALE',
-        theme.colorScheme.error,
-        Colors.white,
-      ));
-    }
-
-    if (widget.favorite.isNewFavorite) {
-      badges.add(_buildBadge(
-        context,
-        'NEW',
-        theme.colorScheme.tertiary,
-        Colors.white,
-      ));
-    }
-
-    if (badges.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: badges.map((badge) =>
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: badge,
-          )
-      ).toList(),
-    );
-  }
-
-  Widget _buildBadge(BuildContext context, String text, Color backgroundColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: textColor,
-          fontWeight: FontWeight.w600,
-          fontSize: 10,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPriceChangeIndicator(BuildContext context) {
-    final theme = Theme.of(context);
-    final indicator = widget.favorite.priceChangeIndicator;
-
-    Color color;
-    if (indicator == '↓') {
-      color = Colors.green;
-    } else if (indicator == '↑') {
-      color = Colors.red;
-    } else {
-      color = theme.colorScheme.onSurfaceVariant;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        indicator,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPriceSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
+  Widget _buildPriceInfo(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.favorite.isOnSale) ...[
+        Text(
+          '\$${widget.favoriteItem.price.toStringAsFixed(2)}',
+          style: context.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: context.colorScheme.primary,
+          ),
+        ),
+
+        // Price tracking info
+        if (widget.favoriteItem.isPriceTrackingEnabled && widget.favoriteItem.targetPrice != null)
           Text(
-            widget.favorite.getFormattedOriginalPrice() ?? '',
-            style: theme.textTheme.bodySmall?.copyWith(
-              decoration: TextDecoration.lineThrough,
-              color: colorScheme.onSurfaceVariant,
+            'Target: \$${widget.favoriteItem.targetPrice!.toStringAsFixed(2)}',
+            style: context.textTheme.bodySmall?.copyWith(
+              color: context.colorScheme.secondary,
             ),
           ),
-          const SizedBox(height: 2),
-        ],
-        Row(
-          children: [
-            Text(
-              widget.favorite.getFormattedPrice(),
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: widget.favorite.isOnSale ? colorScheme.error : colorScheme.onSurface,
-              ),
-            ),
-            if (widget.favorite.isOnSale) ...[
-              const SizedBox(width: 4),
-              Text(
-                widget.favorite.getFormattedDiscount(),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.error,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ],
-        ),
       ],
     );
   }
 
-  void _handleTapDown() {
-    setState(() {
-      _isPressed = true;
-    });
-    _pressController.forward();
-
-    // Log interaction
-    _logger.logUserAction('favorite_card_tap_down', {
-      'user': _userContext,
-      'favorite_id': widget.favorite.id,
-      'product_id': widget.favorite.productId,
-      'timestamp': _currentTimestamp,
-    });
+  Widget _buildFavoriteButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: const Icon(
+          Icons.favorite,
+          color: Colors.red,
+          size: 20,
+        ),
+        onPressed: () {
+          debugPrint('[FavoriteProductCard] Favorite button tapped for product ${widget.favoriteItem.productId} by $_userContext at $_currentTimestamp');
+          widget.onFavoriteTap?.call();
+        },
+        padding: const EdgeInsets.all(4),
+        constraints: const BoxConstraints(
+          minWidth: 32,
+          minHeight: 32,
+        ),
+        tooltip: 'favorites.remove_from_favorites'.tr(),
+      ),
+    );
   }
 
-  void _handleTapUp() {
-    setState(() {
-      _isPressed = false;
-    });
-    _pressController.reverse();
+  Widget _buildAddToCartButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.colorScheme.primary,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: IconButton(
+        icon: Icon(
+          Icons.add_shopping_cart,
+          color: context.colorScheme.onPrimary,
+          size: 16,
+        ),
+        onPressed: () {
+          debugPrint('[FavoriteProductCard] Add to cart button tapped for product ${widget.favoriteItem.productId} by $_userContext at $_currentTimestamp');
+          widget.onAddToCartTap?.call();
+        },
+        padding: const EdgeInsets.all(4),
+        constraints: const BoxConstraints(
+          minWidth: 28,
+          minHeight: 28,
+        ),
+        tooltip: 'products.add_to_cart'.tr(),
+      ),
+    );
+  }
+
+  Widget _buildDateBadge(BuildContext context) {
+    final daysAgo = DateTime.now().difference(widget.favoriteItem.addedAt).inDays;
+
+    if (daysAgo <= 7) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        decoration: BoxDecoration(
+          color: Colors.green,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          daysAgo == 0 ? 'Today' : '${daysAgo}d ago',
+          style: context.textTheme.labelSmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+          ),
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildSelectionOverlay(BuildContext context) {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _selectionAnimation,
+        builder: (context, child) {
+          return Container(
+            color: Colors.black.withOpacity(0.1 * _selectionAnimation.value),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSelectionCheckbox(BuildContext context) {
+    return Positioned(
+      top: 8,
+      right: 8,
+      child: AnimatedBuilder(
+        animation: _selectionAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _selectionAnimation.value,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Checkbox(
+                value: widget.isSelected,
+                onChanged: (_) => widget.onToggleSelection?.call(),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPriceTrackingIndicator(BuildContext context) {
+    return Positioned(
+      bottom: 8,
+      left: 8,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        decoration: BoxDecoration(
+          color: context.colorScheme.secondary,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.track_changes,
+              size: 12,
+              color: context.colorScheme.onSecondary,
+            ),
+            const SizedBox(width: 2),
+            Text(
+              'Price Alert',
+              style: context.textTheme.labelSmall?.copyWith(
+                color: context.colorScheme.onSecondary,
+                fontWeight: FontWeight.bold,
+                fontSize: 9,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

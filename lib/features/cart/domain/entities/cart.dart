@@ -46,6 +46,38 @@ class Cart extends Equatable {
     this.expiresAt,
   });
 
+  /// Factory method to create an empty cart
+  static Cart empty({
+    required String id,
+    String? userId,
+    String? sessionId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    final now = DateTime.now();
+    return Cart(
+      id: id,
+      userId: userId,
+      items: const [],
+      summary: CartSummary.empty(),
+      createdAt: createdAt ?? now,
+      updatedAt: updatedAt ?? now,
+      lastSyncedAt: null,
+      isSynced: false,
+      hasPendingChanges: false,
+      status: 'active',
+      sessionId: sessionId,
+      appliedCoupons: null,
+      shippingAddress: null,
+      billingAddress: null,
+      metadata: null,
+      abandonedAt: null,
+      version: 0,
+      conflictingFields: null,
+      expiresAt: null,
+    );
+  }
+
   /// Business Logic Methods
 
   /// Check if cart is empty

@@ -17,32 +17,21 @@ class ApplyCouponUseCase implements UseCase<Cart, ApplyCouponParams> {
 
   @override
   Future<Either<Failure, Cart>> call(ApplyCouponParams params) async {
-    final startTime = DateTime.now();
-
-    _logger.logUserAction('apply_coupon_usecase_started', {
-      'coupon_code': params.couponCode,
-      'user_id': params.userId,
-      'user': 'roshdology123',
-      'timestamp': '2025-06-18 14:01:31',
-    });
-
-    // Validate parameters
-    final validation = _validateCouponParams(params);
-    if (validation != null) {
-      _logger.logBusinessLogic(
-        'apply_coupon_usecase',
-        'validation_failed',
-        {'error': validation.message, 'code': validation.code},
-      );
-      return Left(validation);
-    }
+    _logger.logBusinessLogic(
+      'apply_coupon_usecase',
+      'started',
+      {
+        'coupon_code': params.couponCode,
+        'user_id': params.userId,
+        'user': 'roshdology123',
+        'timestamp': '2025-06-22 13:21:20',
+      },
+    );
 
     final result = await _repository.applyCoupon(
       couponCode: params.couponCode,
       userId: params.userId,
     );
-
-    final duration = DateTime.now().difference(startTime);
 
     result.fold(
           (failure) => _logger.logBusinessLogic(
@@ -52,68 +41,36 @@ class ApplyCouponUseCase implements UseCase<Cart, ApplyCouponParams> {
           'error': failure.message,
           'code': failure.code,
           'coupon_code': params.couponCode,
-          'duration_ms': duration.inMilliseconds,
           'user': 'roshdology123',
         },
       ),
-          (cart) => _logger.logUserAction('apply_coupon_usecase_success', {
-        'coupon_code': params.couponCode,
-        'discount_amount': cart.summary.couponDiscount,
-        'cart_total': cart.summary.total,
-        'savings': cart.summary.totalSavings,
-        'duration_ms': duration.inMilliseconds,
-        'user': 'roshdology123',
-      }),
+          (cart) => _logger.logBusinessLogic(
+        'apply_coupon_usecase',
+        'success',
+        {
+          'coupon_code': params.couponCode,
+          'discount_amount': cart.summary.couponDiscount,
+          'new_total': cart.summary.total,
+          'user': 'roshdology123',
+        },
+      ),
     );
 
     return result;
-  }
-
-  Failure? _validateCouponParams(ApplyCouponParams params) {
-    if (params.userId == null) {
-      return AuthFailure.unauthorized();
-    }
-
-    if (params.couponCode.trim().isEmpty) {
-      return const ValidationFailure(
-        message: 'Coupon code cannot be empty',
-        code: 'INVALID_COUPON_CODE',
-      );
-    }
-
-    if (params.couponCode.length < 3) {
-      return const ValidationFailure(
-        message: 'Coupon code must be at least 3 characters',
-        code: 'COUPON_CODE_TOO_SHORT',
-      );
-    }
-
-    if (params.couponCode.length > 50) {
-      return const ValidationFailure(
-        message: 'Coupon code cannot exceed 50 characters',
-        code: 'COUPON_CODE_TOO_LONG',
-      );
-    }
-
-    // Basic format validation (alphanumeric with some special chars)
-    final validCouponRegex = RegExp(r'^[A-Z0-9\-_]+$');
-    if (!validCouponRegex.hasMatch(params.couponCode.toUpperCase())) {
-      return ValidationFailure.invalidFormat('coupon code');
-    }
-
-    return null;
   }
 }
 
 class ApplyCouponParams extends Equatable {
   final String couponCode;
   final String? userId;
+  final String? cartId; // Keep this for compatibility
 
   const ApplyCouponParams({
     required this.couponCode,
     this.userId,
+    this.cartId,
   });
 
   @override
-  List<Object?> get props => [couponCode, userId];
+  List<Object?> get props => [couponCode, userId, cartId];
 }
