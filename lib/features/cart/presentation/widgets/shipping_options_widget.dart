@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/utils/app_logger.dart';
+import '../cubit/cart_cubit.dart';
+import '../cubit/cart_state.dart';
 
 class ShippingOptionsWidget extends StatelessWidget {
   final String? selectedMethod;
   final Function(String) onMethodChanged;
   final double currentTotal;
   final bool showEstimatedDelivery;
+  final bool isOptimistic; // 🔥 ADD THIS FLAG
 
   const ShippingOptionsWidget({
     super.key,
@@ -14,91 +18,126 @@ class ShippingOptionsWidget extends StatelessWidget {
     required this.onMethodChanged,
     required this.currentTotal,
     this.showEstimatedDelivery = true,
+    this.isOptimistic = false, // 🔥 ADD THIS FLAG
   });
 
   @override
   Widget build(BuildContext context) {
     final logger = AppLogger();
 
-    // Mock shipping options - in real app, get from API
-    final shippingOptions = _getShippingOptions(currentTotal);
+    // 🔥 LISTEN TO CART STATE TO REBUILD WHEN NEEDED
+    return BlocBuilder<CartCubit, CartState>(
+      builder: (context, state) {
+        // Get current total from cart state if available, otherwise use parameter
+        final effectiveTotal = state.cart?.summary.total ?? currentTotal;
+        final effectiveSelectedMethod = selectedMethod ?? state.cart?.summary.selectedShippingMethod;
 
-    logger.logBusinessLogic(
-      'shipping_options_widget_rendered',
-      'ui_component',
-      {
-        'selected_method': selectedMethod,
-        'current_total': currentTotal,
-        'available_options_count': shippingOptions.length,
-        'user': 'roshdology123',
-        'timestamp': '2025-06-18 14:18:15',
-      },
-    );
+        // Get shipping options based on current total
+        final shippingOptions = _getShippingOptions(effectiveTotal);
 
-    return Card(
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
+        logger.logBusinessLogic(
+          'shipping_options_widget_rendered',
+          'ui_component',
+          {
+            'selected_method': effectiveSelectedMethod,
+            'current_total': effectiveTotal,
+            'available_options_count': shippingOptions.length,
+            'is_optimistic': isOptimistic,
+            'user': 'roshdology123',
+            'timestamp': '2025-06-23 07:05:50', // 🔥 UPDATED TIMESTAMP
+          },
+        );
+
+        return Card(
+          elevation: 1,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.local_shipping_outlined,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
+                // Header with optimistic indicator
+                Row(
+                  children: [
+                    Icon(
+                      Icons.local_shipping_outlined,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Shipping Options',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    // 🔥 OPTIMISTIC UPDATE INDICATOR
+                    if (isOptimistic || state.isOptimistic) ...[
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Shipping Options',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+
+                const SizedBox(height: 16),
+
+                // Shipping Options
+                ...shippingOptions.map((option) => _buildShippingOption(
+                  context,
+                  option,
+                  effectiveSelectedMethod,
+                  effectiveTotal,
+                  state.isOptimistic || isOptimistic,
+                  logger,
+                )),
+
+                // Free Shipping Progress (if applicable)
+                if (effectiveTotal < 50.0)
+                  _buildFreeShippingProgress(context, effectiveTotal),
               ],
             ),
-
-            const SizedBox(height: 16),
-
-            // Shipping Options
-            ...shippingOptions.map((option) => _buildShippingOption(
-              context,
-              option,
-              logger,
-            )),
-
-            // Free Shipping Progress (if applicable)
-            if (currentTotal < 50.0)
-              _buildFreeShippingProgress(context),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildShippingOption(
       BuildContext context,
       Map<String, dynamic> option,
+      String? currentSelectedMethod,
+      double total,
+      bool isOptimisticUpdate,
       AppLogger logger,
       ) {
-    final isSelected = selectedMethod == option['id'];
+    final isSelected = currentSelectedMethod == option['id'];
     final cost = option['cost'] as double;
     final isFree = cost == 0.0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
-        onTap: () {
+        onTap: isOptimisticUpdate ? null : () {
+          // 🔥 OPTIMISTIC UPDATE: Update immediately in UI
           logger.logUserAction('shipping_method_selected', {
             'method_id': option['id'],
             'method_name': option['name'],
             'cost': cost,
             'delivery_days': option['deliveryDays'],
+            'previous_method': currentSelectedMethod,
+            'total_before': total,
             'user': 'roshdology123',
-            'timestamp': '2025-06-18 14:18:15',
+            'timestamp': '2025-06-23 07:05:50', // 🔥 UPDATED TIMESTAMP
           });
+
           onMethodChanged(option['id']);
         },
         borderRadius: BorderRadius.circular(8),
@@ -114,6 +153,16 @@ class ShippingOptionsWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             color: isSelected
                 ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+                : null,
+            // 🔥 VISUAL FEEDBACK FOR OPTIMISTIC UPDATES
+            boxShadow: isOptimisticUpdate && isSelected
+                ? [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ]
                 : null,
           ),
           child: Row(
@@ -157,10 +206,28 @@ class ShippingOptionsWidget extends StatelessWidget {
                           option['name'],
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
+                            // 🔥 DIMMED TEXT DURING OPTIMISTIC UPDATES
+                            color: isOptimisticUpdate
+                                ? Theme.of(context).colorScheme.onSurface.withOpacity(0.7)
+                                : null,
                           ),
                         ),
                         Row(
                           children: [
+                            // 🔥 PENDING INDICATOR FOR SELECTED OPTIMISTIC OPTION
+                            if (isOptimisticUpdate && isSelected) ...[
+                              SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
                             if (isFree) ...[
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -182,6 +249,9 @@ class ShippingOptionsWidget extends StatelessWidget {
                                 '\$${cost.toStringAsFixed(2)}',
                                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
+                                  color: isOptimisticUpdate
+                                      ? Theme.of(context).colorScheme.onSurface.withOpacity(0.7)
+                                      : null,
                                 ),
                               ),
                             ],
@@ -229,9 +299,9 @@ class ShippingOptionsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFreeShippingProgress(BuildContext context) {
-    final amountNeeded = 50.0 - currentTotal;
-    final progress = currentTotal / 50.0;
+  Widget _buildFreeShippingProgress(BuildContext context, double total) {
+    final amountNeeded = 50.0 - total;
+    final progress = total / 50.0;
 
     return Container(
       margin: const EdgeInsets.only(top: 16),

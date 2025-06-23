@@ -24,6 +24,7 @@ mixin _$CartSummaryState {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -45,6 +46,7 @@ mixin _$CartSummaryState {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -66,6 +68,7 @@ mixin _$CartSummaryState {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -178,6 +181,7 @@ class _$InitialImpl implements _Initial {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -202,6 +206,7 @@ class _$InitialImpl implements _Initial {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -226,6 +231,7 @@ class _$InitialImpl implements _Initial {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -337,6 +343,7 @@ class _$LoadingImpl implements _Loading {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -361,6 +368,7 @@ class _$LoadingImpl implements _Loading {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -385,6 +393,7 @@ class _$LoadingImpl implements _Loading {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -459,6 +468,7 @@ abstract class _$$LoadedImplCopyWith<$Res> {
       {CartSummary summary,
       bool isCalculating,
       bool isApplyingCoupon,
+      bool isOptimistic,
       String? selectedShippingMethod,
       String? appliedCouponCode,
       List<String>? availableShippingMethods,
@@ -481,6 +491,7 @@ class __$$LoadedImplCopyWithImpl<$Res>
     Object? summary = null,
     Object? isCalculating = null,
     Object? isApplyingCoupon = null,
+    Object? isOptimistic = null,
     Object? selectedShippingMethod = freezed,
     Object? appliedCouponCode = freezed,
     Object? availableShippingMethods = freezed,
@@ -498,6 +509,10 @@ class __$$LoadedImplCopyWithImpl<$Res>
       isApplyingCoupon: null == isApplyingCoupon
           ? _value.isApplyingCoupon
           : isApplyingCoupon // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isOptimistic: null == isOptimistic
+          ? _value.isOptimistic
+          : isOptimistic // ignore: cast_nullable_to_non_nullable
               as bool,
       selectedShippingMethod: freezed == selectedShippingMethod
           ? _value.selectedShippingMethod
@@ -526,6 +541,7 @@ class _$LoadedImpl implements _Loaded {
       {required this.summary,
       this.isCalculating = false,
       this.isApplyingCoupon = false,
+      this.isOptimistic = false,
       this.selectedShippingMethod,
       this.appliedCouponCode,
       final List<String>? availableShippingMethods,
@@ -541,6 +557,10 @@ class _$LoadedImpl implements _Loaded {
   @override
   @JsonKey()
   final bool isApplyingCoupon;
+  @override
+  @JsonKey()
+  final bool isOptimistic;
+// 🔥 ADD OPTIMISTIC FLAG
   @override
   final String? selectedShippingMethod;
   @override
@@ -568,7 +588,7 @@ class _$LoadedImpl implements _Loaded {
 
   @override
   String toString() {
-    return 'CartSummaryState.loaded(summary: $summary, isCalculating: $isCalculating, isApplyingCoupon: $isApplyingCoupon, selectedShippingMethod: $selectedShippingMethod, appliedCouponCode: $appliedCouponCode, availableShippingMethods: $availableShippingMethods, shippingCosts: $shippingCosts)';
+    return 'CartSummaryState.loaded(summary: $summary, isCalculating: $isCalculating, isApplyingCoupon: $isApplyingCoupon, isOptimistic: $isOptimistic, selectedShippingMethod: $selectedShippingMethod, appliedCouponCode: $appliedCouponCode, availableShippingMethods: $availableShippingMethods, shippingCosts: $shippingCosts)';
   }
 
   @override
@@ -581,6 +601,8 @@ class _$LoadedImpl implements _Loaded {
                 other.isCalculating == isCalculating) &&
             (identical(other.isApplyingCoupon, isApplyingCoupon) ||
                 other.isApplyingCoupon == isApplyingCoupon) &&
+            (identical(other.isOptimistic, isOptimistic) ||
+                other.isOptimistic == isOptimistic) &&
             (identical(other.selectedShippingMethod, selectedShippingMethod) ||
                 other.selectedShippingMethod == selectedShippingMethod) &&
             (identical(other.appliedCouponCode, appliedCouponCode) ||
@@ -597,6 +619,7 @@ class _$LoadedImpl implements _Loaded {
       summary,
       isCalculating,
       isApplyingCoupon,
+      isOptimistic,
       selectedShippingMethod,
       appliedCouponCode,
       const DeepCollectionEquality().hash(_availableShippingMethods),
@@ -619,6 +642,7 @@ class _$LoadedImpl implements _Loaded {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -635,6 +659,7 @@ class _$LoadedImpl implements _Loaded {
         summary,
         isCalculating,
         isApplyingCoupon,
+        isOptimistic,
         selectedShippingMethod,
         appliedCouponCode,
         availableShippingMethods,
@@ -650,6 +675,7 @@ class _$LoadedImpl implements _Loaded {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -666,6 +692,7 @@ class _$LoadedImpl implements _Loaded {
         summary,
         isCalculating,
         isApplyingCoupon,
+        isOptimistic,
         selectedShippingMethod,
         appliedCouponCode,
         availableShippingMethods,
@@ -681,6 +708,7 @@ class _$LoadedImpl implements _Loaded {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -699,6 +727,7 @@ class _$LoadedImpl implements _Loaded {
           summary,
           isCalculating,
           isApplyingCoupon,
+          isOptimistic,
           selectedShippingMethod,
           appliedCouponCode,
           availableShippingMethods,
@@ -753,6 +782,7 @@ abstract class _Loaded implements CartSummaryState {
       {required final CartSummary summary,
       final bool isCalculating,
       final bool isApplyingCoupon,
+      final bool isOptimistic,
       final String? selectedShippingMethod,
       final String? appliedCouponCode,
       final List<String>? availableShippingMethods,
@@ -761,6 +791,7 @@ abstract class _Loaded implements CartSummaryState {
   CartSummary get summary;
   bool get isCalculating;
   bool get isApplyingCoupon;
+  bool get isOptimistic; // 🔥 ADD OPTIMISTIC FLAG
   String? get selectedShippingMethod;
   String? get appliedCouponCode;
   List<String>? get availableShippingMethods;
@@ -883,6 +914,7 @@ class _$ErrorImpl implements _Error {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -907,6 +939,7 @@ class _$ErrorImpl implements _Error {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -931,6 +964,7 @@ class _$ErrorImpl implements _Error {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -1108,6 +1142,7 @@ class _$CalculatingImpl implements _Calculating {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -1132,6 +1167,7 @@ class _$CalculatingImpl implements _Calculating {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,
@@ -1156,6 +1192,7 @@ class _$CalculatingImpl implements _Calculating {
             CartSummary summary,
             bool isCalculating,
             bool isApplyingCoupon,
+            bool isOptimistic,
             String? selectedShippingMethod,
             String? appliedCouponCode,
             List<String>? availableShippingMethods,

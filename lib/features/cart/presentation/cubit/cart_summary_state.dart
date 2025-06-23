@@ -15,6 +15,7 @@ class CartSummaryState with _$CartSummaryState {
     required CartSummary summary,
     @Default(false) bool isCalculating,
     @Default(false) bool isApplyingCoupon,
+    @Default(false) bool isOptimistic, // 🔥 ADD OPTIMISTIC FLAG
     String? selectedShippingMethod,
     String? appliedCouponCode,
     List<String>? availableShippingMethods,
@@ -40,12 +41,17 @@ extension CartSummaryStateX on CartSummaryState {
   bool get isLoading => maybeWhen(
     loading: () => true,
     calculating: (_, __, ___) => true,
-    loaded: (_, isCalculating, __, ___, ____, _____, ______) => isCalculating,
+    loaded: (_, isCalculating, __, ___, ____, _____, ______, _______,) => isCalculating,
+    orElse: () => false,
+  );
+
+  bool get isOptimistic => maybeWhen(
+    loaded: (_, __, ___, isOptimistic, ____, _____, ______, _______) => isOptimistic,
     orElse: () => false,
   );
 
   CartSummary? get summary => maybeWhen(
-    loaded: (summary, _, __, ___, ____, _____, ______) => summary,
+    loaded: (summary, _, __, ___, ____, _____, ______, _______) => summary,
     error: (_, summary, __, ___) => summary,
     calculating: (summary, _, __) => summary,
     orElse: () => null,

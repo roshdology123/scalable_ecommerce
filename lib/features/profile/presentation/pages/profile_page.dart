@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/error_widget.dart';
 import '../../../../core/widgets/loading_widget.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../cubit/profile/profile_cubit.dart';
 import '../cubit/profile/profile_state.dart';
 import '../cubit/profile_preferences/profile_preferences_cubit.dart';
@@ -403,8 +404,14 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
               ProfileMenuItem(
                 icon: Icons.notifications_outlined,
                 title: 'Notifications',
+                subtitle: 'Your notification center',
+                onTap: () => context.push('/notifications'),
+              ),
+              ProfileMenuItem(
+                icon: Icons.settings_applications_outlined,
+                title: 'Notification Settings',
                 subtitle: 'Manage notification preferences',
-                onTap: () => context.push('/profile/settings/notifications'),
+                onTap: () => context.push('/notifications/settings'),
               ),
             ],
           ),
@@ -642,7 +649,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              // Implement sign out logic
+              context.read<AuthCubit>().logout();
               context.go('/auth/login');
             },
             style: ElevatedButton.styleFrom(

@@ -17,6 +17,37 @@ abstract class AppException implements Exception {
     return 'AppException: $message${code != null ? ' (Code: $code)' : ''}';
   }
 }
+/// Server-related exceptions
+class ServerException extends AppException {
+  const ServerException({
+    required super.message,
+    super.code,
+    super.data,
+    super.stackTrace,
+  });
+
+  factory ServerException.unreachable() {
+    return const ServerException(
+      message: 'Server is unreachable',
+      code: 'SERVER_UNREACHABLE',
+    );
+  }
+
+  factory ServerException.maintenance() {
+    return const ServerException(
+      message: 'Server is under maintenance',
+      code: 'SERVER_MAINTENANCE',
+    );
+  }
+
+  factory ServerException.internalError() {
+    return const ServerException(
+      message: 'Internal server error occurred',
+      code: 'INTERNAL_SERVER_ERROR',
+    );
+  }
+}
+
 
 /// Network-related exceptions
 class NetworkException extends AppException {

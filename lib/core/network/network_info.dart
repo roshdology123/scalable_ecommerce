@@ -14,8 +14,9 @@ class NetworkInfoImpl implements NetworkInfo {
 
   @override
   Future<bool> get isConnected async {
-    final result = await _connectivity.checkConnectivity();
-    return _isConnected(result);
+    final results = await _connectivity.checkConnectivity();
+    // results is List<ConnectivityResult>
+    return _isConnected(results);
   }
 
   @override
@@ -23,18 +24,13 @@ class NetworkInfoImpl implements NetworkInfo {
     return _connectivity.onConnectivityChanged.map(_isConnected);
   }
 
-  bool _isConnected(ConnectivityResult result) {
-    switch (result) {
-      case ConnectivityResult.wifi:
-      case ConnectivityResult.mobile:
-      case ConnectivityResult.ethernet:
-        return true;
-      case ConnectivityResult.none:
-      case ConnectivityResult.bluetooth:
-      case ConnectivityResult.vpn:
-      case ConnectivityResult.other:
-        return false;
-    }
+  bool _isConnected(List<ConnectivityResult> results) {
+    // Consider connected if any interface is available
+    return results.any((result) =>
+    result == ConnectivityResult.wifi ||
+        result == ConnectivityResult.mobile ||
+        result == ConnectivityResult.ethernet
+    );
   }
 }
 

@@ -97,18 +97,17 @@ class ProfileThemeChanged extends ProfilePreferencesState {
   final UserPreferences preferences;
   final ThemeMode previousTheme;
   final ThemeMode newTheme;
+  final bool isOptimistic;
 
   const ProfileThemeChanged({
     required this.preferences,
     required this.previousTheme,
     required this.newTheme,
+    this.isOptimistic = false,
   });
 
   @override
-  List<Object?> get props => [preferences, previousTheme, newTheme];
-
-  @override
-  String toString() => 'ProfileThemeChanged(from: ${previousTheme.name}, to: ${newTheme.name})';
+  List<Object?> get props => [preferences, previousTheme, newTheme, isOptimistic];
 }
 
 /// State when language is being changed
@@ -164,17 +163,16 @@ class ProfileNotificationSettingsUpdating extends ProfilePreferencesState {
 class ProfileNotificationSettingsUpdated extends ProfilePreferencesState {
   final UserPreferences preferences;
   final Map<String, bool> changedSettings;
+  final bool isOptimistic;
 
   const ProfileNotificationSettingsUpdated({
     required this.preferences,
     required this.changedSettings,
+    this.isOptimistic = false,
   });
 
   @override
-  List<Object?> get props => [preferences, changedSettings];
-
-  @override
-  String toString() => 'ProfileNotificationSettingsUpdated(changes: ${changedSettings.length})';
+  List<Object?> get props => [preferences, changedSettings, isOptimistic];
 }
 
 /// State when privacy settings are being updated
@@ -195,18 +193,22 @@ class ProfilePrivacySettingsUpdated extends ProfilePreferencesState {
   final UserPreferences preferences;
   final int newPrivacyScore;
   final int previousPrivacyScore;
+  final bool isOptimistic;
 
   const ProfilePrivacySettingsUpdated({
     required this.preferences,
     required this.newPrivacyScore,
     required this.previousPrivacyScore,
+    this.isOptimistic = false,
   });
 
   @override
-  List<Object?> get props => [preferences, newPrivacyScore, previousPrivacyScore];
-
-  @override
-  String toString() => 'ProfilePrivacySettingsUpdated(score: $previousPrivacyScore → $newPrivacyScore)';
+  List<Object?> get props => [
+    preferences,
+    newPrivacyScore,
+    previousPrivacyScore,
+    isOptimistic,
+  ];
 }
 
 /// State when security settings are being updated

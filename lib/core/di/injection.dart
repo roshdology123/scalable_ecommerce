@@ -1,7 +1,10 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:scalable_ecommerce/core/services/notification_service.dart';
+import 'package:scalable_ecommerce/core/services/notification_simulator.dart';
 import 'package:scalable_ecommerce/features/favorites/di/favorites_module.dart';
+import 'package:scalable_ecommerce/features/notifications/domain/repositories/notification_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/themes/theme_cubit.dart';
@@ -12,6 +15,28 @@ import '../../features/favorites/domain/usecases/clear_favorites_usecase.dart';
 import '../../features/favorites/domain/usecases/remove_favorite_usecase.dart';
 import '../../features/favorites/presentation/cubit/favorites_collections/favorites_collection_cubit.dart';
 import '../../features/favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
+import '../../features/notifications/data/datasources/notifications_local_datasource.dart';
+import '../../features/notifications/data/datasources/notifications_remote_datasource.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/notifications/domain/usecases/clear_notification_usecase.dart';
+import '../../features/notifications/domain/usecases/delete_notification_usecase.dart';
+import '../../features/notifications/domain/usecases/export_notifications_usecase.dart';
+import '../../features/notifications/domain/usecases/get_notification_by_id_usecase.dart';
+import '../../features/notifications/domain/usecases/get_notification_stats_usecase.dart';
+import '../../features/notifications/domain/usecases/get_notifications_usecase.dart';
+import '../../features/notifications/domain/usecases/get_unread_count_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_all_as_read_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_as_read_usecase.dart';
+import '../../features/notifications/domain/usecases/send_test_notification_usecase.dart';
+import '../../features/notifications/domain/usecases/subscribe_to_topic_usecase.dart';
+import '../../features/notifications/domain/usecases/sync_notifications_usecase.dart';
+import '../../features/notifications/domain/usecases/unsubscribe_from_topic_usecase.dart';
+import '../../features/notifications/domain/usecases/update_fcm_token_usecase.dart';
+import '../../features/notifications/domain/usecases/update_notification_settings_usecase.dart';
+import '../../features/notifications/presentation/cubit/notification_preferences_cubit.dart';
+import '../../features/notifications/presentation/cubit/notification_stats_cubit.dart';
+import '../../features/notifications/presentation/cubit/notification_sync_cubit.dart';
+import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import '../../features/profile/data/datasources/profile_local_datasource.dart';
 import '../../features/profile/data/datasources/profile_remote_datasource.dart';
@@ -710,9 +735,118 @@ Future<void> configureDependencies() async {
         'timestamp': '2025-06-22 09:41:12',
       },
     );
+    logger.logBusinessLogic(
+      'notifications_feature_registration_started',
+      'system_init',
+      {
+        'user': 'roshdology123',
+        'timestamp': '2025-06-23 11:38:39',
+      },
+    );
+    getIt.registerSingleton<NotificationsLocalDataSource>(
+      NotificationsLocalDataSource(),
+    );
+    getIt.registerSingleton<NotificationsRemoteDataSource>(
+      NotificationsRemoteDataSource(getIt<DioClient>()),
+    );
 
+    // Repository
+    getIt.registerSingleton<NotificationsRepository>(
+      NotificationsRepositoryImpl(
+         getIt<NotificationsRemoteDataSource>(),
+         getIt<NotificationsLocalDataSource>(),
+         getIt<NetworkInfo>(),
+      ),
+    );
+    getIt.registerSingleton<NotificationService>(
+      NotificationService(
+      ),
+    );
+    getIt.registerSingleton<NotificationSimulator>(
+      NotificationSimulator()
+    );
+    // Use Cases
+    getIt.registerSingleton<GetNotificationsUseCase>(
+      GetNotificationsUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<GetNotificationByIdUseCase>(
+      GetNotificationByIdUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<MarkAsReadUseCase>(
+      MarkAsReadUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<MarkAllAsReadUseCase>(
+      MarkAllAsReadUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<DeleteNotificationUseCase>(
+      DeleteNotificationUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<ClearNotificationsUseCase>(
+      ClearNotificationsUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<GetUnreadCountUseCase>(
+      GetUnreadCountUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<UpdateNotificationSettingsUseCase>(
+      UpdateNotificationSettingsUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<SubscribeToTopicUseCase>(
+      SubscribeToTopicUseCase(getIt<NotificationService>()),
+    );
+    getIt.registerSingleton<UnsubscribeFromTopicUseCase>(
+      UnsubscribeFromTopicUseCase(getIt<NotificationService>()),
+    );
+    getIt.registerSingleton<UpdateFCMTokenUseCase>(
+      UpdateFCMTokenUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<SendTestNotificationUseCase>(
+      SendTestNotificationUseCase(getIt<NotificationService>(),
+        getIt<NotificationSimulator>()
+      ),
+    );
+    getIt.registerSingleton<SyncNotificationsUseCase>(
+      SyncNotificationsUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<GetNotificationStatsUseCase>(
+      GetNotificationStatsUseCase(getIt<NotificationsRepository>()),
+    );
+    getIt.registerSingleton<ExportNotificationsUseCase>(
+      ExportNotificationsUseCase(getIt<NotificationsRepository>()),
+    );
+
+    // Cubits (as factories)
+    getIt.registerFactory<NotificationsCubit>(
+          () => NotificationsCubit(
+        getIt<GetNotificationsUseCase>(),
+        getIt<GetNotificationByIdUseCase>(),
+        getIt<MarkAsReadUseCase>(),
+            getIt<MarkAllAsReadUseCase>(),
+            getIt<DeleteNotificationUseCase>(),
+
+            getIt<ClearNotificationsUseCase>(),
+
+        getIt<GetUnreadCountUseCase>(),
+        getIt<SendTestNotificationUseCase>(),
+      ),
+    );
+    getIt.registerFactory<NotificationPreferencesCubit>(
+          () => NotificationPreferencesCubit(
+        getIt<UpdateNotificationSettingsUseCase>(),
+        getIt<SubscribeToTopicUseCase>(),
+        getIt<UnsubscribeFromTopicUseCase>(),
+        getIt<UpdateFCMTokenUseCase>(),
+      ),
+    );
+    getIt.registerFactory<NotificationSyncCubit>(
+          () => NotificationSyncCubit(
+        getIt<SyncNotificationsUseCase>(),
+      ),
+    );
+    getIt.registerFactory<NotificationStatsCubit>(
+          () => NotificationStatsCubit(getIt<GetNotificationStatsUseCase>(),getIt<ExportNotificationsUseCase>()),
+    );
     // =====================================================================
-    // STEP 7: FINAL VERIFICATION AND SUCCESS LOG
+    // STEP 10: FINAL VERIFICATION AND SUCCESS LOG
     // =====================================================================
 
     await _performFinalVerification();

@@ -71,9 +71,9 @@ class ProfileHeader extends StatelessWidget {
 
                       const SizedBox(height: 4),
 
-                      // Username
+                      // Username - use actual username from profile
                       Text(
-                        '@roshdology123',
+                        '@${profile.id}', // Using ID as username for FakeStore API users
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
@@ -245,7 +245,7 @@ class ProfileHeader extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    final now = DateTime.parse('2025-06-22 09:05:09');
+    final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inDays == 0) {

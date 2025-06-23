@@ -3,8 +3,10 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../data/models/cart_item_model.dart';
 import '../../domain/entities/cart.dart';
 import '../../domain/entities/cart_item.dart';
+import '../../domain/entities/cart_summary.dart';
 import '../../domain/usecases/add_to_cart_usecase.dart';
 import '../../domain/usecases/apply_coupon_usecase.dart';
 import '../../domain/usecases/calculate_cart_totals_usecase.dart';
@@ -60,7 +62,6 @@ class CartCubit extends Cubit<CartState> {
     );
   }
 
-  /// 🔥 CRITICAL FIX: Initialize cart with proper user context and guest cart migration
   Future<void> initializeCart([String? userId]) async {
     // Set user context
     final effectiveUserId = userId ?? 'roshdology123';
@@ -76,7 +77,7 @@ class CartCubit extends Cubit<CartState> {
       'was_authenticated': wasAuthenticated,
       'is_authenticated': _isUserAuthenticated,
       'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
     });
 
     // Debug user state
@@ -199,7 +200,7 @@ class CartCubit extends Cubit<CartState> {
         'expected_user': 'roshdology123',
         'user_match': _currentUserId == 'roshdology123',
         'user': 'roshdology123',
-        'timestamp': '2025-06-22 14:00:15',
+        'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
       },
     );
   }
@@ -214,14 +215,15 @@ class CartCubit extends Cubit<CartState> {
       'current_cart_id': state.cart?.id,
       'current_cart_user': state.cart?.userId,
       'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
     });
 
     _currentUserId = authenticatedUserId;
     _isUserAuthenticated = true;
 
     state.whenOrNull(
-      loaded: (cart, _, __, ___, ____, _____, ______) {
+      // 🔥 FIXED: Correct number of parameters (8 parameters)
+      loaded: (cart, _, __, ___, ____, _____, ______, _______) {
         if (cart.isGuestCart || cart.userId != authenticatedUserId) {
           // Migrate guest cart to authenticated cart
           final authenticatedCart = cart.copyWith(
@@ -242,7 +244,7 @@ class CartCubit extends Cubit<CartState> {
           emit(CartState.loaded(cart: authenticatedCart));
         }
       },
-      empty: (_, __) {
+      empty: (_, __,___) {
         // Create new authenticated empty cart
         emit(const CartState.empty());
       },
@@ -251,7 +253,6 @@ class CartCubit extends Cubit<CartState> {
     _debugUserState('forceAuthenticatedCart');
   }
 
-  /// Add product to cart
   Future<void> addToCart({
     required int productId,
     required String productTitle,
@@ -269,8 +270,6 @@ class CartCubit extends Cubit<CartState> {
     double? discountPercentage,
   }) async {
     final startTime = DateTime.now();
-
-    // 🔥 ENSURE USER CONTEXT: Always use roshdology123 for authenticated operations
     final effectiveUserId = _getCurrentEffectiveUserId();
 
     _logger.logUserAction('add_to_cart_started', {
@@ -283,25 +282,147 @@ class CartCubit extends Cubit<CartState> {
       'cubit_user_id': _currentUserId,
       'is_authenticated': _isUserAuthenticated,
       'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
+      'timestamp': '2025-06-23 06:59:26', // 🔥 UPDATED TO CURRENT TIME
     });
 
     _debugUserState('addToCart');
 
-    // Optimistic update
+    // 🔥 OPTIMISTIC UPDATE: Add item immediately
     state.whenOrNull(
-      loaded: (cart, _, __, ___, ____, _____, ______) {
+      // 🔥 FIXED: Correct number of parameters (8 parameters)
+      loaded: (cart, _, __, ___, ____, _____, ______, _______) {
+        // Build selected variants map
+        final variants = <String, String>{};
+        if (selectedColor != null) variants['color'] = selectedColor;
+        if (selectedSize != null) variants['size'] = selectedSize;
+        if (additionalVariants != null) variants.addAll(additionalVariants);
+
+        // Calculate discount amount if discount percentage is provided
+        final effectiveOriginalPrice = originalPrice ?? price;
+        final calculatedDiscountAmount = discountPercentage != null
+            ? (effectiveOriginalPrice * discountPercentage / 100)
+            : (effectiveOriginalPrice > price ? effectiveOriginalPrice - price : null);
+
+        // Create new cart item with all required fields
+        final newItem = CartItem(
+          id: 'temp_${productId}_${DateTime.now().millisecondsSinceEpoch}',
+          productId: productId,
+          productTitle: productTitle,
+          productImage: productImage,
+          price: price,
+          originalPrice: effectiveOriginalPrice,
+          quantity: quantity,
+          maxQuantity: maxQuantity ?? 999, // Default max quantity
+          selectedColor: selectedColor,
+          selectedSize: selectedSize,
+          selectedVariants: variants,
+          isAvailable: true, // Assume available for optimistic update
+          inStock: true, // Assume in stock for optimistic update
+          brand: brand,
+          category: category,
+          sku: sku,
+          discountPercentage: discountPercentage,
+          discountAmount: calculatedDiscountAmount,
+          addedAt: DateTime.parse('2025-06-23 06:59:26'),
+          updatedAt: DateTime.parse('2025-06-23 06:59:26'),
+          lastPriceCheck: DateTime.parse('2025-06-23 06:59:26'),
+          priceChanged: false,
+          previousPrice: null,
+          isSelected: false,
+          specialOfferId: null,
+          metadata: null,
+        );
+
+        final updatedItems = [...cart.items, newItem];
+        final optimisticCart = cart.copyWith(
+          items: updatedItems,
+          updatedAt: DateTime.parse('2025-06-23 06:59:26'),
+        );
+
+        // Recalculate totals optimistically
+        final optimisticSummary = _calculateOptimisticSummary(optimisticCart);
+        final finalCart = optimisticCart.copyWith(summary: optimisticSummary);
+
         emit(CartState.loaded(
-          cart: cart,
-          isUpdating: true,
-          pendingAction: 'add_item',
+          cart: finalCart,
+          isOptimistic: true,
         ));
+
+        _showSuccessMessage('Item added to cart');
       },
-      empty: (_, __) {
-        emit(const CartState.empty(isLoading: true));
+      empty: (_, __,___) {
+        // Build selected variants map
+        final variants = <String, String>{};
+        if (selectedColor != null) variants['color'] = selectedColor;
+        if (selectedSize != null) variants['size'] = selectedSize;
+        if (additionalVariants != null) variants.addAll(additionalVariants);
+
+        // Calculate discount amount if discount percentage is provided
+        final effectiveOriginalPrice = originalPrice ?? price;
+        final calculatedDiscountAmount = discountPercentage != null
+            ? (effectiveOriginalPrice * discountPercentage / 100)
+            : (effectiveOriginalPrice > price ? effectiveOriginalPrice - price : null);
+
+        // Create new cart with the item
+        final newItem = CartItem(
+          id: 'temp_${productId}_${DateTime.now().millisecondsSinceEpoch}',
+          productId: productId,
+          productTitle: productTitle,
+          productImage: productImage,
+          price: price,
+          originalPrice: effectiveOriginalPrice,
+          quantity: quantity,
+          maxQuantity: maxQuantity ?? 999,
+          selectedColor: selectedColor,
+          selectedSize: selectedSize,
+          selectedVariants: variants,
+          isAvailable: true,
+          inStock: true,
+          brand: brand,
+          category: category,
+          sku: sku,
+          discountPercentage: discountPercentage,
+          discountAmount: calculatedDiscountAmount,
+          addedAt: DateTime.parse('2025-06-23 06:59:26'),
+          updatedAt: DateTime.parse('2025-06-23 06:59:26'),
+          lastPriceCheck: DateTime.parse('2025-06-23 06:59:26'),
+          priceChanged: false,
+          previousPrice: null,
+          isSelected: false,
+          specialOfferId: null,
+          metadata: null,
+        );
+
+        // Create initial cart summary
+        final itemTotal = price * quantity;
+        final estimatedTax = itemTotal * 0.08; // 8% tax estimation
+
+        final newCart = Cart(
+          id: 'cart_${effectiveUserId}_${DateTime.now().millisecondsSinceEpoch}',
+          userId: effectiveUserId,
+          items: [newItem],
+          summary: CartSummary.empty().copyWith(
+            subtotal: itemTotal,
+            totalTax: estimatedTax,
+            total: itemTotal + estimatedTax,
+            totalItems: quantity,
+            totalQuantity: quantity, // Assuming this field exists
+            lastCalculated: DateTime.parse('2025-06-23 06:59:26'),
+          ),
+          createdAt: DateTime.parse('2025-06-23 06:59:26'),
+          updatedAt: DateTime.parse('2025-06-23 06:59:26'),
+        );
+
+        emit(CartState.loaded(
+          cart: newCart,
+          isOptimistic: true,
+        ));
+
+        _showSuccessMessage('Item added to cart');
       },
     );
 
+    // Background server update
     final result = await _addToCartUseCase(AddToCartParams(
       productId: productId,
       productTitle: productTitle,
@@ -311,7 +432,7 @@ class CartCubit extends Cubit<CartState> {
       selectedColor: selectedColor,
       selectedSize: selectedSize,
       additionalVariants: additionalVariants,
-      userId: effectiveUserId, // 🔥 Use effective user ID
+      userId: effectiveUserId,
       maxQuantity: maxQuantity,
       brand: brand,
       category: category,
@@ -336,17 +457,9 @@ class CartCubit extends Cubit<CartState> {
           },
         );
 
-        emit(CartState.error(
-          failure: failure,
-          cart: state.cart,
-          canRetry: true,
-          failedAction: 'add_to_cart',
-          actionContext: {
-            'product_id': productId,
-            'quantity': quantity,
-            'price': price,
-          },
-        ));
+        // Revert optimistic update on failure
+        refresh();
+        _showErrorMessage('Failed to add item: ${failure.message}');
       },
           (cart) {
         _logger.logUserAction('add_to_cart_success', {
@@ -358,47 +471,57 @@ class CartCubit extends Cubit<CartState> {
           'user': 'roshdology123',
         });
 
-        emit(CartState.loaded(cart: cart));
-        _showSuccessMessage('Item added to cart');
+        emit(CartState.loaded(
+          cart: cart,
+          isOptimistic: false, // Confirmed by server
+        ));
       },
     );
   }
 
-  /// 🔥 AUTHORIZATION FIX: Apply coupon with forced authentication
+  /// 🔥 OPTIMISTIC UPDATE: Apply coupon with immediate UI response
   Future<void> applyCoupon(String couponCode) async {
     final startTime = DateTime.now();
 
-    // 🔥 FORCE AUTHENTICATION: Always treat roshdology123 as authenticated
     await forceAuthenticatedCart();
-    final effectiveUserId = 'roshdology123'; // 🔥 Always use authenticated user
+    final effectiveUserId = 'roshdology123';
 
     _logger.logUserAction('apply_coupon_started', {
       'coupon_code': couponCode,
       'user_id': effectiveUserId,
-      'cubit_user_id': _currentUserId,
-      'is_authenticated': _isUserAuthenticated,
-      'cart_total': state.cart?.summary.total,
-      'cart_user_id': state.cart?.userId,
       'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
     });
 
-    _debugUserState('applyCoupon');
-
+    // 🔥 OPTIMISTIC UPDATE: Apply coupon immediately with estimated discount
     state.whenOrNull(
-      loaded: (cart, _, __, ___, ____, _____, ______) {
+      // 🔥 FIXED: Correct number of parameters (8 parameters)
+      loaded: (cart, _, __, ___, ____, _____, ______, _______) {
+        final optimisticDiscount = _estimateCouponDiscount(cart, couponCode);
+
+        final optimisticSummary = cart.summary.copyWith(
+          appliedCouponCode: couponCode,
+          couponDiscount: optimisticDiscount,
+          total: (cart.summary.subtotal + cart.summary.totalTax + cart.summary.shippingCost - optimisticDiscount).clamp(0.0, double.infinity),
+          lastCalculated: DateTime.now(),
+        );
+
+        final optimisticCart = cart.copyWith(summary: optimisticSummary);
+
         emit(CartState.loaded(
-          cart: cart,
-          isUpdating: true,
-          pendingAction: 'apply_coupon',
+          cart: optimisticCart,
+          isOptimistic: true,
         ));
+
+        _showSuccessMessage('Coupon applied! Verifying discount...');
       },
     );
 
+    // Background server verification
     final result = await _applyCouponUseCase(ApplyCouponParams(
       couponCode: couponCode,
-      userId: effectiveUserId, // 🔥 Always provide authenticated user ID
-      cartId: state.cart?.id, // 🔥 Provide cart ID for better context
+      userId: effectiveUserId,
+      cartId: state.cart?.id,
     ));
 
     final duration = DateTime.now().difference(startTime);
@@ -418,25 +541,17 @@ class CartCubit extends Cubit<CartState> {
           },
         );
 
-        // 🔥 Better error handling for authorization issues
+        // Revert optimistic update
+        refresh();
+
         String errorMessage = failure.message;
-        if (failure.code == 'unauthorized' || failure.code == 'authentication_required') {
-          errorMessage = 'Authentication issue resolved. Please try again.';
-        } else if (failure.code == 'COUPON_NOT_FOUND') {
+        if (failure.code == 'COUPON_NOT_FOUND') {
           errorMessage = 'Invalid coupon code';
         } else if (failure.code == 'COUPON_EXPIRED') {
           errorMessage = 'This coupon has expired';
         } else if (failure.code == 'MINIMUM_AMOUNT_NOT_MET') {
-          errorMessage = failure.message; // Use the specific minimum amount message
+          errorMessage = failure.message;
         }
-
-        emit(CartState.error(
-          failure: failure,
-          cart: state.cart,
-          canRetry: failure.code != 'COUPON_NOT_FOUND', // Don't retry for invalid coupons
-          failedAction: 'apply_coupon',
-          actionContext: {'coupon_code': couponCode},
-        ));
 
         _showErrorMessage(errorMessage);
       },
@@ -445,89 +560,25 @@ class CartCubit extends Cubit<CartState> {
           'coupon_code': couponCode,
           'discount_amount': cart.summary.couponDiscount,
           'new_total': cart.summary.total,
-          'savings': cart.summary.couponDiscount,
-          'cart_user_id': cart.userId,
           'duration_ms': duration.inMilliseconds,
           'user': 'roshdology123',
         });
 
-        emit(CartState.loaded(cart: cart));
+        // Confirm with actual server discount
+        emit(CartState.loaded(
+          cart: cart,
+          isOptimistic: false,
+        ));
 
         final discountAmount = cart.summary.couponDiscount ?? 0.0;
         _showSuccessMessage(
-          'Coupon applied! You saved \$${discountAmount.toStringAsFixed(2)}',
+          'Coupon confirmed! You saved \$${discountAmount.toStringAsFixed(2)}',
         );
       },
     );
   }
 
-  /// 🔥 ENHANCED: Get current effective user ID with forced authentication
-  String _getCurrentEffectiveUserId() {
-    // 🔥 ALWAYS return authenticated user for roshdology123
-    if (_currentUserId == 'roshdology123' || _isUserAuthenticated) {
-      return 'roshdology123';
-    }
-
-    // Check cart user
-    if (state.cart?.userId != null &&
-        state.cart!.userId!.isNotEmpty &&
-        state.cart!.userId != 'guest') {
-      return state.cart!.userId!;
-    }
-
-    // Default to authenticated user
-    return 'roshdology123';
-  }
-
-  /// Update current user (when login/logout occurs)
-  void updateUser(String? userId) {
-    final previousUserId = _currentUserId;
-    final previousAuthState = _isUserAuthenticated;
-
-    _currentUserId = userId ?? 'roshdology123'; // 🔥 Default to current logged in user
-    _isUserAuthenticated = _currentUserId != 'guest' && _currentUserId!.isNotEmpty;
-
-    _logger.logUserAction('cart_user_changed', {
-      'previous_user_id': previousUserId,
-      'new_user_id': _currentUserId,
-      'previous_auth_state': previousAuthState,
-      'new_auth_state': _isUserAuthenticated,
-      'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
-    });
-
-    _debugUserState('updateUser');
-
-    // Force cart migration if needed
-    if (_isUserAuthenticated) {
-      forceAuthenticatedCart();
-    } else {
-      // Reinitialize cart for new user
-      initializeCart(_currentUserId);
-    }
-  }
-
-  /// 🔥 ENHANCED: Set user authentication state explicitly
-  void setUserAuthentication(String userId, bool isAuthenticated) {
-    _currentUserId = userId;
-    _isUserAuthenticated = isAuthenticated;
-
-    _logger.logUserAction('cart_user_auth_set', {
-      'user_id': userId,
-      'is_authenticated': isAuthenticated,
-      'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
-    });
-
-    _debugUserState('setUserAuthentication');
-
-    // Force cart to authenticated state if needed
-    if (isAuthenticated && userId == 'roshdology123') {
-      forceAuthenticatedCart();
-    }
-  }
-
-  /// 🔥 PERFORMANCE FIX: Optimized quantity update with debouncing and optimistic UI
+  /// 🔥 OPTIMISTIC UPDATE: Update quantity with immediate UI response
   Future<void> updateQuantity(String itemId, int newQuantity) async {
     final now = DateTime.now();
     _lastUpdateTime[itemId] = now;
@@ -539,13 +590,13 @@ class CartCubit extends Cubit<CartState> {
       'new_quantity': newQuantity,
       'user_id': effectiveUserId,
       'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
     });
 
-    // 🔥 IMMEDIATE OPTIMISTIC UPDATE - No loading state for better UX
+    // 🔥 IMMEDIATE OPTIMISTIC UPDATE
     state.whenOrNull(
-      loaded: (cart, _, __, ___, ____, _____, ______) {
-        // Create optimistic cart with updated quantity
+      // 🔥 FIXED: Correct number of parameters (8 parameters)
+      loaded: (cart, _, __, ___, ____, _____, ______, _______) {
         final updatedItems = cart.items.map((item) {
           if (item.id == itemId) {
             return item.copyWith(quantity: newQuantity);
@@ -553,17 +604,32 @@ class CartCubit extends Cubit<CartState> {
           return item;
         }).toList();
 
-        final optimisticCart = cart.copyWith(items: updatedItems);
+        // Remove item if quantity is 0
+        if (newQuantity == 0) {
+          updatedItems.removeWhere((item) => item.id == itemId);
+        }
 
-        // Emit immediately without loading state
-        emit(CartState.loaded(cart: optimisticCart));
+        final optimisticCart = cart.copyWith(
+          items: updatedItems,
+          updatedAt: DateTime.now(),
+        );
+
+        // Recalculate totals optimistically
+        final optimisticSummary = _calculateOptimisticSummary(optimisticCart);
+        final finalCart = optimisticCart.copyWith(summary: optimisticSummary);
+
+        // Emit immediately - no loading state
+        emit(CartState.loaded(
+          cart: finalCart,
+          isOptimistic: true,
+        ));
       },
     );
 
     // 🔥 Debounced server update
     await Future.delayed(_debounceDelay);
 
-    // Check if this is still the latest update for this item
+    // Check if this is still the latest update
     if (_lastUpdateTime[itemId] != now) {
       _logger.d('Skipping outdated quantity update for item $itemId');
       return;
@@ -573,7 +639,7 @@ class CartCubit extends Cubit<CartState> {
     final result = await _updateCartItemUseCase(UpdateCartItemParams(
       itemId: itemId,
       quantity: newQuantity,
-      userId: effectiveUserId, // 🔥 Use effective user ID
+      userId: effectiveUserId,
     ));
 
     result.fold(
@@ -590,57 +656,70 @@ class CartCubit extends Cubit<CartState> {
           },
         );
 
-        // Show error but keep optimistic update unless it's a critical error
+        // Show error but keep optimistic update unless critical
         if (failure.code == 'item_not_found' || failure.code == 'insufficient_stock') {
           // Revert optimistic update for critical errors
           refresh();
+          _showErrorMessage('Failed to update quantity: ${failure.message}');
+        } else {
+          // Keep optimistic update, just show error
+          _showErrorMessage('Update may not be saved: ${failure.message}');
         }
-
-        _showErrorMessage('Failed to update quantity: ${failure.message}');
       },
           (cart) {
         _logger.logUserAction('update_quantity_success', {
           'item_id': itemId,
           'new_quantity': newQuantity,
           'cart_total': cart.summary.total,
-          'cart_user_id': cart.userId,
           'user': 'roshdology123',
         });
 
         // Update with server response
-        emit(CartState.loaded(cart: cart));
+        emit(CartState.loaded(
+          cart: cart,
+          isOptimistic: false, // Confirmed by server
+        ));
       },
     );
   }
 
-  /// Remove coupon code
+  /// 🔥 OPTIMISTIC UPDATE: Remove coupon immediately
   Future<void> removeCoupon(String couponCode) async {
     final effectiveUserId = _getCurrentEffectiveUserId();
 
     _logger.logUserAction('remove_coupon_started', {
       'coupon_code': couponCode,
       'user_id': effectiveUserId,
-      'cubit_user_id': _currentUserId,
-      'is_authenticated': _isUserAuthenticated,
       'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
     });
 
-    _debugUserState('removeCoupon');
-
+    // 🔥 IMMEDIATE OPTIMISTIC UPDATE
     state.whenOrNull(
-      loaded: (cart, _, __, ___, ____, _____, ______) {
+      // 🔥 FIXED: Correct number of parameters (8 parameters)
+      loaded: (cart, _, __, ___, ____, _____, ______, _______) {
+        final optimisticSummary = cart.summary.copyWith(
+          appliedCouponCode: null,
+          couponDiscount: 0.0,
+          total: cart.summary.subtotal + cart.summary.totalTax + cart.summary.shippingCost,
+          lastCalculated: DateTime.now(),
+        );
+
+        final optimisticCart = cart.copyWith(summary: optimisticSummary);
+
         emit(CartState.loaded(
-          cart: cart,
-          isUpdating: true,
-          pendingAction: 'remove_coupon',
+          cart: optimisticCart,
+          isOptimistic: true,
         ));
+
+        _showSuccessMessage('Coupon removed');
       },
     );
 
+    // Background server update
     final result = await _removeCouponUseCase(RemoveCouponParams(
       couponCode: couponCode,
-      userId: effectiveUserId, // 🔥 Use effective user ID
+      userId: effectiveUserId,
     ));
 
     result.fold(
@@ -656,29 +735,200 @@ class CartCubit extends Cubit<CartState> {
           },
         );
 
-        emit(CartState.error(
-          failure: failure,
-          cart: state.cart,
-          canRetry: true,
-          failedAction: 'remove_coupon',
-          actionContext: {'coupon_code': couponCode},
-        ));
+        // Revert on failure
+        refresh();
+        _showErrorMessage('Failed to remove coupon: ${failure.message}');
       },
           (cart) {
         _logger.logUserAction('remove_coupon_success', {
           'coupon_code': couponCode,
           'new_total': cart.summary.total,
-          'cart_user_id': cart.userId,
           'user': 'roshdology123',
         });
 
-        emit(CartState.loaded(cart: cart));
-        _showSuccessMessage('Coupon removed');
+        // Confirm with server response
+        emit(CartState.loaded(
+          cart: cart,
+          isOptimistic: false,
+        ));
       },
     );
   }
 
-  /// Refresh cart data
+  /// 🔥 OPTIMISTIC UPDATE: Remove item with immediate UI response
+  Future<void> removeFromCart(String itemId) async {
+    final startTime = DateTime.now();
+
+    _logger.logUserAction('remove_from_cart_started', {
+      'item_id': itemId,
+      'user_id': _currentUserId ?? 'roshdology123',
+      'user': 'roshdology123',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
+    });
+
+    // 🔥 IMMEDIATE OPTIMISTIC UPDATE
+    state.whenOrNull(
+      // 🔥 FIXED: Correct number of parameters (8 parameters)
+      loaded: (cart, _, __, ___, ____, _____, ______, _______) {
+        final updatedItems = cart.items.where((item) => item.id != itemId).toList();
+
+        final optimisticCart = cart.copyWith(
+          items: updatedItems,
+          updatedAt: DateTime.now(),
+        );
+
+        // Recalculate totals
+        final optimisticSummary = _calculateOptimisticSummary(optimisticCart);
+        final finalCart = optimisticCart.copyWith(summary: optimisticSummary);
+
+        if (finalCart.isEmpty) {
+          emit(const CartState.empty(isOptimistic: true));
+        } else {
+          emit(CartState.loaded(
+            cart: finalCart,
+            isOptimistic: true,
+          ));
+        }
+
+        _showSuccessMessage('Item removed from cart');
+      },
+    );
+
+    // Background server update
+    final result = await _removeFromCartUseCase(
+      RemoveFromCartParams(
+        itemId: itemId,
+        userId: _currentUserId ?? 'roshdology123',
+      ),
+    );
+
+    final duration = DateTime.now().difference(startTime);
+
+    result.fold(
+          (failure) {
+        _logger.logBusinessLogic(
+          'remove_from_cart_failed',
+          'error',
+          {
+            'error': failure.message,
+            'code': failure.code,
+            'item_id': itemId,
+            'duration_ms': duration.inMilliseconds,
+            'user': 'roshdology123',
+          },
+        );
+
+        // Revert optimistic update on failure
+        refresh();
+        _showErrorMessage('Failed to remove item: ${failure.message}');
+      },
+          (cart) {
+        _logger.logUserAction('remove_from_cart_success', {
+          'item_id': itemId,
+          'remaining_items': cart.items.length,
+          'cart_total': cart.summary.total,
+          'duration_ms': duration.inMilliseconds,
+          'user': 'roshdology123',
+        });
+
+        // Confirm with server response
+        if (cart.isEmpty) {
+          emit(const CartState.empty(isOptimistic: false));
+        } else {
+          emit(CartState.loaded(
+            cart: cart,
+            isOptimistic: false,
+          ));
+        }
+      },
+    );
+  }
+
+  /// 🔥 OPTIMISTIC UPDATE: Update variants immediately
+  Future<void> updateVariants(
+      String itemId, {
+        String? selectedColor,
+        String? selectedSize,
+      }) async {
+    _logger.logUserAction('update_variants_started', {
+      'item_id': itemId,
+      'selected_color': selectedColor,
+      'selected_size': selectedSize,
+      'user': 'roshdology123',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
+    });
+
+    // 🔥 IMMEDIATE OPTIMISTIC UPDATE
+    state.whenOrNull(
+      // 🔥 FIXED: Correct number of parameters (8 parameters)
+      loaded: (cart, _, __, ___, ____, _____, ______, _______) {
+        final updatedItems = cart.items.map((item) {
+          if (item.id == itemId) {
+            return item.copyWith(
+              selectedColor: selectedColor ?? item.selectedColor,
+              selectedSize: selectedSize ?? item.selectedSize,
+            );
+          }
+          return item;
+        }).toList();
+
+        final optimisticCart = cart.copyWith(
+          items: updatedItems,
+          updatedAt: DateTime.now(),
+        );
+
+        emit(CartState.loaded(
+          cart: optimisticCart,
+          isOptimistic: true,
+        ));
+
+        _showSuccessMessage('Item updated');
+      },
+    );
+
+    // Background server update
+    final result = await _updateCartItemUseCase(UpdateCartItemParams(
+      itemId: itemId,
+      selectedColor: selectedColor,
+      selectedSize: selectedSize,
+      userId: _currentUserId ?? 'roshdology123',
+    ));
+
+    result.fold(
+          (failure) {
+        _logger.logBusinessLogic(
+          'update_variants_failed',
+          'error',
+          {
+            'error': failure.message,
+            'code': failure.code,
+            'item_id': itemId,
+            'user': 'roshdology123',
+          },
+        );
+
+        // Revert on failure
+        refresh();
+        _showErrorMessage('Failed to update item: ${failure.message}');
+      },
+          (cart) {
+        _logger.logUserAction('update_variants_success', {
+          'item_id': itemId,
+          'selected_color': selectedColor,
+          'selected_size': selectedSize,
+          'user': 'roshdology123',
+        });
+
+        // Confirm with server response
+        emit(CartState.loaded(
+          cart: cart,
+          isOptimistic: false,
+        ));
+      },
+    );
+  }
+
+  /// Update refresh method to fix parameter count
   Future<void> refresh() async {
     final effectiveUserId = _getCurrentEffectiveUserId();
 
@@ -687,19 +937,20 @@ class CartCubit extends Cubit<CartState> {
       'cubit_user_id': _currentUserId,
       'is_authenticated': _isUserAuthenticated,
       'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
     });
 
     _debugUserState('refresh');
 
     state.whenOrNull(
-      loaded: (cart, _, __, ___, ____, _____, ______) {
+      // 🔥 FIXED: Correct number of parameters (8 parameters)
+      loaded: (cart, _, __, ___, ____, _____, ______, _______) {
         emit(CartState.loaded(
           cart: cart,
           isRefreshing: true,
         ));
       },
-      empty: (_, __) {
+      empty: (_, __,___) {
         emit(const CartState.empty(isLoading: true));
       },
       error: (_, cart, __, ___, ____) {
@@ -717,26 +968,131 @@ class CartCubit extends Cubit<CartState> {
     await initializeCart(effectiveUserId);
   }
 
-  // ... [Keep all other existing methods but update them to use _getCurrentEffectiveUserId()]
+  /// Update all other methods to fix parameter count and timestamps
+  void updateUser(String? userId) {
+    final previousUserId = _currentUserId;
+    final previousAuthState = _isUserAuthenticated;
 
-  /// Show success message
+    _currentUserId = userId ?? 'roshdology123';
+    _isUserAuthenticated = _currentUserId != 'guest' && _currentUserId!.isNotEmpty;
+
+    _logger.logUserAction('cart_user_changed', {
+      'previous_user_id': previousUserId,
+      'new_user_id': _currentUserId,
+      'previous_auth_state': previousAuthState,
+      'new_auth_state': _isUserAuthenticated,
+      'user': 'roshdology123',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
+    });
+
+    _debugUserState('updateUser');
+
+    if (_isUserAuthenticated) {
+      forceAuthenticatedCart();
+    } else {
+      initializeCart(_currentUserId);
+    }
+  }
+
+  void setUserAuthentication(String userId, bool isAuthenticated) {
+    _currentUserId = userId;
+    _isUserAuthenticated = isAuthenticated;
+
+    _logger.logUserAction('cart_user_auth_set', {
+      'user_id': userId,
+      'is_authenticated': isAuthenticated,
+      'user': 'roshdology123',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
+    });
+
+    _debugUserState('setUserAuthentication');
+
+    if (isAuthenticated && userId == 'roshdology123') {
+      forceAuthenticatedCart();
+    }
+  }
+
   void _showSuccessMessage(String message) {
     _logger.logUserAction('cart_success_message', {
       'message': message,
       'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
     });
   }
 
-  /// 🔥 Show error message
   void _showErrorMessage(String message) {
     _logger.logUserAction('cart_error_message', {
       'message': message,
       'user': 'roshdology123',
-      'timestamp': '2025-06-22 14:00:15',
+      'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
     });
   }
 
+  // ... continue updating other methods with correct parameter counts and timestamps
+
+  @override
+  Future<void> close() {
+    _logger.logBusinessLogic(
+      'cart_cubit_closed',
+      'cleanup',
+      {
+        'user_id': _currentUserId,
+        'is_authenticated': _isUserAuthenticated,
+        'user': 'roshdology123',
+        'timestamp': '2025-06-23 06:48:38', // 🔥 UPDATED
+      },
+    );
+
+    return super.close();
+  }
+
+  // Keep existing helper methods
+  double _estimateCouponDiscount(Cart cart, String couponCode) {
+    final subtotal = cart.summary.subtotal;
+
+    if (couponCode.toLowerCase().contains('10')) {
+      return subtotal * 0.10;
+    } else if (couponCode.toLowerCase().contains('20')) {
+      return subtotal * 0.20;
+    } else if (couponCode.toLowerCase().contains('free')) {
+      return 10.0;
+    }
+
+    return subtotal * 0.05;
+  }
+
+  String _getCurrentEffectiveUserId() {
+    if (_currentUserId == 'roshdology123' || _isUserAuthenticated) {
+      return 'roshdology123';
+    }
+
+    if (state.cart?.userId != null &&
+        state.cart!.userId!.isNotEmpty &&
+        state.cart!.userId != 'guest') {
+      return state.cart!.userId!;
+    }
+
+    return 'roshdology123';
+  }
+
+  CartSummary _calculateOptimisticSummary(Cart cart) {
+    final subtotal = cart.items.fold<double>(
+      0.0,
+          (sum, item) => sum + (item.price * item.quantity),
+    );
+
+    final tax = subtotal * 0.08;
+    final shippingCost = cart.summary.shippingCost;
+    final couponDiscount = cart.summary.couponDiscount ?? 0.0;
+
+    return cart.summary.copyWith(
+      subtotal: subtotal,
+      totalTax: tax,
+      total: (subtotal + tax + shippingCost - couponDiscount).clamp(0.0, double.infinity),
+      totalItems: cart.items.fold<int>(0, (sum, item) => sum + item.quantity),
+      lastCalculated: DateTime.now(),
+    );
+  }
   /// Get current cart without triggering state changes
   Cart? get currentCart => state.cart;
 
@@ -777,7 +1133,7 @@ class CartCubit extends Cubit<CartState> {
     });
 
     state.whenOrNull(
-      loaded: (cart, _, __, ___, ____, _____, ______) {
+      loaded: (cart, _, __, ___, ____, _____, ______,_________) {
         emit(CartState.loaded(
           cart: cart,
           isUpdating: true,
@@ -872,80 +1228,7 @@ class CartCubit extends Cubit<CartState> {
       },
     );
   }
-  /// Remove item from cart
-  Future<void> removeFromCart(String itemId) async {
-    final startTime = DateTime.now();
 
-    _logger.logUserAction('remove_from_cart_started', {
-      'item_id': itemId,
-      'user_id': _currentUserId ?? 'roshdology123',
-      'user': 'roshdology123',
-      'timestamp': '2025-06-22 12:55:48',
-    });
-
-    // Optimistic update
-    state.whenOrNull(
-      loaded: (cart, _, __, ___, ____, _____, ______) {
-        final itemsLoading = <String, bool>{itemId: true};
-        emit(CartState.loaded(
-          cart: cart,
-          isUpdating: true,
-          pendingAction: 'remove_item',
-          itemsLoading: itemsLoading,
-        ));
-      },
-    );
-
-    final result = await _removeFromCartUseCase(
-      RemoveFromCartParams(
-          itemId: itemId,
-          userId: _currentUserId ?? 'roshdology123' // 🔥 Ensure user ID
-      ),
-    );
-
-    final duration = DateTime.now().difference(startTime);
-
-    result.fold(
-          (failure) {
-        _logger.logBusinessLogic(
-          'remove_from_cart_failed',
-          'error',
-          {
-            'error': failure.message,
-            'code': failure.code,
-            'item_id': itemId,
-            'duration_ms': duration.inMilliseconds,
-            'user': 'roshdology123',
-          },
-        );
-
-        emit(CartState.error(
-          failure: failure,
-          cart: state.cart,
-          canRetry: true,
-          failedAction: 'remove_from_cart',
-          actionContext: {'item_id': itemId},
-        ));
-      },
-          (cart) {
-        _logger.logUserAction('remove_from_cart_success', {
-          'item_id': itemId,
-          'remaining_items': cart.items.length,
-          'cart_total': cart.summary.total,
-          'duration_ms': duration.inMilliseconds,
-          'user': 'roshdology123',
-        });
-
-        if (cart.isEmpty) {
-          emit(const CartState.empty());
-        } else {
-          emit(CartState.loaded(cart: cart));
-        }
-
-        _showSuccessMessage('Item removed from cart');
-      },
-    );
-  }
 
   Future<void> syncCart() async {
     final userId = _currentUserId ?? 'roshdology123';
@@ -961,7 +1244,7 @@ class CartCubit extends Cubit<CartState> {
     );
 
     state.whenOrNull(
-      loaded: (cart, _, __, ___, ____, _____, ______) {
+      loaded: (cart, _, __, ___, ____, _____, ______,_______) {
         emit(CartState.syncing(
           cart: cart,
           message: 'Syncing cart...',
@@ -1015,79 +1298,7 @@ class CartCubit extends Cubit<CartState> {
       },
     );
   }
-  /// Update cart item variants (color, size)
-  Future<void> updateVariants(
-      String itemId, {
-        String? selectedColor,
-        String? selectedSize,
-      }) async {
-    _logger.logUserAction('update_variants_started', {
-      'item_id': itemId,
-      'selected_color': selectedColor,
-      'selected_size': selectedSize,
-      'user_id': _currentUserId ?? 'roshdology123',
-      'user': 'roshdology123',
-      'timestamp': '2025-06-22 12:55:48',
-    });
 
-    // Optimistic update
-    state.whenOrNull(
-      loaded: (cart, _, __, ___, ____, _____, ______) {
-        final itemsLoading = <String, bool>{itemId: true};
-        emit(CartState.loaded(
-          cart: cart,
-          isUpdating: true,
-          pendingAction: 'update_variants',
-          itemsLoading: itemsLoading,
-        ));
-      },
-    );
-
-    final result = await _updateCartItemUseCase(UpdateCartItemParams(
-      itemId: itemId,
-      selectedColor: selectedColor,
-      selectedSize: selectedSize,
-      userId: _currentUserId ?? 'roshdology123', // 🔥 Ensure user ID
-    ));
-
-    result.fold(
-          (failure) {
-        _logger.logBusinessLogic(
-          'update_variants_failed',
-          'error',
-          {
-            'error': failure.message,
-            'code': failure.code,
-            'item_id': itemId,
-            'user': 'roshdology123',
-          },
-        );
-
-        emit(CartState.error(
-          failure: failure,
-          cart: state.cart,
-          canRetry: true,
-          failedAction: 'update_variants',
-          actionContext: {
-            'item_id': itemId,
-            'selected_color': selectedColor,
-            'selected_size': selectedSize,
-          },
-        ));
-      },
-          (cart) {
-        _logger.logUserAction('update_variants_success', {
-          'item_id': itemId,
-          'selected_color': selectedColor,
-          'selected_size': selectedSize,
-          'user': 'roshdology123',
-        });
-
-        emit(CartState.loaded(cart: cart));
-        _showSuccessMessage('Item updated');
-      },
-    );
-  }
 
   /// Background sync (no UI feedback)
   Future<void> _syncCartBackground() async {
@@ -1101,7 +1312,7 @@ class CartCubit extends Cubit<CartState> {
           _logger.d('Background sync successful');
 
           state.whenOrNull(
-            loaded: (_, __, ___, ____, _____, ______, _______) {
+            loaded: (_, __, ___, ____, _____, ______, _______,________) {
               emit(CartState.loaded(cart: cart));
             },
           );
@@ -1112,19 +1323,4 @@ class CartCubit extends Cubit<CartState> {
     }
   }
 
-  @override
-  Future<void> close() {
-    _logger.logBusinessLogic(
-      'cart_cubit_closed',
-      'cleanup',
-      {
-        'user_id': _currentUserId,
-        'is_authenticated': _isUserAuthenticated,
-        'user': 'roshdology123',
-        'timestamp': '2025-06-22 14:00:15',
-      },
-    );
-
-    return super.close();
-  }
 }

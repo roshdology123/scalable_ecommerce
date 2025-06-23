@@ -25,6 +25,7 @@ mixin _$CartState {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)
@@ -32,7 +33,9 @@ mixin _$CartState {
     required TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)
         error,
-    required TResult Function(bool isLoading, String? message) empty,
+    required TResult Function(
+            bool isLoading, bool isOptimistic, String? message)
+        empty,
     required TResult Function(Cart cart, String message, double progress)
         syncing,
     required TResult Function(Cart localCart, Cart remoteCart,
@@ -49,6 +52,7 @@ mixin _$CartState {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -56,7 +60,8 @@ mixin _$CartState {
     TResult? Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult? Function(bool isLoading, String? message)? empty,
+    TResult? Function(bool isLoading, bool isOptimistic, String? message)?
+        empty,
     TResult? Function(Cart cart, String message, double progress)? syncing,
     TResult? Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -72,6 +77,7 @@ mixin _$CartState {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -79,7 +85,7 @@ mixin _$CartState {
     TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult Function(bool isLoading, String? message)? empty,
+    TResult Function(bool isLoading, bool isOptimistic, String? message)? empty,
     TResult Function(Cart cart, String message, double progress)? syncing,
     TResult Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -191,6 +197,7 @@ class _$InitialImpl implements _Initial {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)
@@ -198,7 +205,9 @@ class _$InitialImpl implements _Initial {
     required TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)
         error,
-    required TResult Function(bool isLoading, String? message) empty,
+    required TResult Function(
+            bool isLoading, bool isOptimistic, String? message)
+        empty,
     required TResult Function(Cart cart, String message, double progress)
         syncing,
     required TResult Function(Cart localCart, Cart remoteCart,
@@ -218,6 +227,7 @@ class _$InitialImpl implements _Initial {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -225,7 +235,8 @@ class _$InitialImpl implements _Initial {
     TResult? Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult? Function(bool isLoading, String? message)? empty,
+    TResult? Function(bool isLoading, bool isOptimistic, String? message)?
+        empty,
     TResult? Function(Cart cart, String message, double progress)? syncing,
     TResult? Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -244,6 +255,7 @@ class _$InitialImpl implements _Initial {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -251,7 +263,7 @@ class _$InitialImpl implements _Initial {
     TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult Function(bool isLoading, String? message)? empty,
+    TResult Function(bool isLoading, bool isOptimistic, String? message)? empty,
     TResult Function(Cart cart, String message, double progress)? syncing,
     TResult Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -363,6 +375,7 @@ class _$LoadingImpl implements _Loading {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)
@@ -370,7 +383,9 @@ class _$LoadingImpl implements _Loading {
     required TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)
         error,
-    required TResult Function(bool isLoading, String? message) empty,
+    required TResult Function(
+            bool isLoading, bool isOptimistic, String? message)
+        empty,
     required TResult Function(Cart cart, String message, double progress)
         syncing,
     required TResult Function(Cart localCart, Cart remoteCart,
@@ -390,6 +405,7 @@ class _$LoadingImpl implements _Loading {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -397,7 +413,8 @@ class _$LoadingImpl implements _Loading {
     TResult? Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult? Function(bool isLoading, String? message)? empty,
+    TResult? Function(bool isLoading, bool isOptimistic, String? message)?
+        empty,
     TResult? Function(Cart cart, String message, double progress)? syncing,
     TResult? Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -416,6 +433,7 @@ class _$LoadingImpl implements _Loading {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -423,7 +441,7 @@ class _$LoadingImpl implements _Loading {
     TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult Function(bool isLoading, String? message)? empty,
+    TResult Function(bool isLoading, bool isOptimistic, String? message)? empty,
     TResult Function(Cart cart, String message, double progress)? syncing,
     TResult Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -498,6 +516,7 @@ abstract class _$$LoadedImplCopyWith<$Res> {
       bool isRefreshing,
       bool isUpdating,
       bool isSyncing,
+      bool isOptimistic,
       String? pendingAction,
       CartItem? pendingItem,
       Map<String, bool>? itemsLoading});
@@ -520,6 +539,7 @@ class __$$LoadedImplCopyWithImpl<$Res>
     Object? isRefreshing = null,
     Object? isUpdating = null,
     Object? isSyncing = null,
+    Object? isOptimistic = null,
     Object? pendingAction = freezed,
     Object? pendingItem = freezed,
     Object? itemsLoading = freezed,
@@ -540,6 +560,10 @@ class __$$LoadedImplCopyWithImpl<$Res>
       isSyncing: null == isSyncing
           ? _value.isSyncing
           : isSyncing // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isOptimistic: null == isOptimistic
+          ? _value.isOptimistic
+          : isOptimistic // ignore: cast_nullable_to_non_nullable
               as bool,
       pendingAction: freezed == pendingAction
           ? _value.pendingAction
@@ -565,6 +589,7 @@ class _$LoadedImpl implements _Loaded {
       this.isRefreshing = false,
       this.isUpdating = false,
       this.isSyncing = false,
+      this.isOptimistic = false,
       this.pendingAction,
       this.pendingItem,
       final Map<String, bool>? itemsLoading})
@@ -582,6 +607,9 @@ class _$LoadedImpl implements _Loaded {
   @JsonKey()
   final bool isSyncing;
   @override
+  @JsonKey()
+  final bool isOptimistic;
+  @override
   final String? pendingAction;
   @override
   final CartItem? pendingItem;
@@ -597,7 +625,7 @@ class _$LoadedImpl implements _Loaded {
 
   @override
   String toString() {
-    return 'CartState.loaded(cart: $cart, isRefreshing: $isRefreshing, isUpdating: $isUpdating, isSyncing: $isSyncing, pendingAction: $pendingAction, pendingItem: $pendingItem, itemsLoading: $itemsLoading)';
+    return 'CartState.loaded(cart: $cart, isRefreshing: $isRefreshing, isUpdating: $isUpdating, isSyncing: $isSyncing, isOptimistic: $isOptimistic, pendingAction: $pendingAction, pendingItem: $pendingItem, itemsLoading: $itemsLoading)';
   }
 
   @override
@@ -612,6 +640,8 @@ class _$LoadedImpl implements _Loaded {
                 other.isUpdating == isUpdating) &&
             (identical(other.isSyncing, isSyncing) ||
                 other.isSyncing == isSyncing) &&
+            (identical(other.isOptimistic, isOptimistic) ||
+                other.isOptimistic == isOptimistic) &&
             (identical(other.pendingAction, pendingAction) ||
                 other.pendingAction == pendingAction) &&
             (identical(other.pendingItem, pendingItem) ||
@@ -627,6 +657,7 @@ class _$LoadedImpl implements _Loaded {
       isRefreshing,
       isUpdating,
       isSyncing,
+      isOptimistic,
       pendingAction,
       pendingItem,
       const DeepCollectionEquality().hash(_itemsLoading));
@@ -649,6 +680,7 @@ class _$LoadedImpl implements _Loaded {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)
@@ -656,15 +688,17 @@ class _$LoadedImpl implements _Loaded {
     required TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)
         error,
-    required TResult Function(bool isLoading, String? message) empty,
+    required TResult Function(
+            bool isLoading, bool isOptimistic, String? message)
+        empty,
     required TResult Function(Cart cart, String message, double progress)
         syncing,
     required TResult Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)
         conflict,
   }) {
-    return loaded(cart, isRefreshing, isUpdating, isSyncing, pendingAction,
-        pendingItem, itemsLoading);
+    return loaded(cart, isRefreshing, isUpdating, isSyncing, isOptimistic,
+        pendingAction, pendingItem, itemsLoading);
   }
 
   @override
@@ -677,6 +711,7 @@ class _$LoadedImpl implements _Loaded {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -684,13 +719,14 @@ class _$LoadedImpl implements _Loaded {
     TResult? Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult? Function(bool isLoading, String? message)? empty,
+    TResult? Function(bool isLoading, bool isOptimistic, String? message)?
+        empty,
     TResult? Function(Cart cart, String message, double progress)? syncing,
     TResult? Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
         conflict,
   }) {
-    return loaded?.call(cart, isRefreshing, isUpdating, isSyncing,
+    return loaded?.call(cart, isRefreshing, isUpdating, isSyncing, isOptimistic,
         pendingAction, pendingItem, itemsLoading);
   }
 
@@ -704,6 +740,7 @@ class _$LoadedImpl implements _Loaded {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -711,7 +748,7 @@ class _$LoadedImpl implements _Loaded {
     TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult Function(bool isLoading, String? message)? empty,
+    TResult Function(bool isLoading, bool isOptimistic, String? message)? empty,
     TResult Function(Cart cart, String message, double progress)? syncing,
     TResult Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -719,8 +756,8 @@ class _$LoadedImpl implements _Loaded {
     required TResult orElse(),
   }) {
     if (loaded != null) {
-      return loaded(cart, isRefreshing, isUpdating, isSyncing, pendingAction,
-          pendingItem, itemsLoading);
+      return loaded(cart, isRefreshing, isUpdating, isSyncing, isOptimistic,
+          pendingAction, pendingItem, itemsLoading);
     }
     return orElse();
   }
@@ -778,6 +815,7 @@ abstract class _Loaded implements CartState {
       final bool isRefreshing,
       final bool isUpdating,
       final bool isSyncing,
+      final bool isOptimistic,
       final String? pendingAction,
       final CartItem? pendingItem,
       final Map<String, bool>? itemsLoading}) = _$LoadedImpl;
@@ -786,6 +824,7 @@ abstract class _Loaded implements CartState {
   bool get isRefreshing;
   bool get isUpdating;
   bool get isSyncing;
+  bool get isOptimistic;
   String? get pendingAction;
   CartItem? get pendingItem;
   Map<String, bool>? get itemsLoading;
@@ -927,6 +966,7 @@ class _$ErrorImpl implements _Error {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)
@@ -934,7 +974,9 @@ class _$ErrorImpl implements _Error {
     required TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)
         error,
-    required TResult Function(bool isLoading, String? message) empty,
+    required TResult Function(
+            bool isLoading, bool isOptimistic, String? message)
+        empty,
     required TResult Function(Cart cart, String message, double progress)
         syncing,
     required TResult Function(Cart localCart, Cart remoteCart,
@@ -954,6 +996,7 @@ class _$ErrorImpl implements _Error {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -961,7 +1004,8 @@ class _$ErrorImpl implements _Error {
     TResult? Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult? Function(bool isLoading, String? message)? empty,
+    TResult? Function(bool isLoading, bool isOptimistic, String? message)?
+        empty,
     TResult? Function(Cart cart, String message, double progress)? syncing,
     TResult? Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -980,6 +1024,7 @@ class _$ErrorImpl implements _Error {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -987,7 +1032,7 @@ class _$ErrorImpl implements _Error {
     TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult Function(bool isLoading, String? message)? empty,
+    TResult Function(bool isLoading, bool isOptimistic, String? message)? empty,
     TResult Function(Cart cart, String message, double progress)? syncing,
     TResult Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -1074,7 +1119,7 @@ abstract class _$$EmptyImplCopyWith<$Res> {
           _$EmptyImpl value, $Res Function(_$EmptyImpl) then) =
       __$$EmptyImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({bool isLoading, String? message});
+  $Res call({bool isLoading, bool isOptimistic, String? message});
 }
 
 /// @nodoc
@@ -1091,12 +1136,17 @@ class __$$EmptyImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? isLoading = null,
+    Object? isOptimistic = null,
     Object? message = freezed,
   }) {
     return _then(_$EmptyImpl(
       isLoading: null == isLoading
           ? _value.isLoading
           : isLoading // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isOptimistic: null == isOptimistic
+          ? _value.isOptimistic
+          : isOptimistic // ignore: cast_nullable_to_non_nullable
               as bool,
       message: freezed == message
           ? _value.message
@@ -1109,17 +1159,21 @@ class __$$EmptyImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$EmptyImpl implements _Empty {
-  const _$EmptyImpl({this.isLoading = false, this.message});
+  const _$EmptyImpl(
+      {this.isLoading = false, this.isOptimistic = false, this.message});
 
   @override
   @JsonKey()
   final bool isLoading;
   @override
+  @JsonKey()
+  final bool isOptimistic;
+  @override
   final String? message;
 
   @override
   String toString() {
-    return 'CartState.empty(isLoading: $isLoading, message: $message)';
+    return 'CartState.empty(isLoading: $isLoading, isOptimistic: $isOptimistic, message: $message)';
   }
 
   @override
@@ -1129,11 +1183,14 @@ class _$EmptyImpl implements _Empty {
             other is _$EmptyImpl &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
+            (identical(other.isOptimistic, isOptimistic) ||
+                other.isOptimistic == isOptimistic) &&
             (identical(other.message, message) || other.message == message));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, isLoading, message);
+  int get hashCode =>
+      Object.hash(runtimeType, isLoading, isOptimistic, message);
 
   /// Create a copy of CartState
   /// with the given fields replaced by the non-null parameter values.
@@ -1153,6 +1210,7 @@ class _$EmptyImpl implements _Empty {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)
@@ -1160,14 +1218,16 @@ class _$EmptyImpl implements _Empty {
     required TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)
         error,
-    required TResult Function(bool isLoading, String? message) empty,
+    required TResult Function(
+            bool isLoading, bool isOptimistic, String? message)
+        empty,
     required TResult Function(Cart cart, String message, double progress)
         syncing,
     required TResult Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)
         conflict,
   }) {
-    return empty(isLoading, message);
+    return empty(isLoading, isOptimistic, message);
   }
 
   @override
@@ -1180,6 +1240,7 @@ class _$EmptyImpl implements _Empty {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -1187,13 +1248,14 @@ class _$EmptyImpl implements _Empty {
     TResult? Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult? Function(bool isLoading, String? message)? empty,
+    TResult? Function(bool isLoading, bool isOptimistic, String? message)?
+        empty,
     TResult? Function(Cart cart, String message, double progress)? syncing,
     TResult? Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
         conflict,
   }) {
-    return empty?.call(isLoading, message);
+    return empty?.call(isLoading, isOptimistic, message);
   }
 
   @override
@@ -1206,6 +1268,7 @@ class _$EmptyImpl implements _Empty {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -1213,7 +1276,7 @@ class _$EmptyImpl implements _Empty {
     TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult Function(bool isLoading, String? message)? empty,
+    TResult Function(bool isLoading, bool isOptimistic, String? message)? empty,
     TResult Function(Cart cart, String message, double progress)? syncing,
     TResult Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -1221,7 +1284,7 @@ class _$EmptyImpl implements _Empty {
     required TResult orElse(),
   }) {
     if (empty != null) {
-      return empty(isLoading, message);
+      return empty(isLoading, isOptimistic, message);
     }
     return orElse();
   }
@@ -1274,10 +1337,13 @@ class _$EmptyImpl implements _Empty {
 }
 
 abstract class _Empty implements CartState {
-  const factory _Empty({final bool isLoading, final String? message}) =
-      _$EmptyImpl;
+  const factory _Empty(
+      {final bool isLoading,
+      final bool isOptimistic,
+      final String? message}) = _$EmptyImpl;
 
   bool get isLoading;
+  bool get isOptimistic;
   String? get message;
 
   /// Create a copy of CartState
@@ -1384,6 +1450,7 @@ class _$SyncingImpl implements _Syncing {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)
@@ -1391,7 +1458,9 @@ class _$SyncingImpl implements _Syncing {
     required TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)
         error,
-    required TResult Function(bool isLoading, String? message) empty,
+    required TResult Function(
+            bool isLoading, bool isOptimistic, String? message)
+        empty,
     required TResult Function(Cart cart, String message, double progress)
         syncing,
     required TResult Function(Cart localCart, Cart remoteCart,
@@ -1411,6 +1480,7 @@ class _$SyncingImpl implements _Syncing {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -1418,7 +1488,8 @@ class _$SyncingImpl implements _Syncing {
     TResult? Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult? Function(bool isLoading, String? message)? empty,
+    TResult? Function(bool isLoading, bool isOptimistic, String? message)?
+        empty,
     TResult? Function(Cart cart, String message, double progress)? syncing,
     TResult? Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -1437,6 +1508,7 @@ class _$SyncingImpl implements _Syncing {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -1444,7 +1516,7 @@ class _$SyncingImpl implements _Syncing {
     TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult Function(bool isLoading, String? message)? empty,
+    TResult Function(bool isLoading, bool isOptimistic, String? message)? empty,
     TResult Function(Cart cart, String message, double progress)? syncing,
     TResult Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -1641,6 +1713,7 @@ class _$ConflictImpl implements _Conflict {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)
@@ -1648,7 +1721,9 @@ class _$ConflictImpl implements _Conflict {
     required TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)
         error,
-    required TResult Function(bool isLoading, String? message) empty,
+    required TResult Function(
+            bool isLoading, bool isOptimistic, String? message)
+        empty,
     required TResult Function(Cart cart, String message, double progress)
         syncing,
     required TResult Function(Cart localCart, Cart remoteCart,
@@ -1668,6 +1743,7 @@ class _$ConflictImpl implements _Conflict {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -1675,7 +1751,8 @@ class _$ConflictImpl implements _Conflict {
     TResult? Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult? Function(bool isLoading, String? message)? empty,
+    TResult? Function(bool isLoading, bool isOptimistic, String? message)?
+        empty,
     TResult? Function(Cart cart, String message, double progress)? syncing,
     TResult? Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?
@@ -1694,6 +1771,7 @@ class _$ConflictImpl implements _Conflict {
             bool isRefreshing,
             bool isUpdating,
             bool isSyncing,
+            bool isOptimistic,
             String? pendingAction,
             CartItem? pendingItem,
             Map<String, bool>? itemsLoading)?
@@ -1701,7 +1779,7 @@ class _$ConflictImpl implements _Conflict {
     TResult Function(Failure failure, Cart? cart, bool canRetry,
             String? failedAction, Map<String, dynamic>? actionContext)?
         error,
-    TResult Function(bool isLoading, String? message)? empty,
+    TResult Function(bool isLoading, bool isOptimistic, String? message)? empty,
     TResult Function(Cart cart, String message, double progress)? syncing,
     TResult Function(Cart localCart, Cart remoteCart,
             List<String> conflictingFields, String message)?

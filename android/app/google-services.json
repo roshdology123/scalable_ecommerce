@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "631342080767",
+    "project_id": "scalable-ecommerce-6d422",
+    "storage_bucket": "scalable-ecommerce-6d422.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:631342080767:android:f58dbf06b676b8a0f5e2ca",
+        "android_client_info": {
+          "package_name": "com.itg.scalable_ecommerce"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApXrvYBkZ5Xzt7v-3ReieP6MuRrNXOc7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

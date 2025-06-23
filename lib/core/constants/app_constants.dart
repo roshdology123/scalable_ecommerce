@@ -29,6 +29,7 @@ class AppConstants {
   static const String boxCache = 'cache_box';
   static const String boxUser = 'user_box';
   static const String boxSearch = 'search_box';
+  static const String boxNotifications = 'notifications_box';
 
   // Animation Durations
   static const Duration animationDurationShort = Duration(milliseconds: 200);
@@ -46,7 +47,7 @@ class AppConstants {
   static const Duration cacheDurationLong = Duration(hours: 24);
   static const Duration cacheDurationProducts = Duration(hours: 1);
   static const Duration cacheDurationCategories = Duration(hours: 12);
-
+  static const Duration notificationsCacheDuration = Duration(minutes: 30);
   // Pagination
   static const int defaultPageSize = 20;
   static const int maxPageSize = 100;
@@ -80,6 +81,8 @@ class AppConstants {
   static const int maxSearchHistoryItems = 10;
   static const int minSearchLength = 2;
   static const int maxSearchSuggestions = 5;
+  static const int maxNotificationHistory = 100;
+  static const int notificationSyncBatchSize = 20;
 
   // Cart Constants
   static const int maxCartItems = 99;
@@ -101,7 +104,7 @@ class AppConstants {
   static const String errorUnauthorized = 'You are not authorized to perform this action.';
   static const String errorValidation = 'Please check your input and try again.';
   static const String errorCacheExpired = 'Data is outdated. Refreshing...';
-
+  static const String notificationPermissionDenied = 'Notification permission denied';
   // Success Messages
   static const String successLogin = 'Welcome back!';
   static const String successLogout = 'You have been logged out successfully.';
@@ -112,15 +115,31 @@ class AppConstants {
   static const String successRemoveFromFavorites = 'Removed from favorites.';
   static const String successProfileUpdate = 'Profile updated successfully.';
   static const String successPasswordChange = 'Password changed successfully.';
-
+  static const String keyFCMToken = 'fcm_token';
+  static const String keyNotificationPreferences = 'notification_preferences';
+  static const String keyPushNotificationsEnabled = 'push_notifications_enabled';
+  static const String keyEmailNotificationsEnabled = 'email_notifications_enabled';
+  static const String keySMSNotificationsEnabled = 'sms_notifications_enabled';
+  static const String keyOrderUpdatesFrequency = 'order_updates_frequency';
+  static const String keyPromotionalEmailsFrequency = 'promotional_emails_frequency';
+  static const String keyNewsletterSubscription = 'newsletter_subscription';
+  static const String keyNotificationQuietHoursStart = 'quiet_hours_start';
+  static const String keyNotificationQuietHoursEnd = 'quiet_hours_end';
+  static const String keyLastNotificationSync = 'last_notification_sync';
+  static const String keyUnreadNotificationsCount = 'unread_notifications_count';
   // Supported Languages
   static const List<String> supportedLanguages = ['en', 'ar'];
   static const String defaultLanguage = 'en';
-
+  static const String notificationsEndpoint = '/notifications';
+  static const String fcmTokenEndpoint = '/user/fcm-token';
+  static const String notificationPreferencesEndpoint = '/user/notification-preferences';
   // Supported Countries
   static const List<String> supportedCountries = ['US', 'EG', 'SA', 'AE'];
   static const String defaultCountry = 'US';
-
+  static const bool defaultNotificationsEnabled = true;
+  static const bool defaultPushNotificationsEnabled = true;
+  static const bool defaultEmailNotificationsEnabled = true;
+  static const bool defaultSMSNotificationsEnabled = false;
   // Regular Expressions
   static const String emailRegex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
   static const String phoneRegex = r'^\+?[1-9]\d{1,14}$';

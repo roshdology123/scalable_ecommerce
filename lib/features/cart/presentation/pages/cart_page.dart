@@ -164,7 +164,7 @@ class _CartPageState extends State<CartPage>
     return state.when(
       initial: () => const CartLoadingWidget(),
       loading: () => const CartLoadingWidget(),
-      loaded: (cart, isRefreshing, isUpdating, isSyncing, pendingAction, pendingItem, itemsLoading) {
+      loaded: (cart, isRefreshing, isUpdating, isSyncing, isOptimistic, pendingAction, pendingItem, itemsLoading) {
         // Update cart summary
         context.read<CartSummaryCubit>().updateFromCart(cart);
 
@@ -201,9 +201,10 @@ class _CartPageState extends State<CartPage>
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: CartSummaryWidget(
-                  summary: cart.summary,
+                  initialSummary: cart.summary,
                   onShippingMethodChanged: _handleShippingMethodChanged,
                   showShippingOptions: true,
+                  isOptimistic: isOptimistic,
                 ),
               ),
             ),
@@ -223,7 +224,7 @@ class _CartPageState extends State<CartPage>
           onContinueShopping: widget.onContinueShoppingPressed,
         );
       },
-      empty: (isLoading, message) {
+      empty: (isLoading, isOptimistic, message) {
         return CartEmptyWidget(
           message: message,
           isLoading: isLoading,
@@ -305,7 +306,7 @@ class _CartPageState extends State<CartPage>
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: CartSummaryWidget(
-              summary: cart.summary,
+              initialSummary: cart.summary,
               onShippingMethodChanged: _handleShippingMethodChanged,
               showShippingOptions: true,
             ),

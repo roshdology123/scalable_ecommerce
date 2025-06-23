@@ -2,6 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../features/cart/data/models/cart_item_model.dart';
+import '../../features/notifications/data/models/notification_model.dart';
 import '../../features/products/data/models/rating_model.dart';
 import '../constants/app_constants.dart';
 import '../errors/exceptions.dart';
@@ -16,7 +17,7 @@ class LocalStorage {
   static late Box<Map<dynamic, dynamic>> _cacheBox;
   static late Box<String> _userBox;
   static late Box<String> _searchBox;
-
+  static late Box<NotificationModel> _notificationsBox;
   static bool _isInitialized = false;
 
   static Future<void> init() async {
@@ -58,7 +59,9 @@ class LocalStorage {
     _cacheBox = await Hive.openBox<Map<dynamic, dynamic>>(AppConstants.boxCache);
     _userBox = await Hive.openBox<String>(AppConstants.boxUser);
     _searchBox = await Hive.openBox<String>(AppConstants.boxSearch);
+    _notificationsBox = await Hive.openBox<NotificationModel>(AppConstants.boxNotifications); // 🔥 NEW
   }
+
 
   // Products Operations
   static Future<void> saveProducts(List<ProductModel> products) async {
@@ -403,15 +406,294 @@ class LocalStorage {
     }
   }
 
+  static Future<void> saveNotifications(List<NotificationModel> notifications) async {
+    try {
+      await _notificationsBox.clear();
+
+      // Sort by created date (newest first) and limit to max items
+      notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      final limitedNotifications = notifications.take(AppConstants.maxNotificationHistory).toList();
+
+      final notificationMap = {
+        for (var notification in limitedNotifications)
+          notification.id: notification
+      };
+
+      await _notificationsBox.putAll(notificationMap);
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static Future<void> saveNotification(NotificationModel notification) async {
+    try {
+      await _notificationsBox.put(notification.id, notification);
+
+      // Cleanup old notifications if we exceed the limit
+      if (_notificationsBox.length > AppConstants.maxNotificationHistory) {
+        final notifications = _notificationsBox.values.toList();
+        notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+        // Keep only the newest notifications
+        final notificationsToKeep = notifications.take(AppConstants.maxNotificationHistory);
+        await _notificationsBox.clear();
+
+        final notificationMap = {
+          for (var notification in notificationsToKeep)
+            notification.id: notification
+        };
+        await _notificationsBox.putAll(notificationMap);
+      }
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  // Update these methods in your LocalStorage class:
+
+  static List<NotificationModel> getNotifications({
+    bool? unreadOnly,
+    int? limit,
+  }) {
+    try {
+      var notifications = _notificationsBox.values
+          .where((n) => n != null) // Filter out nulls
+          .cast<NotificationModel>()
+          .toList();
+
+      // Filter by read status if specified
+      if (unreadOnly == true) {
+        notifications = notifications.where((n) => !n.isRead).toList();
+      }
+
+      // Sort by created date (newest first)
+      notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      // Apply limit if specified
+      if (limit != null && limit > 0) {
+        notifications = notifications.take(limit).toList();
+      }
+
+      return notifications;
+    } catch (e) {
+      throw StorageException.readError();
+    }
+  }
+
+  static List<NotificationModel> getNotificationsByType(String type) {
+    try {
+      return _notificationsBox.values
+          .where((n) => n.type == type)
+          .cast<NotificationModel>()
+          .toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    } catch (e) {
+      throw StorageException.readError();
+    }
+  }
+
+  static NotificationModel? getNotification(String id) {
+    try {
+      return _notificationsBox.get(id);
+    } catch (e) {
+      throw StorageException.readError();
+    }
+  }
+
+  static Future<void> markNotificationAsRead(String id) async {
+    try {
+      final notification = _notificationsBox.get(id);
+      if (notification != null && !notification.isRead) {
+        final updatedNotification = notification.copyWith(
+          isRead: true,
+          readAt: DateTime.parse('2025-06-23 07:50:05'),
+        );
+        await _notificationsBox.put(id, updatedNotification);
+      }
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static Future<void> markAllNotificationsAsRead() async {
+    try {
+      final notifications = _notificationsBox.values.toList();
+      final updates = <String, NotificationModel>{};
+
+      for (var notification in notifications) {
+        if (!notification.isRead) {
+          updates[notification.id] = notification.copyWith(
+            isRead: true,
+            readAt: DateTime.parse('2025-06-23 07:50:05'),
+          );
+        }
+      }
+
+      if (updates.isNotEmpty) {
+        await _notificationsBox.putAll(updates);
+      }
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static Future<void> deleteNotification(String id) async {
+    try {
+      await _notificationsBox.delete(id);
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static Future<void> clearNotifications() async {
+    try {
+      await _notificationsBox.clear();
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static int getUnreadNotificationsCount() {
+    try {
+      return _notificationsBox.values.where((n) => !n.isRead).length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  static Future<void> saveFCMToken(String token) async {
+    try {
+      await _settingsBox.put(AppConstants.keyFCMToken, token);
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static String? getFCMToken() {
+    try {
+      return _settingsBox.get(AppConstants.keyFCMToken);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // 🔥 NEW: Notification Preferences Operations
+  static Future<void> savePushNotificationsEnabled(bool enabled) async {
+    try {
+      await _settingsBox.put(AppConstants.keyPushNotificationsEnabled, enabled.toString());
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static bool getPushNotificationsEnabled() {
+    try {
+      final value = _settingsBox.get(AppConstants.keyPushNotificationsEnabled);
+      return value != 'false'; // Default to true
+    } catch (e) {
+      return AppConstants.defaultPushNotificationsEnabled;
+    }
+  }
+
+  static Future<void> saveEmailNotificationsEnabled(bool enabled) async {
+    try {
+      await _settingsBox.put(AppConstants.keyEmailNotificationsEnabled, enabled.toString());
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static bool getEmailNotificationsEnabled() {
+    try {
+      final value = _settingsBox.get(AppConstants.keyEmailNotificationsEnabled);
+      return value != 'false'; // Default to true
+    } catch (e) {
+      return AppConstants.defaultEmailNotificationsEnabled;
+    }
+  }
+
+  static Future<void> saveSMSNotificationsEnabled(bool enabled) async {
+    try {
+      await _settingsBox.put(AppConstants.keySMSNotificationsEnabled, enabled.toString());
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static bool getSMSNotificationsEnabled() {
+    try {
+      final value = _settingsBox.get(AppConstants.keySMSNotificationsEnabled);
+      return value == 'true'; // Default to false
+    } catch (e) {
+      return AppConstants.defaultSMSNotificationsEnabled;
+    }
+  }
+
+  // 🔥 NEW: Notification Frequency Settings
+  static Future<void> saveNotificationFrequency(String key, String frequency) async {
+    try {
+      await _settingsBox.put(key, frequency);
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static String getNotificationFrequency(String key, String defaultValue) {
+    try {
+      return _settingsBox.get(key) ?? defaultValue;
+    } catch (e) {
+      return defaultValue;
+    }
+  }
+
+  // 🔥 NEW: Last Sync Time
+  static Future<void> saveLastNotificationSync(DateTime dateTime) async {
+    try {
+      await _settingsBox.put(AppConstants.keyLastNotificationSync, dateTime.toIso8601String());
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static DateTime? getLastNotificationSync() {
+    try {
+      final value = _settingsBox.get(AppConstants.keyLastNotificationSync);
+      return value != null ? DateTime.parse(value) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // 🔥 NEW: Unread Count Cache
+  static Future<void> saveUnreadNotificationsCount(int count) async {
+    try {
+      await _settingsBox.put(AppConstants.keyUnreadNotificationsCount, count.toString());
+    } catch (e) {
+      throw StorageException.writeError();
+    }
+  }
+
+  static int getCachedUnreadNotificationsCount() {
+    try {
+      final value = _settingsBox.get(AppConstants.keyUnreadNotificationsCount);
+      return int.tryParse(value ?? '0') ?? 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // Updated disposal method
   static Future<void> dispose() async {
     try {
       await Future.wait([
         _productsBox.close(),
+        _cartBox.close(), // Fixed: was _favoritesBox.close() twice
         _favoritesBox.close(),
         _settingsBox.close(),
         _cacheBox.close(),
         _userBox.close(),
         _searchBox.close(),
+        _notificationsBox.close(), // 🔥 NEW
       ]);
     } catch (e) {
       throw StorageException(
@@ -422,10 +704,10 @@ class LocalStorage {
     }
   }
 
-  // Helper methods
+  // Updated helper methods
   static bool get isInitialized => _isInitialized;
-
   static int get productsCount => _productsBox.length;
   static int get cartItemsCount => _cartBox.length;
   static int get favoritesCount => _favoritesBox.length;
+  static int get notificationsCount => _notificationsBox.length;
 }

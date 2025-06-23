@@ -23,7 +23,7 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
       'success',
       {
         'user': 'roshdology123',
-        'timestamp': '2025-06-18 14:08:39',
+        'timestamp': '2025-06-23 07:09:01', // 🔥 UPDATED TIMESTAMP
       },
     );
   }
@@ -45,7 +45,7 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
         'has_coupon': cart.summary.hasCouponApplied,
         'shipping_method': _selectedShippingMethod,
         'user': 'roshdology123',
-        'timestamp': '2025-06-18 14:08:39',
+        'timestamp': '2025-06-23 07:09:01', // 🔥 UPDATED TIMESTAMP
       },
     );
 
@@ -56,7 +56,7 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
     ));
   }
 
-  /// Calculate cart totals with specific shipping method
+  /// 🔥 OPTIMISTIC UPDATE: Calculate cart totals with specific shipping method
   Future<void> calculateWithShipping(String shippingMethodId) async {
     final startTime = DateTime.now();
 
@@ -65,7 +65,7 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
       'current_total': state.summary?.total,
       'user_id': _currentUserId ?? 'guest',
       'user': 'roshdology123',
-      'timestamp': '2025-06-18 14:08:39',
+      'timestamp': '2025-06-23 07:09:01', // 🔥 UPDATED TIMESTAMP
     });
 
     final currentSummary = state.summary;
@@ -74,14 +74,26 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
       return;
     }
 
+    final previousShippingMethod = _selectedShippingMethod;
     _selectedShippingMethod = shippingMethodId;
 
-    emit(CartSummaryState.calculating(
-      currentSummary: currentSummary,
-      message: 'Calculating shipping costs...',
-      progress: 0.5,
+    // 🔥 OPTIMISTIC UPDATE: Apply shipping immediately
+    final optimisticShippingCost = _estimateShippingCost(shippingMethodId, currentSummary.subtotal);
+    final optimisticSummary = currentSummary.copyWith(
+      selectedShippingMethod: shippingMethodId,
+      shippingCost: optimisticShippingCost,
+      total: currentSummary.subtotal + currentSummary.totalTax + optimisticShippingCost - (currentSummary.couponDiscount ?? 0.0),
+      lastCalculated: DateTime.parse('2025-06-23 07:09:01'),
+    );
+
+    emit(CartSummaryState.loaded(
+      summary: optimisticSummary,
+      selectedShippingMethod: shippingMethodId,
+      appliedCouponCode: _appliedCouponCode,
+      isCalculating: true, // 🔥 INDICATE OPTIMISTIC UPDATE
     ));
 
+    // Background server calculation
     final result = await _calculateCartTotalsUseCase(CalculateCartTotalsParams(
       shippingMethodId: shippingMethodId,
       couponCode: _appliedCouponCode,
@@ -104,6 +116,8 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
           },
         );
 
+        // Revert optimistic update
+        _selectedShippingMethod = previousShippingMethod;
         emit(CartSummaryState.error(
           failure: failure,
           summary: currentSummary,
@@ -125,13 +139,31 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
           },
         );
 
+        // Confirm with server response
         emit(CartSummaryState.loaded(
           summary: summary,
           selectedShippingMethod: shippingMethodId,
           appliedCouponCode: _appliedCouponCode,
+          isCalculating: false, // 🔥 CONFIRMED BY SERVER
         ));
       },
     );
+  }
+
+  /// Helper method to estimate shipping cost
+  double _estimateShippingCost(String shippingMethodId, double subtotal) {
+    switch (shippingMethodId) {
+      case 'standard':
+        return subtotal >= 50.0 ? 0.0 : 5.99;
+      case 'express':
+        return 12.99;
+      case 'overnight':
+        return 24.99;
+      case 'pickup':
+        return 0.0;
+      default:
+        return 0.0;
+    }
   }
 
   /// Calculate cart totals with coupon
@@ -143,7 +175,7 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
       'current_total': state.summary?.total,
       'user_id': _currentUserId ?? 'guest',
       'user': 'roshdology123',
-      'timestamp': '2025-06-18 14:08:39',
+      'timestamp': '2025-06-23 07:09:01', // 🔥 UPDATED TIMESTAMP
     });
 
     final currentSummary = state.summary;
@@ -226,7 +258,7 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
       'removed_coupon': couponToRemove,
       'user_id': _currentUserId ?? 'guest',
       'user': 'roshdology123',
-      'timestamp': '2025-06-18 14:08:39',
+      'timestamp': '2025-06-23 07:09:01', // 🔥 UPDATED TIMESTAMP
     });
 
     final currentSummary = state.summary;
@@ -290,7 +322,7 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
       'coupon_code': _appliedCouponCode,
       'user_id': _currentUserId ?? 'guest',
       'user': 'roshdology123',
-      'timestamp': '2025-06-18 14:08:39',
+      'timestamp': '2025-06-23 07:09:01', // 🔥 UPDATED TIMESTAMP
     });
 
     final currentSummary = state.summary;
@@ -361,7 +393,7 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
         'messages_count': messages.length,
         'messages': messages,
         'user': 'roshdology123',
-        'timestamp': '2025-06-18 14:08:39',
+        'timestamp': '2025-06-23 07:09:01', // 🔥 UPDATED TIMESTAMP
       },
     );
 
@@ -387,7 +419,7 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
     _logger.logUserAction('cart_summary_user_changed', {
       'new_user_id': userId,
       'user': 'roshdology123',
-      'timestamp': '2025-06-18 14:08:39',
+      'timestamp': '2025-06-23 07:09:01', // 🔥 UPDATED TIMESTAMP
     });
   }
 
@@ -399,7 +431,7 @@ class CartSummaryCubit extends Cubit<CartSummaryState> {
       {
         'user_id': _currentUserId,
         'user': 'roshdology123',
-        'timestamp': '2025-06-18 14:08:39',
+        'timestamp': '2025-06-23 07:09:01', // 🔥 UPDATED TIMESTAMP
       },
     );
 

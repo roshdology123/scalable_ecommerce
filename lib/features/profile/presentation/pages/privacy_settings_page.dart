@@ -42,9 +42,14 @@ class PrivacySettingsPage extends StatelessWidget {
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: theme.colorScheme.error,
+                action: SnackBarAction(
+                  label: 'Retry',
+                  onPressed: () => context.read<ProfilePreferencesCubit>().loadPreferences(),
+                ),
               ),
             );
-          } else if (state is ProfilePrivacySettingsUpdated) {
+          } else if (state is ProfilePrivacySettingsUpdated && !state.isOptimistic) {
+            // Only show success message when confirmed by server
             final scoreChange = state.newPrivacyScore - state.previousPrivacyScore;
             final message = scoreChange > 0
                 ? 'Privacy score increased to ${state.newPrivacyScore}%'
@@ -54,13 +59,21 @@ class PrivacySettingsPage extends StatelessWidget {
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(message),
+                content: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white),
+                    SizedBox(width: 8),
+                    Expanded(child: Text(message)),
+                  ],
+                ),
                 backgroundColor: theme.colorScheme.tertiary,
+                duration: Duration(seconds: 2),
               ),
             );
           }
         },
         builder: (context, state) {
+          // Handle initial loading
           if (state is ProfilePreferencesLoading) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -93,33 +106,26 @@ class PrivacySettingsPage extends StatelessWidget {
             );
           }
 
-          return _buildPrivacySettings(context, preferences);
+          // No more loading overlay - changes are instant!
+          return _buildPrivacySettings(context, preferences, state);
         },
       ),
     );
   }
 
-  UserPreferences? _getPreferences(ProfilePreferencesState state) {
-    if (state is ProfilePreferencesLoaded) return state.preferences;
-    if (state is ProfilePreferencesUpdated) return state.preferences;
-    if (state is ProfilePrivacySettingsUpdated) return state.preferences;
-    if (state is ProfilePreferencesError) return state.currentPreferences;
-    return null;
-  }
-
-  Widget _buildPrivacySettings(BuildContext context, UserPreferences preferences) {
+  Widget _buildPrivacySettings(BuildContext context, UserPreferences preferences, ProfilePreferencesState state) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Privacy Score Card
-          _buildPrivacyScoreCard(context, preferences),
+          // Privacy Score Card with optimistic indicator
+          _buildPrivacyScoreCard(context, preferences, state),
 
           const SizedBox(height: 24),
 
           // Data Sharing Section
-          _buildDataSharingSection(context, preferences),
+          _buildDataSharingSection(context, preferences, state),
 
           const SizedBox(height: 24),
 
@@ -140,10 +146,13 @@ class PrivacySettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPrivacyScoreCard(BuildContext context, UserPreferences preferences) {
+  Widget _buildPrivacyScoreCard(BuildContext context, UserPreferences preferences, ProfilePreferencesState state) {
     final theme = Theme.of(context);
     final score = preferences.privacyScore;
     final scoreColor = _getScoreColor(theme, score);
+
+    // Show pending indicator for optimistic updates
+    final isOptimistic = state is ProfilePrivacySettingsUpdated && state.isOptimistic;
 
     return Card(
       child: Padding(
@@ -170,11 +179,26 @@ class PrivacySettingsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Privacy Score',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Privacy Score',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (isOptimistic) ...[
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       Text(
                         _getScoreDescription(score),
@@ -205,7 +229,6 @@ class PrivacySettingsPage extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Privacy Score Progress Bar
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -223,7 +246,7 @@ class PrivacySettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Last updated: 2025-06-22 09:15:58',
+                  'Last updated: 2025-06-23 06:26:34',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -236,7 +259,11 @@ class PrivacySettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDataSharingSection(BuildContext context, UserPreferences preferences) {
+  Widget _buildDataSharingSection(
+      BuildContext context,
+      UserPreferences preferences,
+      ProfilePreferencesState state,
+      ) {
     final theme = Theme.of(context);
 
     return Card(
@@ -277,6 +304,7 @@ class PrivacySettingsPage extends StatelessWidget {
               subtitle: 'Help improve app performance and user experience',
               icon: Icons.analytics_outlined,
               value: preferences.shareDataForAnalytics,
+              isLoading: false, // No loading state needed with optimistic updates
               onChanged: (value) {
                 context.read<ProfilePreferencesCubit>().updatePrivacySettings(
                   shareDataForAnalytics: value,
@@ -291,6 +319,7 @@ class PrivacySettingsPage extends StatelessWidget {
               subtitle: 'Receive personalized offers and product recommendations',
               icon: Icons.campaign_outlined,
               value: preferences.shareDataForMarketing,
+              isLoading: false, // No loading state needed with optimistic updates
               onChanged: (value) {
                 context.read<ProfilePreferencesCubit>().updatePrivacySettings(
                   shareDataForMarketing: value,
@@ -333,6 +362,30 @@ class PrivacySettingsPage extends StatelessWidget {
       ),
     );
   }
+
+  UserPreferences? _getPreferences(ProfilePreferencesState state) {
+    if (state is ProfilePreferencesLoaded) return state.preferences;
+    if (state is ProfilePreferencesUpdated) return state.preferences;
+    if (state is ProfilePrivacySettingsUpdated) return state.preferences;
+    if (state is ProfilePreferencesError) return state.currentPreferences;
+
+    // Handle all the specific updating states that preserve current preferences
+    if (state is ProfilePrivacySettingsUpdating) return state.currentPreferences;
+    if (state is ProfileNotificationSettingsUpdating) return state.currentPreferences;
+    if (state is ProfileSecuritySettingsUpdating) return state.currentPreferences;
+    if (state is ProfileThemeChanging) return state.currentPreferences;
+    if (state is ProfileLanguageChanging) return state.currentPreferences;
+    if (state is ProfilePreferencesUpdating) return state.currentPreferences;
+
+    // For generic loading states, check if we have current preferences
+    if (state is ProfilePreferencesLoading) {
+      // This is for initial loading - return null to show loading indicator
+      return null;
+    }
+
+    return null;
+  }
+
 
   Widget _buildAccountDataSection(BuildContext context) {
     final theme = Theme.of(context);

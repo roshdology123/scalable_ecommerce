@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 
@@ -57,17 +58,20 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<ProfileModel> getProfile() async {
     try {
-      // For roshdology123, return mock data since they're not in FakeStoreAPI
-      await Future.delayed(const Duration(milliseconds: 500));
-      return ProfileModel.roshdology123();
+      final response = await _dioClient.get('/users/1');
 
-      // If this was a real user ID from FakeStore, we'd do:
-      // final response = await _dioClient.get('/users/1');
-      // if (response.statusCode == 200) {
-      //   return ProfileModel.fromJson(response.data as Map<String, dynamic>);
-      // }
-      // throw ApiException.fromResponse(response.statusCode ?? 500, response.data);
+      if (response.statusCode == 200) {
+        final profileData = response.data as Map<String, dynamic>;
+        debugPrint('API Response: $profileData'); // Debug log
+
+        // Convert API data to ProfileModel
+        return ProfileModel.fromJson(profileData);
+      }
+
+      throw ApiException.fromResponse(response.statusCode ?? 500, response.data);
     } catch (e) {
+      debugPrint('Error fetching profile: $e'); // Debug log
+
       if (e is ApiException) rethrow;
       throw NetworkException(
         message: 'Failed to get profile: ${e.toString()}',
@@ -79,22 +83,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<ProfileModel> updateProfile(ProfileModel profile) async {
     try {
-      // For demo purposes, simulate API call to FakeStoreAPI
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      // In real implementation with existing FakeStore user:
-      // final response = await _dioClient.put(
-      //   '/users/${profile.id}',
-      //   data: profile.toFakeStoreJson(),
-      // );
-      // if (response.statusCode == 200) {
-      //   return ProfileModel.fromJson(response.data as Map<String, dynamic>);
-      // }
-
-      // For mock, return updated profile
-      return profile.copyWith(
-        updatedAt: DateTime.parse('2025-06-22 08:11:58'),
+      // Update profile using FakeStore API
+      final response = await _dioClient.put(
+        '/users/${profile.id}', // Using user ID 1 for demo
+        data: profile.toFakeStoreJson(),
       );
+
+      if (response.statusCode == 200) {
+        return ProfileModel.fromJson(response.data as Map<String, dynamic>);
+      }
+
+      throw ApiException.fromResponse(response.statusCode ?? 500, response.data);
     } catch (e) {
       if (e is ApiException) rethrow;
       throw NetworkException(
@@ -110,7 +109,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       // FakeStoreAPI doesn't support image upload, so we simulate it
       await Future.delayed(const Duration(milliseconds: 1500));
 
-      final timestamp = DateTime.parse('2025-06-22 08:11:58').millisecondsSinceEpoch;
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
       return 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&t=$timestamp';
     } catch (e) {
       throw NetworkException(
@@ -137,7 +136,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<UserPreferencesModel> getUserPreferences() async {
     try {
       await Future.delayed(const Duration(milliseconds: 300));
-      return UserPreferencesModel.defaults('11'); // roshdology123's ID
+      return UserPreferencesModel.defaults('1'); // Using actual user ID from API
     } catch (e) {
       throw NetworkException(
         message: 'Failed to get user preferences: ${e.toString()}',
@@ -151,7 +150,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     try {
       await Future.delayed(const Duration(milliseconds: 600));
       return preferences.copyWith(
-        updatedAt: DateTime.parse('2025-06-22 08:11:58'),
+        updatedAt: DateTime.now(),
       );
     } catch (e) {
       throw NetworkException(
@@ -165,7 +164,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<ProfileStatsModel> getProfileStats() async {
     try {
       await Future.delayed(const Duration(milliseconds: 400));
-      return ProfileStatsModel.mock('11'); // roshdology123's stats
+      return ProfileStatsModel.mock('1'); // Using actual user ID from API
     } catch (e) {
       throw NetworkException(
         message: 'Failed to get profile stats: ${e.toString()}',
@@ -178,13 +177,11 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<void> deleteAccount() async {
     try {
       // Using FakeStoreAPI delete user endpoint
-      await Future.delayed(const Duration(milliseconds: 1000));
+      final response = await _dioClient.delete('/users/1');
 
-      // Real implementation would be:
-      // final response = await _dioClient.delete('/users/11');
-      // if (response.statusCode != 200) {
-      //   throw ApiException.fromResponse(response.statusCode ?? 500, response.data);
-      // }
+      if (response.statusCode != 200) {
+        throw ApiException.fromResponse(response.statusCode ?? 500, response.data);
+      }
     } catch (e) {
       if (e is ApiException) rethrow;
       throw NetworkException(
@@ -198,7 +195,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   Future<String> exportUserData() async {
     try {
       await Future.delayed(const Duration(milliseconds: 2000));
-      return 'https://api.example.com/exports/roshdology123_data_2025-06-22.zip';
+      return 'https://api.example.com/exports/user_data_${DateTime.now().millisecondsSinceEpoch}.zip';
     } catch (e) {
       throw NetworkException(
         message: 'Failed to export user data: ${e.toString()}',
@@ -235,9 +232,6 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         final users = usersJson
             .map((json) => ProfileModel.fromJson(json as Map<String, dynamic>))
             .toList();
-
-        // Add roshdology123 to the list
-        users.add(ProfileModel.roshdology123());
 
         return users;
       }

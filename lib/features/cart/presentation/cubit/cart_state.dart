@@ -17,6 +17,7 @@ class CartState with _$CartState {
     @Default(false) bool isRefreshing,
     @Default(false) bool isUpdating,
     @Default(false) bool isSyncing,
+    @Default(false) bool isOptimistic,
     String? pendingAction,
     CartItem? pendingItem,
     Map<String, bool>? itemsLoading,
@@ -32,6 +33,7 @@ class CartState with _$CartState {
 
   const factory CartState.empty({
     @Default(false) bool isLoading,
+    @Default(false) bool isOptimistic,
     String? message,
   }) = _Empty;
 
@@ -53,15 +55,15 @@ class CartState with _$CartState {
 extension CartStateX on CartState {
   bool get isLoading => maybeWhen(
     loading: () => true,
-    loaded: (_, isRefreshing, isUpdating, __, ___, ____, _____) =>
+    loaded: (_, isRefreshing, isUpdating, __, ___, ____, _____,______,) =>
     isRefreshing || isUpdating,
     syncing: (_, __, ___) => true,
-    empty: (isLoading, _) => isLoading,
+    empty: (isLoading, _,__) => isLoading,
     orElse: () => false,
   );
 
   bool get hasCart => maybeWhen(
-    loaded: (cart, _, __, ___, ____, _____, ______) => true,
+    loaded: (cart, _, __, ___, ____, _____, ______,_______) => true,
     error: (_, cart, __, ___, ____) => cart != null,
     syncing: (cart, _, __) => true,
     conflict: (_, __, ___, ____) => true,
@@ -69,7 +71,7 @@ extension CartStateX on CartState {
   );
 
   Cart? get cart => maybeWhen(
-    loaded: (cart, _, __, ___, ____, _____, ______) => cart,
+    loaded: (cart, _, __, ___, ____, _____, ______,_______) => cart,
     error: (_, cart, __, ___, ____) => cart,
     syncing: (cart, _, __) => cart,
     conflict: (localCart, _, __, ___) => localCart,
@@ -93,6 +95,10 @@ extension CartStateX on CartState {
     error: (failure, _, __, ___, ____) => failure,
     orElse: () => null,
   );
+  bool get isOptimistic => whenOrNull(
+    loaded: (_, __, ___, ____, isOptimistic, _____, ______, _______) => isOptimistic,
+    empty: (_, isOptimistic, __) => isOptimistic,
+  ) ?? false;
 
   bool get hasConflicts => maybeWhen(
     conflict: (_, __, ___, ____) => true,

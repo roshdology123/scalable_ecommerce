@@ -81,29 +81,57 @@ class ProfilePreferencesCubit extends Cubit<ProfilePreferencesState> {
       return;
     }
 
-    final previousTheme = _currentPreferences!.themeMode;
+    final previousPreferences = _currentPreferences!;
+    final previousTheme = previousPreferences.themeMode;
+
     if (previousTheme == newTheme) return; // No change needed
 
-    emit(ProfileThemeChanging(
-      currentPreferences: _currentPreferences!,
-      newTheme: newTheme,
-    ));
-
-    debugPrint('Changing theme from ${previousTheme.name} to ${newTheme.name}...');
-
-    final updatedPreferences = _currentPreferences!.copyWith(
+    // OPTIMISTIC UPDATE
+    final optimisticPreferences = previousPreferences.copyWith(
       themeMode: newTheme,
-      updatedAt: DateTime.parse('2025-06-22 08:33:00'),
+      updatedAt: DateTime.parse('2025-06-23 06:26:34'),
     );
 
-    await _updatePreferences(
-      updatedPreferences,
-      'theme',
-          () => ProfileThemeChanged(
-        preferences: updatedPreferences,
-        previousTheme: previousTheme,
-        newTheme: newTheme,
-      ),
+    _currentPreferences = optimisticPreferences;
+
+    emit(ProfileThemeChanged(
+      preferences: optimisticPreferences,
+      previousTheme: previousTheme,
+      newTheme: newTheme,
+      isOptimistic: true,
+    ));
+
+    debugPrint('Applied optimistic theme change from ${previousTheme.name} to ${newTheme.name}...');
+
+    // Make API call
+    final params = UpdateUserPreferencesParams(preferences: optimisticPreferences);
+    final result = await _updateUserPreferencesUseCase(params);
+
+    result.fold(
+          (failure) {
+        debugPrint('Failed to update theme: ${failure.message}');
+
+        // ROLLBACK
+        _currentPreferences = previousPreferences;
+
+        emit(ProfilePreferencesError(
+          message: 'Failed to update theme: ${failure.message}',
+          code: failure.code.toString(),
+          currentPreferences: previousPreferences,
+        ));
+      },
+          (serverPreferences) {
+        debugPrint('Theme change confirmed by server');
+
+        _currentPreferences = serverPreferences;
+
+        emit(ProfileThemeChanged(
+          preferences: serverPreferences,
+          previousTheme: previousTheme,
+          newTheme: newTheme,
+          isOptimistic: false,
+        ));
+      },
     );
   }
 
@@ -160,42 +188,75 @@ class ProfilePreferencesCubit extends Cubit<ProfilePreferencesState> {
       return;
     }
 
-    emit(ProfileNotificationSettingsUpdating(currentPreferences: _currentPreferences!));
-    debugPrint('Updating notification settings...');
+    final previousPreferences = _currentPreferences!;
 
     // Track changes for logging
     final changes = <String, bool>{};
 
-    final updatedPreferences = _currentPreferences!.copyWith(
+    // OPTIMISTIC UPDATE
+    final optimisticPreferences = previousPreferences.copyWith(
       pushNotificationsEnabled: pushNotifications,
       emailNotificationsEnabled: emailNotifications,
       smsNotificationsEnabled: smsNotifications,
       orderUpdates: orderUpdates,
       promotionalEmails: promotionalEmails,
       newsletterSubscription: newsletterSubscription,
-      updatedAt: DateTime.parse('2025-06-22 08:33:00'),
+      updatedAt: DateTime.parse('2025-06-23 06:26:34'),
     );
 
     // Log changes
-    if (pushNotifications != null && pushNotifications != _currentPreferences!.pushNotificationsEnabled) {
+    if (pushNotifications != null && pushNotifications != previousPreferences.pushNotificationsEnabled) {
       changes['pushNotifications'] = pushNotifications;
     }
-    if (emailNotifications != null && emailNotifications != _currentPreferences!.emailNotificationsEnabled) {
+    if (emailNotifications != null && emailNotifications != previousPreferences.emailNotificationsEnabled) {
       changes['emailNotifications'] = emailNotifications;
     }
-    if (smsNotifications != null && smsNotifications != _currentPreferences!.smsNotificationsEnabled) {
+    if (smsNotifications != null && smsNotifications != previousPreferences.smsNotificationsEnabled) {
       changes['smsNotifications'] = smsNotifications;
     }
 
-    await _updatePreferences(
-      updatedPreferences,
-      'notifications',
-          () => ProfileNotificationSettingsUpdated(
-        preferences: updatedPreferences,
-        changedSettings: changes,
-      ),
+    // Update current preferences and emit optimistic state
+    _currentPreferences = optimisticPreferences;
+
+    emit(ProfileNotificationSettingsUpdated(
+      preferences: optimisticPreferences,
+      changedSettings: changes,
+      isOptimistic: true,
+    ));
+
+    debugPrint('Applied optimistic notification settings update...');
+
+    // Make API call
+    final params = UpdateUserPreferencesParams(preferences: optimisticPreferences);
+    final result = await _updateUserPreferencesUseCase(params);
+
+    result.fold(
+          (failure) {
+        debugPrint('Failed to update notification settings: ${failure.message}');
+
+        // ROLLBACK
+        _currentPreferences = previousPreferences;
+
+        emit(ProfilePreferencesError(
+          message: 'Failed to update notification settings: ${failure.message}',
+          code: failure.code.toString(),
+          currentPreferences: previousPreferences,
+        ));
+      },
+          (serverPreferences) {
+        debugPrint('Notification settings confirmed by server');
+
+        _currentPreferences = serverPreferences;
+
+        emit(ProfileNotificationSettingsUpdated(
+          preferences: serverPreferences,
+          changedSettings: changes,
+          isOptimistic: false,
+        ));
+      },
     );
   }
+
 
   /// Update privacy settings
   Future<void> updatePrivacySettings({
@@ -210,29 +271,63 @@ class ProfilePreferencesCubit extends Cubit<ProfilePreferencesState> {
       return;
     }
 
-    emit(ProfilePrivacySettingsUpdating(currentPreferences: _currentPreferences!));
-    debugPrint('Updating privacy settings...');
+    final previousPreferences = _currentPreferences!;
+    final previousPrivacyScore = previousPreferences.privacyScore;
 
-    final previousPrivacyScore = _currentPreferences!.privacyScore;
-
-    final updatedPreferences = _currentPreferences!.copyWith(
+    // OPTIMISTIC UPDATE: Update immediately with new values
+    final optimisticPreferences = previousPreferences.copyWith(
       shareDataForAnalytics: shareDataForAnalytics,
       shareDataForMarketing: shareDataForMarketing,
-      updatedAt: DateTime.parse('2025-06-22 08:33:00'),
+      updatedAt: DateTime.parse('2025-06-23 06:26:34'),
     );
 
-    final newPrivacyScore = updatedPreferences.privacyScore;
+    final newPrivacyScore = optimisticPreferences.privacyScore;
 
-    await _updatePreferences(
-      updatedPreferences,
-      'privacy',
-          () => ProfilePrivacySettingsUpdated(
-        preferences: updatedPreferences,
-        newPrivacyScore: newPrivacyScore,
-        previousPrivacyScore: previousPrivacyScore,
-      ),
+    // Update current preferences and emit optimistic state immediately
+    _currentPreferences = optimisticPreferences;
+
+    emit(ProfilePrivacySettingsUpdated(
+      preferences: optimisticPreferences,
+      newPrivacyScore: newPrivacyScore,
+      previousPrivacyScore: previousPrivacyScore,
+      isOptimistic: true, // Add this flag to indicate optimistic update
+    ));
+
+    debugPrint('Applied optimistic privacy settings update...');
+
+    // Now make the actual API call in the background
+    final params = UpdateUserPreferencesParams(preferences: optimisticPreferences);
+    final result = await _updateUserPreferencesUseCase(params);
+
+    result.fold(
+          (failure) {
+        debugPrint('Failed to update privacy settings: ${failure.message}');
+
+        // ROLLBACK: Revert to previous preferences on failure
+        _currentPreferences = previousPreferences;
+
+        emit(ProfilePreferencesError(
+          message: 'Failed to update privacy settings: ${failure.message}',
+          code: failure.code.toString(),
+          currentPreferences: previousPreferences,
+        ));
+      },
+          (serverPreferences) {
+        debugPrint('Privacy settings confirmed by server');
+
+        // Update with server response (in case server made adjustments)
+        _currentPreferences = serverPreferences;
+
+        emit(ProfilePrivacySettingsUpdated(
+          preferences: serverPreferences,
+          newPrivacyScore: serverPreferences.privacyScore,
+          previousPrivacyScore: previousPrivacyScore,
+          isOptimistic: false, // Confirmed by server
+        ));
+      },
     );
   }
+
 
   /// Update security settings
   Future<void> updateSecuritySettings({

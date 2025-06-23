@@ -12,6 +12,14 @@ import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
 import '../../features/favorites/presentation/pages/favorites_collection_page.dart';
 import '../../features/favorites/presentation/pages/favorites_page.dart';
+import '../../features/notifications/presentation/cubit/notification_preferences_cubit.dart';
+import '../../features/notifications/presentation/cubit/notification_stats_cubit.dart';
+import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
+import '../../features/notifications/presentation/pages/notification_analytics_page.dart';
+import '../../features/notifications/presentation/pages/notification_detail_page.dart';
+import '../../features/notifications/presentation/pages/notification_history_page.dart';
+import '../../features/notifications/presentation/pages/notification_onboarding_page.dart';
+import '../../features/notifications/presentation/pages/notification_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/products/presentation/pages/products_page.dart';
 import '../../features/products/presentation/pages/product_detail_page.dart';
@@ -28,7 +36,52 @@ import '../../features/profile/presentation/pages/change_password_page.dart'; //
 import '../../features/profile/presentation/pages/delete_account_page.dart'; // Add this
 import '../../features/search/presentation/pages/search_page.dart';
 import '../themes/theme_cubit.dart';
-
+final List<GoRoute> notificationRoutes = [
+  GoRoute(
+    path: '/notifications',
+    builder: (context, state) => BlocProvider(
+      create: (context) => getIt<NotificationsCubit>()..loadNotifications(),
+      child: const NotificationsPage(),
+    ),
+    routes: [
+      GoRoute(
+        path: 'history',
+        builder: (context, state) => BlocProvider(
+          create: (context) => getIt<NotificationsCubit>()..loadNotifications(),
+          child: const NotificationHistoryPage(),
+        ),
+      ),
+      GoRoute(
+        path: 'settings',
+        builder: (context, state) => BlocProvider(
+          create: (context) => getIt<NotificationPreferencesCubit>()..loadPreferences(),
+          child: const NotificationSettingsPage(),
+        ),
+      ),
+      GoRoute(
+        path: 'analytics',
+        builder: (context, state) => BlocProvider(
+          create: (context) => getIt<NotificationStatsCubit>()..loadStats(),
+          child: const NotificationAnalyticsPage(),
+        ),
+      ),
+      GoRoute(
+        path: 'onboarding',
+        builder: (context, state) => const NotificationOnboardingPage(),
+      ),
+      GoRoute(
+        path: 'detail/:id',
+        builder: (context, state) {
+          final notificationId = state.pathParameters['id']!;
+          return BlocProvider(
+            create: (context) => getIt<NotificationsCubit>(),
+            child: NotificationDetailPage(notificationId: notificationId),
+          );
+        },
+      ),
+    ],
+  ),
+];
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -125,6 +178,7 @@ class AppRouter {
 
     routes: [
       // Splash Route
+
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashPage(),
@@ -385,7 +439,7 @@ class AppRouter {
           ),
         ],
       ),
-
+      ...notificationRoutes,
       // Standalone Routes (outside shell)
       GoRoute(
         path: '/product-detail/:id',
