@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      FLUTTER_VERSION: "3.13.0"  # Matches your working environment
+      FLUTTER_VERSION: "3.32.4"  # Matches your working version
 
     steps:
       - name: Checkout repository
@@ -32,12 +32,6 @@ jobs:
         run: |
           flutter --version
           dart --version
-
-      - name: Modify pubspec.yaml for compatibility
-        run: |
-          # Update flutter_lints to a version compatible with Dart 3.1.0
-          sed -i 's/flutter_lints: \^6.0.0/flutter_lints: 1.0.0/' pubspec.yaml
-          cat pubspec.yaml | grep flutter_lints  # Verify change
 
       - name: Cache dependencies
         uses: actions/cache@v4
