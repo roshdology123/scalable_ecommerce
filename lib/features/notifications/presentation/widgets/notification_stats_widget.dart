@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:scalable_ecommerce/features/notifications/data/models/notification_stats_model.dart';
+
+import '../../domain/entities/notification_stats.dart';
 
 class NotificationStatsWidget extends StatelessWidget {
   final dynamic stats;
@@ -42,7 +45,7 @@ class NotificationStatsWidget extends StatelessWidget {
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ),
-          _StatTiles(stats: stats, comparison: comparison),
+          _StatTiles(stats: stats, ),
           if (recommendations != null && recommendations!.isNotEmpty) ...[
             const Divider(height: 32),
             const Text(
@@ -75,41 +78,34 @@ class NotificationStatsWidget extends StatelessWidget {
   }
 }
 
-class _StatTiles extends StatelessWidget {
-  final dynamic stats;
-  final (
-  dynamic,
-  dynamic,
-  dynamic
-  )? comparison;
 
+class _StatTiles extends StatelessWidget {
+  final NotificationStats stats;
   const _StatTiles({
     required this.stats,
-    this.comparison,
   });
 
   @override
   Widget build(BuildContext context) {
-    // You should adapt these to your actual stats structure.
-    final total = stats?['total'] ?? 0;
-    final unread = stats?['unread'] ?? 0;
-    final urgent = stats?['urgent'] ?? 0;
+    final total = stats.totalNotifications;
+    final unread = stats.unreadCount;
+    final urgent = stats.priorityBreakdown['urgent'] ?? 0;
+    final today = stats.todayCount;
+    final engagement = stats.engagementRate;
+    final trend = stats.trend;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _statCard('Total', total, Icons.notifications_active_outlined, Colors.blue),
-        _statCard('Unread', unread, Icons.mark_email_unread_outlined, Colors.orange),
-        _statCard('Urgent', urgent, Icons.priority_high, Colors.redAccent),
-        if (comparison != null)
-          _statCard(
-            'Δ',
-            comparison!.$3 ?? '-',
-            Icons.trending_up,
-            Colors.green,
-            comparison: true,
-          ),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _statCard('Total', total, Icons.notifications_active_outlined, Colors.blue),
+          _statCard('Unread', unread, Icons.mark_email_unread_outlined, Colors.orange),
+          _statCard('Urgent', urgent, Icons.priority_high, Colors.redAccent),
+          _statCard('Today', today, Icons.today, Colors.indigo),
+          _statCard('Engagement', "${engagement.toStringAsFixed(1)}%", Icons.trending_up, Colors.green),
+          _statCard('Trend', trend.capitalize(), Icons.show_chart, Colors.purple),
+        ],
+      ),
     );
   }
 
@@ -117,14 +113,12 @@ class _StatTiles extends StatelessWidget {
       String label,
       dynamic value,
       IconData icon,
-      Color color, {
-        bool comparison = false,
-      }) {
+      Color color,
+      ) {
     return Card(
-      color: comparison ? Colors.green[50] : null,
       child: SizedBox(
-        width: 80,
-        height: 76,
+        width: 90,
+        height: 90,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -146,5 +140,12 @@ class _StatTiles extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+extension StringCasingExtension on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

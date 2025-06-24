@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/services/notification_service.dart';
 import '../cubit/profile_preferences/profile_preferences_cubit.dart';
 import '../cubit/profile_preferences/profile_preferences_state.dart';
 import '../widgets/preference_switch_tile.dart';
@@ -730,13 +731,16 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
 
     switch (action) {
       case 'test':
+        NotificationService().sendTestNotification();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('🔔 Test notification sent to roshdology123!'),
             backgroundColor: theme.colorScheme.tertiary,
             action: SnackBarAction(
               label: 'View',
-              onPressed: () {},
+              onPressed: () {
+
+              },
             ),
           ),
         );

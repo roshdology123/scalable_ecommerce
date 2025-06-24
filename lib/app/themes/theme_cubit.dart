@@ -69,7 +69,6 @@ class ThemeCubit extends Cubit<ThemeState> {
       // Update state
       emit(state.copyWith(themeMode: themeMode));
     } catch (e) {
-      // If saving fails, still update the UI
       emit(state.copyWith(themeMode: themeMode));
     }
   }

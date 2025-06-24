@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart' hide ThemeMode;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -78,6 +79,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
           final preferences = _getPreferences(state);
           if (preferences == null) {
+            debugPrint('Current State is ${state.runtimeType}');
+            // Show a spinner during loading or updating, not an error
+            if (state is ProfilePreferencesLoading || state is ProfilePreferencesUpdating || state is ProfileLanguageChanging) {
+              return const Center(child: CircularProgressIndicator());
+            }
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -102,7 +108,7 @@ class _SettingsPageState extends State<SettingsPage> {
             );
           }
 
-          return _buildSettingsContent(preferences);
+          return _buildSettingsContent(preferences!);
         },
       ),
     );
@@ -308,6 +314,7 @@ class _SettingsPageState extends State<SettingsPage> {
               onChanged: (value) {
                 final language = value == 'arabic' ? Language.arabic : Language.english;
                 context.read<ProfilePreferencesCubit>().updateLanguage(language);
+                context.setLocale(Locale(language.name == 'arabic' ? 'ar' : 'en'));
               },
             ),
           ],

@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:scalable_ecommerce/features/notifications/domain/entities/notification.dart';
 import '../utils/app_logger.dart';
 import '../storage/local_storage.dart';
 import '../storage/secure_storage.dart';
@@ -134,7 +136,7 @@ class NotificationService {
   }
 
   /// Convert AppNotification to Firebase message format
-  Map<String, dynamic> _convertNotificationToMessage(dynamic notification) {
+  Map<String, dynamic> _convertNotificationToMessage(AppNotification notification) {
     return {
       'messageId': notification.id,
       'data': {
@@ -169,7 +171,7 @@ class NotificationService {
   }
 
   /// Show local notification from simulation
-  Future<void> _showLocalNotificationFromSimulation(dynamic notification) async {
+  Future<void> _showLocalNotificationFromSimulation(AppNotification notification) async {
     final channelId = _getChannelIdFromType(notification.type.name);
 
     final androidDetails = AndroidNotificationDetails(
@@ -601,7 +603,15 @@ class NotificationService {
             enableVibration: true,
           ),
         ];
+        const AndroidNotificationChannel fcmFallbackChannel = AndroidNotificationChannel(
+          'fcm_fallback_notification_channel',
+          'FCM Fallback',
+          description: 'Default channel used by FCM',
+          importance: Importance.high,
+          playSound: true,
+        );
 
+        await androidPlugin.createNotificationChannel(fcmFallbackChannel);
         for (final channel in channels) {
           await androidPlugin.createNotificationChannel(channel);
         }
@@ -761,11 +771,42 @@ class NotificationService {
         },
       );
     }
+  }Future<void> showLocalTestNotification({
+    String title = "Test Notification",
+    String body = "This is a test notification!",
+  }) async {
+    const channelId = 'general';
+    final androidDetails = AndroidNotificationDetails(
+      channelId,
+      'General',
+      channelDescription: 'General app notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+    );
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+
+    await _localNotifications.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      details,
+      payload: '{"type":"test","source":"local"}',
+    );
   }
 
   /// Send test notification (for development)
   Future<void> sendTestNotification() async {
+    debugPrint('Sending test notification...');
     if (_simulationEnabled) {
+      showLocalTestNotification();
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      debugPrint('fcmToken : $fcmToken');
       _simulator.generateActionBasedNotification('test_notification', {
         'user_id': 'roshdology123',
         'message': 'This is a test notification!',

@@ -53,10 +53,17 @@ final List<GoRoute> notificationRoutes = [
       ),
       GoRoute(
         path: 'settings',
-        builder: (context, state) => BlocProvider(
+        builder: (context, state) => MultiBlocProvider(
+  providers: [
+    BlocProvider(
           create: (context) => getIt<NotificationPreferencesCubit>()..loadPreferences(),
-          child: const NotificationSettingsPage(),
         ),
+    BlocProvider(
+      create: (context) => getIt<ProfilePreferencesCubit>()..loadPreferences(),
+    ),
+  ],
+  child: NotificationSettingsPage(),
+),
       ),
       GoRoute(
         path: 'analytics',

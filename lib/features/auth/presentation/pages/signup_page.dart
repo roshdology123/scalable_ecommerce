@@ -181,10 +181,10 @@ class SignupPage extends HookWidget {
                   PhoneInputField(
                     controller: phoneController,
                     labelText: 'auth.phone'.tr(),
-                    hintText: '1-570-236-7033',
+                    hintText: '01012345678',
                     validator: (value) {
                       if (value != null && value.isNotEmpty) {
-                        final phoneRegex = RegExp(r'^\d{1}-\d{3}-\d{3}-\d{4}$');
+                        final phoneRegex = RegExp(r'^01[0125][0-9]{8}$');
                         if (!phoneRegex.hasMatch(value)) {
                           return 'auth.invalid_phone_format'.tr();
                         }

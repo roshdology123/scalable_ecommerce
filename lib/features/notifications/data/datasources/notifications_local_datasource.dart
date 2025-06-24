@@ -94,7 +94,21 @@ class NotificationsLocalDataSource {
         },
       );
 
-      await LocalStorage.saveNotifications(notifications);
+      try {
+        await LocalStorage.saveNotifications(notifications);
+      } catch (e, st) {
+        _logger.logErrorWithContext(
+          'NotificationsLocalDataSource.saveNotifications',
+          e,
+          st,
+          {
+            'notifications_count': notifications.length,
+            'user': 'Abdallah Roshdy',
+            'timestamp': DateTime.now().toIso8601String(),
+          },
+        );
+        throw CacheException(message: 'Failed to save notifications to local storage: $e');
+      }
 
       _logger.logBusinessLogic(
         'local_save_notifications_success',

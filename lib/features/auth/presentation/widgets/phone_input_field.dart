@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 class PhoneInputField extends StatelessWidget {
   final TextEditingController controller;
   final String labelText;
@@ -30,17 +33,16 @@ class PhoneInputField extends StatelessWidget {
       keyboardType: TextInputType.phone,
       textInputAction: TextInputAction.next,
       inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'[0-9-]')),
-        LengthLimitingTextInputFormatter(12), // 1-570-236-7033 format
-        PhoneNumberFormatter(),
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(11), // Egyptian numbers are 11 digits
       ],
       validator: validator,
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: labelText,
-        hintText: hintText ?? '1-570-236-7033',
+        hintText: hintText ?? '01012345678',
         prefixIcon: const Icon(Icons.phone_outlined),
-        helperText: 'Format: 1-570-236-7033',
+        helperText: 'Format: 01XXXXXXXXX',
       ),
     );
   }
@@ -93,3 +95,4 @@ class PhoneNumberFormatter extends TextInputFormatter {
     );
   }
 }
+

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../cubit/notifications_cubit.dart';
 import '../cubit/notifications_state.dart';
@@ -81,10 +82,8 @@ class _NotificationHistoryPageState extends State<NotificationHistoryPage> {
                   child: NotificationList(
                     notifications: filteredNotifications,
                     onNotificationTap: (notification) {
-                      Navigator.pushNamed(
-                        context,
-                        '/notifications/detail',
-                        arguments: notification.id,
+                      context.push(
+                        '/notifications/detail/${notification.id}',
                       );
                     },
                     onMarkRead: (notification) {

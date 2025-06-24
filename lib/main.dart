@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:scalable_ecommerce/core/services/notification_service.dart';
+import 'package:scalable_ecommerce/core/storage/local_storage.dart';
+import 'package:scalable_ecommerce/core/storage/secure_storage.dart';
 
 import 'core/di/injection.dart';
+import 'core/storage/storage_service.dart';
 import 'core/utils/app_logger.dart';
 import 'app/router/app_router.dart';
 import 'app/themes/theme_cubit.dart';
@@ -25,8 +29,15 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   final logger = AppLogger();
-
+  NotificationService().initialize(
+    enableSimulation: true,
+  );
+  await StorageService.initializeAll();
+  await LocalStorage.init();
   try {
     logger.logBusinessLogic(
       'app_initialization_started',
@@ -43,9 +54,7 @@ void main() async {
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -80,12 +89,14 @@ void main() async {
     // Run the app
     runApp(
       EasyLocalization(
+        saveLocale: true,
+        startLocale: const Locale('ar',),
         supportedLocales: const [
           Locale('en',),
           Locale('ar',),
         ],
         path: 'assets/translations',
-        fallbackLocale: const Locale('en', 'US'),
+        fallbackLocale: const Locale('ar',),
         child: const MyApp(),
       ),
     );
@@ -169,7 +180,7 @@ class MyApp extends StatelessWidget {
                 'timestamp': '2025-06-22 11:18:18',
               },
             );
-            return getIt<AuthCubit>()..checkAuthStatus();
+            return getIt<AuthCubit>();
           },
         ),
 

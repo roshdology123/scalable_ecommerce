@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:scalable_ecommerce/core/storage/local_storage.dart';
+import 'package:scalable_ecommerce/core/storage/secure_storage.dart';
+import 'package:scalable_ecommerce/core/storage/storage_service.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/usecases/usecase.dart';
@@ -52,41 +55,41 @@ class AuthCubit extends Cubit<AuthState> {
     emit(const AuthState.loading());
 
     try {
-      print('[AuthCubit] Checking auth status...');
+      debugPrint('[AuthCubit] Checking auth status...');
 
       // First, check if user should be automatically logged in (Remember Me)
       final autoLoginResult = await _checkAutoLogin();
 
       await autoLoginResult.fold(
             (failure) async {
-          print('[AuthCubit] Auto-login failed: ${failure.message}');
+          debugPrint('[AuthCubit] Auto-login failed: ${failure.message}');
           // Auto login failed, check for existing session
           final result = await _getCurrentUserUseCase(const NoParams());
           result.fold(
                 (failure) {
-              print('[AuthCubit] No existing session: ${failure.message}');
+              debugPrint('[AuthCubit] No existing session: ${failure.message}');
               emit(const AuthState.unauthenticated());
             },
                 (user) {
-              print('[AuthCubit] Found existing session: ${user.email}');
+              debugPrint('[AuthCubit] Found existing session: ${user.email}');
               emit(AuthState.authenticated(user));
             },
           );
         },
             (user) async {
           if (user != null) {
-            print('[AuthCubit] Auto-login successful: ${user.email}');
+            debugPrint('[AuthCubit] Auto-login successful: ${user.email}');
             emit(AuthState.authenticated(user));
           } else {
-            print('[AuthCubit] No auto-login, checking existing session...');
+            debugPrint('[AuthCubit] No auto-login, checking existing session...');
             final result = await _getCurrentUserUseCase(const NoParams());
             result.fold(
                   (failure) {
-                print('[AuthCubit] No existing session: ${failure.message}');
+                debugPrint('[AuthCubit] No existing session: ${failure.message}');
                 emit(const AuthState.unauthenticated());
               },
                   (user) {
-                print('[AuthCubit] Found existing session: ${user.email}');
+                debugPrint('[AuthCubit] Found existing session: ${user.email}');
                 emit(AuthState.authenticated(user));
               },
             );
@@ -94,7 +97,7 @@ class AuthCubit extends Cubit<AuthState> {
         },
       );
     } catch (e) {
-      print('[AuthCubit] Auth check error: $e');
+      debugPrint('[AuthCubit] Auth check error: $e');
       emit(const AuthState.unauthenticated());
     }
   }
@@ -102,14 +105,14 @@ class AuthCubit extends Cubit<AuthState> {
   // Fixed auto-login check method
   Future<Either<Failure, User?>> _checkAutoLogin() async {
     try {
-      print('[AuthCubit] Starting auto-login check...');
+      debugPrint('[AuthCubit] Starting auto-login check...');
 
       // Check if remember me is enabled
       final isRememberMeEnabled = await _authRepository.isRememberMeEnabled();
-      print('[AuthCubit] Remember me enabled: $isRememberMeEnabled');
+      debugPrint('[AuthCubit] Remember me enabled: $isRememberMeEnabled');
 
       if (!isRememberMeEnabled) {
-        print('[AuthCubit] Remember me not enabled');
+        debugPrint('[AuthCubit] Remember me not enabled');
         return const Right(null);
       }
 
@@ -117,28 +120,28 @@ class AuthCubit extends Cubit<AuthState> {
       final tokensResult = await _authRepository.getAuthTokens();
       final tokens = tokensResult.fold(
             (failure) {
-          print('[AuthCubit] No tokens found: ${failure.message}');
+          debugPrint('[AuthCubit] No tokens found: ${failure.message}');
           return null;
         },
             (tokens) {
-          print('[AuthCubit] Tokens found, expires at: ${tokens.expiresAt}');
+          debugPrint('[AuthCubit] Tokens found, expires at: ${tokens.expiresAt}');
           return tokens;
         },
       );
 
       if (tokens != null && !tokens.isExpired) {
-        print('[AuthCubit] Valid tokens found, trying to get cached user directly');
+        debugPrint('[AuthCubit] Valid tokens found, trying to get cached user directly');
 
         // Try to get cached user directly from local storage
         final userResult = await _authRepository.getCachedUserDirectly();
         return userResult.fold(
               (failure) async {
-            print('[AuthCubit] No cached user, trying credential login: ${failure.message}');
+            debugPrint('[AuthCubit] No cached user, trying credential login: ${failure.message}');
             // No cached user, try to login with saved credentials
             return await _tryCredentialLogin();
           },
               (user) {
-            print('[AuthCubit] Found cached user: ${user.email}');
+            debugPrint('[AuthCubit] Found cached user: ${user.email}');
             // We have a cached user and valid tokens, mark as logged in
             _authRepository.setLoggedInStatus(true);
             return Right(user);
@@ -146,11 +149,11 @@ class AuthCubit extends Cubit<AuthState> {
         );
       }
 
-      print('[AuthCubit] No valid tokens, trying credential login');
+      debugPrint('[AuthCubit] No valid tokens, trying credential login');
       // No valid tokens, try to login with saved credentials
       return await _tryCredentialLogin();
     } catch (e) {
-      print('[AuthCubit] Auto-login error: $e');
+      debugPrint('[AuthCubit] Auto-login error: $e');
       return Left(CacheFailure(
         message: 'Auto login failed: ${e.toString()}',
         code: 'AUTO_LOGIN_ERROR',
@@ -160,12 +163,12 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<Either<Failure, User?>> _tryCredentialLogin() async {
     try {
-      print('[AuthCubit] Attempting credential-based auto-login');
+      debugPrint('[AuthCubit] Attempting credential-based auto-login');
 
       final credentials = await _authRepository.getSavedCredentials();
       return credentials.fold(
             (failure) {
-          print('[AuthCubit] No saved credentials: ${failure.message}');
+          debugPrint('[AuthCubit] No saved credentials: ${failure.message}');
           return const Right(null);
         },
             (creds) async {
@@ -173,7 +176,7 @@ class AuthCubit extends Cubit<AuthState> {
           final password = creds['password'];
 
           if (email != null && password != null) {
-            print('[AuthCubit] Attempting auto-login with saved credentials for: $email');
+            debugPrint('[AuthCubit] Attempting auto-login with saved credentials for: $email');
 
             // Use the repository login directly to avoid recursion
             final loginResult = await _authRepository.login(
@@ -184,22 +187,22 @@ class AuthCubit extends Cubit<AuthState> {
 
             return loginResult.fold(
                   (failure) {
-                print('[AuthCubit] Credential auto-login failed: ${failure.message}');
+                debugPrint('[AuthCubit] Credential auto-login failed: ${failure.message}');
                 return Left(failure);
               },
                   (user) {
-                print('[AuthCubit] Credential auto-login successful: ${user.email}');
+                debugPrint('[AuthCubit] Credential auto-login successful: ${user.email}');
                 return Right(user);
               },
             );
           }
 
-          print('[AuthCubit] Incomplete saved credentials');
+          debugPrint('[AuthCubit] Incomplete saved credentials');
           return const Right(null);
         },
       );
     } catch (e) {
-      print('[AuthCubit] Credential login error: $e');
+      debugPrint('[AuthCubit] Credential login error: $e');
       return Left(AuthFailure(
         message: 'Credential auto-login failed: ${e.toString()}',
         code: 'CREDENTIAL_LOGIN_ERROR',
@@ -212,7 +215,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String password,
     bool rememberMe = false,
   }) async {
-    print('[AuthCubit] Login attempt for: $emailOrUsername, Remember me: $rememberMe');
+    debugPrint('[AuthCubit] Login attempt for: $emailOrUsername, Remember me: $rememberMe');
     emit(const AuthState.loading());
 
     final result = await _loginUseCase(LoginParams(
@@ -223,11 +226,11 @@ class AuthCubit extends Cubit<AuthState> {
 
     result.fold(
           (failure) {
-        print('[AuthCubit] Login failed: ${failure.message}');
+        debugPrint('[AuthCubit] Login failed: ${failure.message}');
         emit(AuthState.error(failure.message, failure.code));
       },
           (user) {
-        print('[AuthCubit] Login successful: ${user.email}');
+        debugPrint('[AuthCubit] Login successful: ${user.email}');
         emit(AuthState.authenticated(user));
       },
     );
@@ -242,7 +245,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String lastName,
     String? phone,
   }) async {
-    print('[AuthCubit] Registration attempt for: $email');
+    debugPrint('[AuthCubit] Registration attempt for: $email');
     emit(const AuthState.loading());
 
     final result = await _registerUseCase(RegisterParams(
@@ -257,45 +260,46 @@ class AuthCubit extends Cubit<AuthState> {
 
     result.fold(
           (failure) {
-        print('[AuthCubit] Registration failed: ${failure.message}');
+        debugPrint('[AuthCubit] Registration failed: ${failure.message}');
         emit(AuthState.error(failure.message, failure.code));
       },
           (user) {
-        print('[AuthCubit] Registration successful: ${user.email}');
+        debugPrint('[AuthCubit] Registration successful: ${user.email}');
         emit(AuthState.authenticated(user));
       },
     );
   }
 
   Future<void> logout() async {
-    print('[AuthCubit] Logout request');
+    debugPrint('[AuthCubit] Logout request');
     emit(const AuthState.loading());
 
     final result = await _logoutUseCase(const NoParams());
     result.fold(
           (failure) {
-        print('[AuthCubit] Logout failed: ${failure.message}');
+        debugPrint('[AuthCubit] Logout failed: ${failure.message}');
         emit(AuthState.error(failure.message, failure.code));
       },
           (_) {
-        print('[AuthCubit] Logout successful');
+        debugPrint('[AuthCubit] Logout successful');
+        SecureStorage().clearAll();
         emit(const AuthState.unauthenticated());
       },
     );
   }
 
   Future<void> forgotPassword(String email) async {
-    print('[AuthCubit] Forgot password request for: $email');
+    debugPrint('[AuthCubit] Forgot password request for: $email');
     emit(const AuthState.loading());
 
     final result = await _forgotPasswordUseCase(ForgotPasswordParams(email: email));
     result.fold(
           (failure) {
-        print('[AuthCubit] Forgot password failed: ${failure.message}');
+        debugPrint('[AuthCubit] Forgot password failed: ${failure.message}');
         emit(AuthState.error(failure.message, failure.code));
       },
           (_) {
-        print('[AuthCubit] Forgot password email sent');
+        debugPrint('[AuthCubit] Forgot password email sent');
         emit(const AuthState.forgotPasswordSent());
       },
     );
@@ -305,7 +309,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String token,
     required String newPassword,
   }) async {
-    print('[AuthCubit] Reset password request');
+    debugPrint('[AuthCubit] Reset password request');
     emit(const AuthState.loading());
 
     final result = await _resetPasswordUseCase(ResetPasswordParams(
@@ -315,11 +319,11 @@ class AuthCubit extends Cubit<AuthState> {
 
     result.fold(
           (failure) {
-        print('[AuthCubit] Reset password failed: ${failure.message}');
+        debugPrint('[AuthCubit] Reset password failed: ${failure.message}');
         emit(AuthState.error(failure.message, failure.code));
       },
           (_) {
-        print('[AuthCubit] Password reset successful');
+        debugPrint('[AuthCubit] Password reset successful');
         emit(const AuthState.passwordResetSuccess());
       },
     );
@@ -331,7 +335,7 @@ class AuthCubit extends Cubit<AuthState> {
     String? phone,
     String? avatar,
   }) async {
-    print('[AuthCubit] Update profile request');
+    debugPrint('[AuthCubit] Update profile request');
     emit(const AuthState.loading());
 
     final result = await _updateProfileUseCase(UpdateProfileParams(
@@ -343,11 +347,11 @@ class AuthCubit extends Cubit<AuthState> {
 
     result.fold(
           (failure) {
-        print('[AuthCubit] Update profile failed: ${failure.message}');
+        debugPrint('[AuthCubit] Update profile failed: ${failure.message}');
         emit(AuthState.error(failure.message, failure.code));
       },
           (user) {
-        print('[AuthCubit] Profile updated successfully');
+        debugPrint('[AuthCubit] Profile updated successfully');
         emit(AuthState.authenticated(user));
       },
     );
@@ -369,7 +373,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await _authRepository.clearRememberMe();
     } catch (e) {
-      print('[AuthCubit] Failed to clear remember me: $e');
+      debugPrint('[AuthCubit] Failed to clear remember me: $e');
     }
   }
 

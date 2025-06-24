@@ -399,7 +399,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                 icon: Icons.language_outlined,
                 title: 'Language',
                 subtitle: 'Change app language',
-                onTap: () => context.push('/profile/settings/language'),
+                onTap: () => context.push('/profile/settings'),
               ),
               ProfileMenuItem(
                 icon: Icons.notifications_outlined,
@@ -650,6 +650,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
             onPressed: () {
               Navigator.pop(context);
               context.read<AuthCubit>().logout();
+
               context.go('/auth/login');
             },
             style: ElevatedButton.styleFrom(

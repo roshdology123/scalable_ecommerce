@@ -87,8 +87,8 @@ class RegisterUseCase implements UseCase<User, RegisterParams> {
 
     // Phone validation (optional but must be valid if provided)
     if (params.phone != null && params.phone!.isNotEmpty) {
-      if (!_isValidPhoneFormat(params.phone!)) {
-        errors['phone'] = 'Please enter a valid phone number (e.g., 1-570-236-7033)';
+      if (!_isValidEgyptianPhone(params.phone!)) {
+        errors['phone'] = 'Please enter a valid Egyptian phone number (e.g., 01012345678)';
       }
     }
 
@@ -105,7 +105,10 @@ class RegisterUseCase implements UseCase<User, RegisterParams> {
     return phoneRegex.hasMatch(phone) || phone.isValidPhone;
   }
 }
-
+bool _isValidEgyptianPhone(String phone) {
+  final phoneRegex = RegExp(r'^01[0125][0-9]{8}$');
+  return phoneRegex.hasMatch(phone);
+}
 class RegisterParams extends Equatable {
   final String email;
   final String username;

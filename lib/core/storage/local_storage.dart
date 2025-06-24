@@ -49,6 +49,10 @@ class LocalStorage {
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(RatingModelAdapter());
     }
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(NotificationModelAdapter());
+    }
+
   }
 
   static Future<void> _openBoxes() async {

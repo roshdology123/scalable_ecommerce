@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../cubit/notifications_cubit.dart';
 import '../cubit/notifications_state.dart';
@@ -17,11 +18,11 @@ class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});
 
   void _openSettings(BuildContext context) {
-    Navigator.pushNamed(context, '/notifications/settings');
+    context.push( '/notifications/settings');
   }
 
   void _openAnalytics(BuildContext context) {
-    Navigator.pushNamed(context, '/notifications/analytics');
+    context.push( '/notifications/analytics');
   }
 
   void _onSearch(BuildContext context, String query) {
@@ -113,10 +114,8 @@ class NotificationsPage extends StatelessWidget {
                       child: NotificationList(
                         notifications: state.notifications,
                         onNotificationTap: (notification) {
-                          Navigator.pushNamed(
-                            context,
-                            '/notifications/detail',
-                            arguments: notification.id,
+                          context.push(
+                            '/notifications/detail/${notification.id}',
                           );
                         },
                         onMarkRead: (notification) {
