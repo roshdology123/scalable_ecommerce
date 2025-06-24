@@ -2,47 +2,67 @@ name: Flutter CI/CD
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master,  main ]
   pull_request:
     branches: [ master, main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FLUTTER_VERSION: "3.13.0"  # Explicitly matches your working version
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
-          flutter-version: '3.13.0'  # Explicit version to match your requirements
 
-      - name: Display Flutter version
-        run: flutter --version
+      - name: Disable Flutter analytics
+        run: flutter config --no-analytics
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Verify versions
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/hostedtoolcache/flutter
+            .pub-cache/
+            ${{ github.workspace }}/.dart_tool/
+            ${{ github.workspace }}/android/gradle-wrapper/
+          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
+
+      - name: Install dependencies with correct flutter_lints
+        run: |
+          flutter pub add flutter_lints@6.0.0 --dev
+          flutter pub get
 
       - name: Run tests
         run: flutter test
 
+      - name: Run code generators
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
       - name: Build Android APK
         run: flutter build apk --release
-
-      - name: Find APK file
-        run: |
-          echo "Searching for APK files..."
-          find build -name "*.apk" | sort
-          APK_PATH=$(find build -name "*.apk" | grep -i "release" | head -n 1)
-          echo "Found APK at: $APK_PATH"
-          [ -z "$APK_PATH" ] && { echo "No APK found!"; exit 1; }
-          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
-          path: ${{ env.APK_PATH }}
+          path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 5
