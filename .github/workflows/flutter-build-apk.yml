@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      FLUTTER_VERSION: "3.32.4"  # Matches your working version
+      FLUTTER_VERSION: "3.32.4"
 
     steps:
       - name: Checkout repository
@@ -21,6 +21,14 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android Licenses
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager --install "ndk;29.0.13599879"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
