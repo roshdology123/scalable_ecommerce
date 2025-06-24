@@ -6,11 +6,13 @@ on:
   pull_request:
     branches: [ main, master ]
 
+env:
+  FLUTTER_VERSION: "3.19.0"  # Updated to match your SDK constraints
+  DART_VERSION: "3.3.0"      # Explicitly set Dart version
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      FLUTTER_VERSION: "3.13.0" # Matches your constraint (>=3.10.0)
 
     steps:
       - name: Checkout repository
@@ -28,18 +30,25 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
 
+      - name: Set Dart SDK version
+        run: flutter downgrade dart:${{ env.DART_VERSION }}
+
       - name: Cache dependencies
         uses: actions/cache@v4
+        id: cache
         with:
           path: |
             /opt/hostedtoolcache/flutter
             .pub-cache/
             ${{ github.workspace }}/.dart_tool/
             ${{ github.workspace }}/android/gradle-wrapper/
-          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
+          key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-dart-${{ env.DART_VERSION }}-${{ hashFiles('pubspec.lock') }}
 
       - name: Get dependencies
-        run: flutter pub get
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          flutter pub get
+          flutter pub cache add flutter_lints@6.0.0
 
       - name: Run code generators
         run: flutter pub run build_runner build --delete-conflicting-outputs
