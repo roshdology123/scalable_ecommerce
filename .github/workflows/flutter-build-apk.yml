@@ -2,7 +2,7 @@ name: Flutter CI/CD
 
 on:
   push:
-    branches: [ master,  main ]
+    branches: [ master, main ]
   pull_request:
     branches: [ master, main ]
 
@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      FLUTTER_VERSION: "3.13.0"  # Explicitly matches your working version
+      FLUTTER_VERSION: "3.13.0"  # Matches your working version
 
     steps:
       - name: Checkout code
@@ -46,9 +46,10 @@ jobs:
             ${{ github.workspace }}/android/gradle-wrapper/
           key: ${{ runner.os }}-flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
 
-      - name: Install dependencies with correct flutter_lints
+      - name: Install dependencies
         run: |
-          flutter pub add flutter_lints@6.0.0 --dev
+          # First manually edit pubspec.yaml to ensure correct flutter_lints version
+          sed -i 's/flutter_lints: \^6.0.0/flutter_lints: 6.0.0/' pubspec.yaml
           flutter pub get
 
       - name: Run tests
