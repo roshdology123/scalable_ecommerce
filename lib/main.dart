@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:scalable_ecommerce/core/services/notification_service.dart';
 import 'package:scalable_ecommerce/core/storage/local_storage.dart';
@@ -27,7 +28,8 @@ import 'features/profile/presentation/cubit/profile_stats/profile_stats_cubit.da
 import 'firebase_options.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -349,6 +351,7 @@ class MyApp extends StatelessWidget {
               'locale': context.locale.toString(),
             },
           );
+          FlutterNativeSplash.remove();
 
           return MaterialApp.router(
             title: 'Scalable E-Commerce - roshdology123',

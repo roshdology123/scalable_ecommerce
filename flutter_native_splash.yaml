@@ -1,0 +1,19 @@
+flutter_native_splash:
+  # Background color
+  color: "#2196F3"  # Your primary color
+
+  # App icon
+  image: assets/images/app_logo.png
+
+  # Optional: For dark mode
+  color_dark: "#2196F3"
+  image_dark: assets/images/app_logo.png
+
+  # Web specific
+  web: true
+  web_image_mode: center  # center, contain, cover, fill
+
+  # Android 12+
+  android_12:
+    image: assets/images/app_logo.png
+    color: "#2196F3"
