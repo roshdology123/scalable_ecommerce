@@ -31,6 +31,7 @@ void main() async {
   await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+
   );
   final logger = AppLogger();
   NotificationService().initialize(

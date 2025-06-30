@@ -10,14 +10,11 @@ class SecureStorage {
   static String? _cachedAuthToken;
 
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
+    aOptions: AndroidOptions(),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
   );
-
 
   Future<String?> getAuthToken() async {
     try {
@@ -185,7 +182,8 @@ class SecureStorage {
   Future<void> clearSessionData() async {
     try {
       final allKeys = await _storage.readAll();
-      final sessionKeys = allKeys.keys.where((key) => key.startsWith('session_'));
+      final sessionKeys =
+          allKeys.keys.where((key) => key.startsWith('session_'));
 
       for (final key in sessionKeys) {
         await _storage.delete(key: key);
