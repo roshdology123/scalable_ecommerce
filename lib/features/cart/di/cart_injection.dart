@@ -2,7 +2,6 @@ import 'package:get_it/get_it.dart';
 
 import '../../../core/network/dio_client.dart';
 import '../../../core/network/network_info.dart';
-import '../../../core/storage/storage_service.dart';
 
 import '../data/datasources/cart_local_datasource.dart';
 import '../data/datasources/cart_remote_datasource.dart';

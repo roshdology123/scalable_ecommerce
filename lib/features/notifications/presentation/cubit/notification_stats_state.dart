@@ -144,7 +144,7 @@ extension NotificationStatsStateExtensions on NotificationStatsState {
       if (isExporting) return 'Exporting data...';
       if (isRefreshing) return 'Refreshing statistics...';
       final days = dateRange.toDate.difference(dateRange.fromDate).inDays;
-      return 'Statistics loaded (${days} days, ${stats.totalNotifications} notifications)';
+      return 'Statistics loaded ($days days, ${stats.totalNotifications} notifications)';
     },
     comparison: (currentStats, previousStats, _, __, ___) {
       return 'Comparison loaded (${currentStats.totalNotifications} vs ${previousStats.totalNotifications} notifications)';

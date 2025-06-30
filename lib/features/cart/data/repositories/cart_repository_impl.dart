@@ -6,7 +6,6 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/network/network_info.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/cart.dart';
-import '../../domain/entities/cart_item.dart';
 import '../../domain/entities/cart_summary.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../datasources/cart_local_datasource.dart';

@@ -33,11 +33,11 @@ class CartCubit extends Cubit<CartState> {
   final AppLogger _logger = AppLogger();
 
   String? _currentUserId;
-  bool _autoSync = true;
+  final bool _autoSync = true;
   bool _isUserAuthenticated = false;
 
   // 🔥 Debouncing for quantity updates - PERFORMANCE FIX
-  Map<String, DateTime> _lastUpdateTime = {};
+  final Map<String, DateTime> _lastUpdateTime = {};
   static const Duration _debounceDelay = Duration(milliseconds: 300);
 
   CartCubit(

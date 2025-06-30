@@ -76,7 +76,7 @@ class ProductFilterDialog extends HookWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: context.colorScheme.surfaceVariant,
+                color: context.colorScheme.surfaceContainerHighest,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(12),
                 ),
@@ -171,7 +171,7 @@ class ProductFilterDialog extends HookWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: context.colorScheme.surfaceVariant.withOpacity(0.5),
+                color: context.colorScheme.surfaceContainerHighest.withOpacity(0.5),
                 borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(12),
                 ),

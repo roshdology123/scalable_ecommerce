@@ -22,7 +22,7 @@ class LoadingProductCard extends StatelessWidget {
         elevation: 2,
         clipBehavior: Clip.antiAlias,
         child: Shimmer.fromColors(
-          baseColor: context.colorScheme.surfaceVariant,
+          baseColor: context.colorScheme.surfaceContainerHighest,
           highlightColor: context.colorScheme.surface,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -108,7 +108,7 @@ class _SettingsPageState extends State<SettingsPage> {
             );
           }
 
-          return _buildSettingsContent(preferences!);
+          return _buildSettingsContent(preferences);
         },
       ),
     );

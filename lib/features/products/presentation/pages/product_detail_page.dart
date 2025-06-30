@@ -182,7 +182,7 @@ class ProductDetailPage extends HookWidget {
   Widget _buildProductImage(BuildContext context, Product product) {
     if (product.image.isEmpty) {
       return Container(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         child: Icon(
           Icons.image_not_supported,
           size: 64,
@@ -200,7 +200,7 @@ class ProductDetailPage extends HookWidget {
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(
-            color: Theme.of(context).colorScheme.surfaceVariant,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Center(
               child: CircularProgressIndicator(
                 value: loadingProgress.expectedTotalBytes != null
@@ -213,7 +213,7 @@ class ProductDetailPage extends HookWidget {
         },
         errorBuilder: (context, error, stackTrace) {
           return Container(
-            color: Theme.of(context).colorScheme.surfaceVariant,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Icon(
               Icons.image_not_supported,
               size: 64,
@@ -462,7 +462,7 @@ class ProductDetailPage extends HookWidget {
             width: double.infinity, // 🔥 Fixed: Explicit width constraint
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
@@ -564,7 +564,7 @@ class ProductDetailPage extends HookWidget {
                   : null,
               icon: const Icon(Icons.remove),
               style: IconButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               ),
             ),
             const SizedBox(width: 16),
@@ -588,7 +588,7 @@ class ProductDetailPage extends HookWidget {
                   : null,
               icon: const Icon(Icons.add),
               style: IconButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               ),
             ),
             const Spacer(),

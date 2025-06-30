@@ -84,8 +84,8 @@ class _NotificationOnboardingPageState extends State<NotificationOnboardingPage>
             ),
             const SizedBox(height: 40),
             ElevatedButton(
-              child: const Text('Finish Setup'),
               onPressed: _finishOnboarding,
+              child: const Text('Finish Setup'),
             ),
           ],
         ),

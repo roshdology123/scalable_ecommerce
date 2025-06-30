@@ -137,13 +137,13 @@ class _ProductImageCarouselState extends State<ProductImageCarousel> {
       imageUrl: imageUrl,
       fit: BoxFit.cover,
       placeholder: (context, url) => Container(
-        color: context.colorScheme.surfaceVariant,
+        color: context.colorScheme.surfaceContainerHighest,
         child: const Center(
           child: CircularProgressIndicator(),
         ),
       ),
       errorWidget: (context, url, error) => Container(
-        color: context.colorScheme.surfaceVariant,
+        color: context.colorScheme.surfaceContainerHighest,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -167,7 +167,7 @@ class _ProductImageCarouselState extends State<ProductImageCarousel> {
 
   Widget _buildPlaceholder(BuildContext context) {
     return Container(
-      color: context.colorScheme.surfaceVariant,
+      color: context.colorScheme.surfaceContainerHighest,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

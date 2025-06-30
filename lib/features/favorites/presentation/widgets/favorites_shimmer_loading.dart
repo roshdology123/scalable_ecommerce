@@ -14,7 +14,7 @@ class FavoritesShimmerLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      baseColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
       highlightColor: Theme.of(context).colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),

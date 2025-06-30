@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/utils/app_logger.dart';
-import '../../domain/entities/notification.dart';
 import '../../domain/usecases/sync_notifications_usecase.dart';
 import 'notification_sync_state.dart';
 

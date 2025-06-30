@@ -147,7 +147,7 @@ class AppTheme {
 
       // Chip Theme
       chipTheme: ChipThemeData(
-        backgroundColor: colorScheme.surfaceVariant,
+        backgroundColor: colorScheme.surfaceContainerHighest,
         selectedColor: colorScheme.secondaryContainer,
         deleteIconColor: colorScheme.onSurfaceVariant,
         labelStyle: TextStyle(color: colorScheme.onSurface),
@@ -314,7 +314,7 @@ class AppTheme {
 
       // Chip Theme
       chipTheme: ChipThemeData(
-        backgroundColor: colorScheme.surfaceVariant,
+        backgroundColor: colorScheme.surfaceContainerHighest,
         selectedColor: colorScheme.secondaryContainer,
         deleteIconColor: colorScheme.onSurfaceVariant,
         labelStyle: TextStyle(color: colorScheme.onSurface),

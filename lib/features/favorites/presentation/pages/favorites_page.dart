@@ -40,7 +40,7 @@ class _FavoritesPageState extends State<FavoritesPage>
 
   bool _showScrollToTop = false;
   String _searchQuery = '';
-  Map<String, dynamic> _currentFilters = {};
+  final Map<String, dynamic> _currentFilters = {};
 
   @override
   void initState() {
@@ -455,10 +455,10 @@ class _FavoritesPageState extends State<FavoritesPage>
               flex: 3,
               child: Container(
                 width: double.infinity,
-                color: Theme.of(context).colorScheme.surfaceVariant,
-                child: favorite.productImage?.isNotEmpty == true
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: favorite.productImage.isNotEmpty == true
                     ? Image.network(
-                  favorite.productImage!,
+                  favorite.productImage,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Icon(
@@ -490,14 +490,13 @@ class _FavoritesPageState extends State<FavoritesPage>
                       overflow: TextOverflow.ellipsis,
                     ),
                     const Spacer(),
-                    if (favorite.price != null)
-                      Text(
-                        '\$${favorite.price!.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                    Text(
+                      '\$${favorite.price!.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
+                    ),
                   ],
                 ),
               ),
@@ -516,13 +515,13 @@ class _FavoritesPageState extends State<FavoritesPage>
           height: 56,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: Theme.of(context).colorScheme.surfaceVariant,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
           ),
-          child: favorite.productImage?.isNotEmpty == true
+          child: favorite.productImage.isNotEmpty == true
               ? ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.network(
-              favorite.productImage!,
+              favorite.productImage,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Icon(
@@ -543,7 +542,7 @@ class _FavoritesPageState extends State<FavoritesPage>
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: favorite.price != null
-            ? Text('\$${favorite.price!.toStringAsFixed(2)}')
+            ? Text('\$${favorite.price.toStringAsFixed(2)}')
             : null,
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () => _navigateToProductDetails(favorite.id),

@@ -1,6 +1,5 @@
 import 'package:injectable/injectable.dart';
 
-import '../../features/auth/domain/repositories/auth_repository.dart';
 
 abstract class Environments {
   static const String dev = 'dev';

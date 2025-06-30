@@ -1,8 +1,6 @@
 import 'package:injectable/injectable.dart';
 
-import '../../../core/network/dio_client.dart';
 import '../../../core/network/network_info.dart';
-import '../../../core/storage/secure_storage.dart';
 import '../data/datasources/auth_local_datasource.dart';
 import '../data/datasources/auth_remote_datasource.dart';
 import '../data/repositories/auth_repository_impl.dart';

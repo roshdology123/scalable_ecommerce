@@ -1,7 +1,6 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../../core/errors/failures.dart';
-import '../../../products/domain/entities/product.dart';
 import '../entities/search_history.dart';
 import '../entities/search_query.dart';
 import '../entities/search_result.dart';

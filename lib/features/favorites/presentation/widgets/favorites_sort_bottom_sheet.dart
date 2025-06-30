@@ -216,7 +216,7 @@ class _FavoritesSortBottomSheetState extends State<FavoritesSortBottomSheet> {
         decoration: BoxDecoration(
           color: isSelected
               ? colorScheme.primaryContainer
-              : colorScheme.surfaceVariant.withOpacity(0.3),
+              : colorScheme.surfaceContainerHighest.withOpacity(0.3),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
@@ -269,7 +269,7 @@ class _FavoritesSortBottomSheetState extends State<FavoritesSortBottomSheet> {
         decoration: BoxDecoration(
           color: isSelected
               ? colorScheme.primaryContainer.withOpacity(0.5)
-              : colorScheme.surfaceVariant.withOpacity(0.3),
+              : colorScheme.surfaceContainerHighest.withOpacity(0.3),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected

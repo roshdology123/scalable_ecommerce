@@ -154,7 +154,7 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
                 ),
               ),
               const SizedBox(height: 8),
-              Container(
+              SizedBox(
                 height: 60,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
@@ -171,7 +171,7 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? colorScheme.primaryContainer
-                              : colorScheme.surfaceVariant.withOpacity(0.3),
+                              : colorScheme.surfaceContainerHighest.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isSelected
@@ -202,7 +202,7 @@ class _CreateCollectionDialogState extends State<CreateCollectionDialog> {
                 ),
               ),
               const SizedBox(height: 8),
-              Container(
+              SizedBox(
                 height: 40,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,

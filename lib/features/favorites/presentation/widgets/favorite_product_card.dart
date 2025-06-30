@@ -244,7 +244,7 @@ class _FavoriteProductCardState extends State<FavoriteProductCard>
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 ),
                 child: CachedNetworkImage(
                   imageUrl: widget.favoriteItem.productImage,
@@ -302,13 +302,13 @@ class _FavoriteProductCardState extends State<FavoriteProductCard>
           imageUrl: widget.favoriteItem.productImage,
           fit: BoxFit.cover,
           placeholder: (context, url) => Container(
-            color: context.colorScheme.surfaceVariant,
+            color: context.colorScheme.surfaceContainerHighest,
             child: const Center(
               child: CircularProgressIndicator(),
             ),
           ),
           errorWidget: (context, url, error) => Container(
-            color: context.colorScheme.surfaceVariant,
+            color: context.colorScheme.surfaceContainerHighest,
             child: Icon(
               Icons.image_not_supported,
               color: context.colorScheme.onSurfaceVariant,

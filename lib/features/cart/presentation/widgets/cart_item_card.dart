@@ -95,7 +95,7 @@ class CartItemCard extends StatelessWidget {
       height: 80,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
@@ -103,14 +103,14 @@ class CartItemCard extends StatelessWidget {
           imageUrl: item.productImage,
           fit: BoxFit.cover,
           placeholder: (context, url) => Container(
-            color: Theme.of(context).colorScheme.surfaceVariant,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Icon(
               Icons.image,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           errorWidget: (context, url, error) => Container(
-            color: Theme.of(context).colorScheme.surfaceVariant,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Icon(
               Icons.broken_image,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -591,7 +591,7 @@ class CartItemCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surfaceVariant,
+                          : Theme.of(context).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isSelected

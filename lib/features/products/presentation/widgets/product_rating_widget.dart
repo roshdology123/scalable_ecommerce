@@ -166,7 +166,7 @@ class RatingBreakdown extends StatelessWidget {
                 Expanded(
                   child: LinearProgressIndicator(
                     value: percentage,
-                    backgroundColor: context.colorScheme.surfaceVariant,
+                    backgroundColor: context.colorScheme.surfaceContainerHighest,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       context.colorScheme.primary,
                     ),

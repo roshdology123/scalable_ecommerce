@@ -88,7 +88,7 @@ class CartLoadingWidget extends StatelessWidget {
 
   Widget _buildHeaderSkeleton(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).colorScheme.surfaceVariant,
+      baseColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       highlightColor: Theme.of(context).colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -119,7 +119,7 @@ class CartLoadingWidget extends StatelessWidget {
 
   Widget _buildCartItemSkeleton(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).colorScheme.surfaceVariant,
+      baseColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       highlightColor: Theme.of(context).colorScheme.surface,
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -232,7 +232,7 @@ class CartLoadingWidget extends StatelessWidget {
 
   Widget _buildSummarySkeleton(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).colorScheme.surfaceVariant,
+      baseColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       highlightColor: Theme.of(context).colorScheme.surface,
       child: Card(
         margin: const EdgeInsets.all(16),
@@ -312,7 +312,7 @@ class CartLoadingWidget extends StatelessWidget {
 
   Widget _buildActionButtonsSkeleton(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).colorScheme.surfaceVariant,
+      baseColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       highlightColor: Theme.of(context).colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),

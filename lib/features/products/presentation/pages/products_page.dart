@@ -253,7 +253,7 @@ class ProductsPage extends HookWidget {
                 return Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  color: context.colorScheme.surfaceVariant.withOpacity(0.5),
+                  color: context.colorScheme.surfaceContainerHighest.withOpacity(0.5),
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,

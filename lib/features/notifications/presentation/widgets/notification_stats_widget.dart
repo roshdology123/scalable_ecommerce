@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:scalable_ecommerce/features/notifications/data/models/notification_stats_model.dart';
 
 import '../../domain/entities/notification_stats.dart';
 

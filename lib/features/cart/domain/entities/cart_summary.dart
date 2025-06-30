@@ -160,12 +160,12 @@ class CartSummary extends Equatable {
       return 'Free shipping applied';
     } else if (freeShippingThreshold != null && amountToFreeShipping != null) {
       if (amountToFreeShipping! > 0) {
-        return 'Add ${formattedAmountToFreeShipping} more for free shipping';
+        return 'Add $formattedAmountToFreeShipping more for free shipping';
       } else {
         return 'Qualifies for free shipping';
       }
     } else if (shippingCost > 0) {
-      return 'Shipping: ${formattedShippingCost}';
+      return 'Shipping: $formattedShippingCost';
     } else {
       return 'Shipping calculated at checkout';
     }
@@ -183,7 +183,7 @@ class CartSummary extends Equatable {
     } else if (days <= 3) {
       return '$days-day delivery';
     } else if (days <= 7) {
-      return '${days}+ days delivery';
+      return '$days+ days delivery';
     } else {
       return '1-2 weeks delivery';
     }
@@ -234,11 +234,11 @@ class CartSummary extends Equatable {
     final messages = <String>[];
 
     if (freeShippingThreshold != null && amountToFreeShipping != null && amountToFreeShipping! > 0) {
-      messages.add('Add ${formattedAmountToFreeShipping} more for FREE shipping! 🚚');
+      messages.add('Add $formattedAmountToFreeShipping more for FREE shipping! 🚚');
     }
 
     if (totalSavings > 0) {
-      messages.add('You\'re saving ${formattedTotalSavings}! 💰');
+      messages.add('You\'re saving $formattedTotalSavings! 💰');
     }
 
     if (isFreeShipping) {

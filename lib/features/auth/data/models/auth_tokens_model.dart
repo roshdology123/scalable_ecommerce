@@ -55,6 +55,7 @@ class AuthTokensModel extends AuthTokens {
     );
   }
 
+  @override
   AuthTokensModel copyWith({
     String? accessToken,
     String? refreshToken,

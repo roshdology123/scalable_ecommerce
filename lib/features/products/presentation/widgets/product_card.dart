@@ -57,13 +57,13 @@ class ProductCard extends StatelessWidget {
                       imageUrl: product.image,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => Container(
-                        color: context.colorScheme.surfaceVariant,
+                        color: context.colorScheme.surfaceContainerHighest,
                         child: const Center(
                           child: CircularProgressIndicator(),
                         ),
                       ),
                       errorWidget: (context, url, error) => Container(
-                        color: context.colorScheme.surfaceVariant,
+                        color: context.colorScheme.surfaceContainerHighest,
                         child: Icon(
                           Icons.image_not_supported,
                           color: context.colorScheme.onSurfaceVariant,

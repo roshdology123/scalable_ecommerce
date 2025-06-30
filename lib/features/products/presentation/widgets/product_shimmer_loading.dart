@@ -60,7 +60,7 @@ class _LoadingProductListItem extends StatelessWidget {
       elevation: 2,
       clipBehavior: Clip.antiAlias,
       child: Shimmer.fromColors(
-        baseColor: context.colorScheme.surfaceVariant,
+        baseColor: context.colorScheme.surfaceContainerHighest,
         highlightColor: context.colorScheme.surface,
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -187,7 +187,7 @@ class CategoryShimmerLoading extends StatelessWidget {
         itemBuilder: (context, index) => Padding(
           padding: const EdgeInsets.only(right: 8),
           child: Shimmer.fromColors(
-            baseColor: context.colorScheme.surfaceVariant,
+            baseColor: context.colorScheme.surfaceContainerHighest,
             highlightColor: context.colorScheme.surface,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

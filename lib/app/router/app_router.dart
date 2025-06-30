@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:scalable_ecommerce/features/favorites/presentation/cubit/favorites_collections/favorites_collection_cubit.dart';
 import 'package:scalable_ecommerce/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 
 import '../../core/di/injection.dart';
@@ -9,7 +8,6 @@ import '../../core/storage/storage_service.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
-import '../../features/favorites/presentation/cubit/favorites_cubit/favorites_cubit.dart';
 import '../../features/favorites/presentation/pages/favorites_collection_page.dart';
 import '../../features/favorites/presentation/pages/favorites_page.dart';
 import '../../features/notifications/presentation/cubit/notification_preferences_cubit.dart';

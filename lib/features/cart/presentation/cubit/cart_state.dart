@@ -49,10 +49,20 @@ class CartState with _$CartState {
     required List<String> conflictingFields,
     @Default('Cart sync conflict detected') String message,
   }) = _Conflict;
+
+
+
 }
 
 // Helper methods for CartState
 extension CartStateX on CartState {
+  Object? get isRefreshing => maybeWhen(
+    loaded: (_, isRefreshing, __, ___, ____, _____, ______, _______) => isRefreshing,
+    empty: (isLoading, isRefreshing, __) => isRefreshing,
+    orElse: () => null,
+  );
+
+
   bool get isLoading => maybeWhen(
     loading: () => true,
     loaded: (_, isRefreshing, isUpdating, __, ___, ____, _____,______,) =>
@@ -61,7 +71,15 @@ extension CartStateX on CartState {
     empty: (isLoading, _,__) => isLoading,
     orElse: () => false,
   );
+  Object? get isError => maybeWhen(
+    error: (failure, _, __, ___, ____) => failure,
+    orElse: () => null,
+  );
 
+  Object? get isLoaded => maybeWhen(
+    loaded: (cart, _, __, ___, ____, _____, ______, _______) => cart,
+    orElse: () => null,
+  );
   bool get hasCart => maybeWhen(
     loaded: (cart, _, __, ___, ____, _____, ______,_______) => true,
     error: (_, cart, __, ___, ____) => cart != null,

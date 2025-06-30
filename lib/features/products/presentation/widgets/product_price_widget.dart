@@ -227,7 +227,7 @@ class PriceComparisonWidget extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: context.colorScheme.surfaceVariant.withOpacity(0.5),
+            color: context.colorScheme.surfaceContainerHighest.withOpacity(0.5),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(

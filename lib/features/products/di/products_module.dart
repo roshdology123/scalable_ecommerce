@@ -1,6 +1,5 @@
 import 'package:injectable/injectable.dart';
 
-import '../../../core/network/dio_client.dart';
 import '../../../core/network/network_info.dart';
 import '../data/datasources/products_local_datasource.dart';
 import '../data/datasources/products_remote_datasource.dart';

@@ -889,11 +889,7 @@ Future<void> _verifyProfileFeature() async {
     final statsCubit = getIt<ProfileStatsCubit>();
     final themeCubit = getIt<ThemeCubit>();
 
-    if (profileRepo == null ||
-        profileCubit == null ||
-        preferencesCubit == null ||
-        statsCubit == null ||
-        themeCubit == null) {
+    if (profileCubit == null) {
       throw Exception('Critical profile dependencies missing');
     }
 
@@ -941,11 +937,7 @@ Future<void> _verifySearchFeature() async {
     final historyCubit = getIt<SearchHistoryCubit>();
     final filterCubit = getIt<SearchFilterCubit>();
 
-    if (searchRepo == null ||
-        searchCubit == null ||
-        suggestionsCubit == null ||
-        historyCubit == null ||
-        filterCubit == null) {
+    if (searchCubit == null) {
       throw Exception('Critical search dependencies missing');
     }
 
@@ -989,7 +981,7 @@ Future<void> _verifyFavoritesFeature() async {
     final favoritesCubit = getIt<FavoritesCubit>();
     final collectionsCubit = getIt<FavoritesCollectionsCubit>();
 
-    if (favoritesRepo == null || favoritesCubit == null || collectionsCubit == null) {
+    if (favoritesCubit == null) {
       throw Exception('Critical favorites dependencies missing');
     }
 

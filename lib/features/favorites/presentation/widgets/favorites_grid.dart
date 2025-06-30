@@ -39,7 +39,7 @@ class _FavoritesGridState extends State<FavoritesGrid>
   final AppLogger _logger = AppLogger();
 
   late AnimationController _staggerController;
-  List<Animation<double>> _itemAnimations = [];
+  final List<Animation<double>> _itemAnimations = [];
 
   @override
   void initState() {

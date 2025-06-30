@@ -63,7 +63,7 @@ class PhoneNumberFormatter extends TextInputFormatter {
     final buffer = StringBuffer();
 
     // Format: 1-570-236-7033
-    if (text.length >= 1) {
+    if (text.isNotEmpty) {
       buffer.write(text[0]);
       if (text.length > 1) {
         buffer.write('-');

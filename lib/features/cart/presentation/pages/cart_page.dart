@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/di/bloc_providers.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../cubit/cart_cubit.dart';
 import '../cubit/cart_state.dart';

@@ -98,7 +98,7 @@ class CartEmptyWidget extends StatelessWidget {
       width: 120,
       height: 120,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         shape: BoxShape.circle,
       ),
       child: Stack(
@@ -200,7 +200,7 @@ class CartEmptyWidget extends StatelessWidget {
                   arguments: {'category': category.toLowerCase()},
                 );
               },
-              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               labelStyle: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),

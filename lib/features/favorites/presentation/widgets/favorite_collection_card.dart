@@ -235,7 +235,7 @@ class _FavoriteCollectionCardState extends State<FavoriteCollectionCard>
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: colorScheme.surfaceVariant.withOpacity(0.5),
+                                  color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -316,7 +316,7 @@ class _FavoriteCollectionCardState extends State<FavoriteCollectionCard>
       return colorScheme.primaryContainer.withOpacity(0.5);
     }
 
-    return colorScheme.surfaceVariant.withOpacity(0.5);
+    return colorScheme.surfaceContainerHighest.withOpacity(0.5);
   }
 
   String _getAgeText() {

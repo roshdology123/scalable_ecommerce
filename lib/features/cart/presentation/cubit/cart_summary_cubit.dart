@@ -3,7 +3,6 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/cart.dart';
-import '../../domain/entities/cart_summary.dart';
 import '../../domain/usecases/calculate_cart_totals_usecase.dart';
 import 'cart_summary_state.dart';
 

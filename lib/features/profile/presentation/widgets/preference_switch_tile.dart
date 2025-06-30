@@ -78,7 +78,7 @@ class PreferenceSwitchTile extends StatelessWidget {
           onChanged: onChanged,
           activeColor: theme.colorScheme.primary,
           inactiveThumbColor: theme.colorScheme.outline,
-          inactiveTrackColor: theme.colorScheme.surfaceVariant,
+          inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
         ),
       ),
     );

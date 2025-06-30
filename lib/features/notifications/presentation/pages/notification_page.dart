@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../cubit/notifications_cubit.dart';
 import '../cubit/notifications_state.dart';
-import '../widgets/notification_card.dart';
 import '../widgets/notification_list.dart';
 import '../widgets/notification_badge.dart';
 import '../widgets/notification_empty_state.dart';

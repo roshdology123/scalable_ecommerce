@@ -125,7 +125,7 @@ class ProductsByCategoryPage extends HookWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
-              color: context.colorScheme.surfaceVariant.withOpacity(0.5),
+              color: context.colorScheme.surfaceContainerHighest.withOpacity(0.5),
               child: BlocBuilder<CategoriesCubit, categories.CategoriesState>(
                 builder: (context, state) {
                   final category = state.categories
@@ -172,7 +172,7 @@ class ProductsByCategoryPage extends HookWidget {
                 return Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  color: context.colorScheme.surfaceVariant.withOpacity(0.3),
+                  color: context.colorScheme.surfaceContainerHighest.withOpacity(0.3),
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,

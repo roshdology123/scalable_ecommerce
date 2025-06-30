@@ -3,8 +3,6 @@ import 'package:injectable/injectable.dart';
 import 'package:scalable_ecommerce/core/usecases/usecase.dart';
 
 import '../../../../../core/utils/debouncer.dart';
-import '../../../../products/domain/entities/product.dart';
-import '../../../../products/domain/entities/category.dart';
 import '../../../../products/domain/usecases/get_products_usecase.dart';
 import '../../../../products/domain/usecases/get_categories_usecase.dart';
 import '../../../domain/entities/search_suggestion.dart';

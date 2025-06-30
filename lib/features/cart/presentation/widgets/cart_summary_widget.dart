@@ -67,7 +67,7 @@ class CartSummaryWidget extends StatelessWidget {
               elevation: 2,
               // 🔥 VISUAL FEEDBACK FOR OPTIMISTIC UPDATES
               color: effectiveIsOptimistic
-                  ? Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.8)
+                  ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.8)
                   : null,
               child: Padding(
                 padding: const EdgeInsets.all(16),

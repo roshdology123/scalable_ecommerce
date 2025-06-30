@@ -3,9 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
-import 'package:scalable_ecommerce/core/storage/local_storage.dart';
 import 'package:scalable_ecommerce/core/storage/secure_storage.dart';
-import 'package:scalable_ecommerce/core/storage/storage_service.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/usecases/usecase.dart';
@@ -269,24 +267,22 @@ class AuthCubit extends Cubit<AuthState> {
       },
     );
   }
+Future<void> logout() async {
+  debugPrint('[AuthCubit] Logout request');
+  emit(const AuthState.loading());
 
-  Future<void> logout() async {
-    debugPrint('[AuthCubit] Logout request');
-    emit(const AuthState.loading());
-
-    final result = await _logoutUseCase(const NoParams());
-    result.fold(
-          (failure) {
-        debugPrint('[AuthCubit] Logout failed: ${failure.message}');
-        emit(AuthState.error(failure.message, failure.code));
-      },
-          (_) {
-        debugPrint('[AuthCubit] Logout successful');
-        SecureStorage().clearAll();
-        emit(const AuthState.unauthenticated());
-      },
-    );
-  }
+  final result = await _logoutUseCase(const NoParams());
+  result.fold(
+    (failure) {
+      debugPrint('[AuthCubit] Logout failed: ${failure.message}');
+      emit(AuthState.error(failure.message, failure.code));
+    },
+    (_) {
+      debugPrint('[AuthCubit] Logout successful');
+      emit(const AuthState.unauthenticated());
+    },
+  );
+}
 
   Future<void> forgotPassword(String email) async {
     debugPrint('[AuthCubit] Forgot password request for: $email');

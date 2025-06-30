@@ -7,7 +7,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:scalable_ecommerce/core/services/notification_service.dart';
 import 'package:scalable_ecommerce/core/storage/local_storage.dart';
-import 'package:scalable_ecommerce/core/storage/secure_storage.dart';
 
 import 'core/di/injection.dart';
 import 'core/storage/storage_service.dart';
