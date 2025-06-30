@@ -34,10 +34,43 @@ class CartSummaryState with _$CartSummaryState {
     @Default('Calculating totals...') String message,
     @Default(0.0) double progress,
   }) = _Calculating;
+
+
+
+
 }
 
 // Helper extensions
 extension CartSummaryStateX on CartSummaryState {
+
+  Object? get canRetry => maybeWhen(
+    error: (_, __, canRetry, ___) => canRetry,
+    orElse: () => false,
+  );
+
+  Object? get failedAction => maybeWhen(
+    error: (_, __, ___, failedAction) => failedAction,
+    orElse: () => null,
+  );
+
+  Object? get appliedCouponCode => maybeWhen(
+    loaded: (_, __, ___, ____, appliedCouponCode, _____, ______, ________) => appliedCouponCode,
+    calculating: (currentSummary, __, ___) => currentSummary.appliedCouponCode,
+    orElse: () => null,
+  );
+
+  Object? get selectedShippingMethod => maybeWhen(
+    loaded: (_, __, ___, selectedShippingMethod, ____, _____, ______, _______) => selectedShippingMethod,
+    calculating: (currentSummary, __, ___) => currentSummary.selectedShippingMethod,
+    orElse: () => null,
+  );
+
+
+  Object? get isCalculating => maybeWhen(
+    calculating: (_, __, ___) => true,
+    loaded: (_, isCalculating, __, ___, ____, _____, ______, _______) => isCalculating,
+    orElse: () => false,
+  );
   bool get isLoading => maybeWhen(
     loading: () => true,
     calculating: (_, __, ___) => true,
