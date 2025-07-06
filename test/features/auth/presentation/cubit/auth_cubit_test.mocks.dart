@@ -20,6 +20,8 @@ import 'package:scalable_ecommerce/features/auth/domain/usecases/forgot_password
     as _i12;
 import 'package:scalable_ecommerce/features/auth/domain/usecases/get_current_user_usecase.dart'
     as _i11;
+import 'package:scalable_ecommerce/features/auth/domain/usecases/google_sign_in_usecase.dart'
+    as _i17;
 import 'package:scalable_ecommerce/features/auth/domain/usecases/login_usecase.dart'
     as _i4;
 import 'package:scalable_ecommerce/features/auth/domain/usecases/logout_usecase.dart'
@@ -950,6 +952,23 @@ class MockAuthRepository extends _i1.Mock implements _i2.AuthRepository {
               ),
             )),
           ) as _i5.Future<_i3.Either<_i6.Failure, Map<String, String?>>>);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, _i7.User>> signInWithGoogle() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #signInWithGoogle,
+          [],
+        ),
+        returnValue: _i5.Future<_i3.Either<_i6.Failure, _i7.User>>.value(
+            _FakeEither_1<_i6.Failure, _i7.User>(
+          this,
+          Invocation.method(
+            #signInWithGoogle,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i3.Either<_i6.Failure, _i7.User>>);
 }
 
 /// A class which mocks [SecureStorage].
@@ -1289,4 +1308,40 @@ class MockSecureStorage extends _i1.Mock implements _i16.SecureStorage {
         ),
         returnValue: _i5.Future<bool>.value(false),
       ) as _i5.Future<bool>);
+}
+
+/// A class which mocks [GoogleSignInUseCase].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockGoogleSignInUseCase extends _i1.Mock
+    implements _i17.GoogleSignInUseCase {
+  MockGoogleSignInUseCase() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i2.AuthRepository get repository => (super.noSuchMethod(
+        Invocation.getter(#repository),
+        returnValue: _FakeAuthRepository_0(
+          this,
+          Invocation.getter(#repository),
+        ),
+      ) as _i2.AuthRepository);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, _i7.User>> call(_i10.NoParams? params) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [params],
+        ),
+        returnValue: _i5.Future<_i3.Either<_i6.Failure, _i7.User>>.value(
+            _FakeEither_1<_i6.Failure, _i7.User>(
+          this,
+          Invocation.method(
+            #call,
+            [params],
+          ),
+        )),
+      ) as _i5.Future<_i3.Either<_i6.Failure, _i7.User>>);
 }

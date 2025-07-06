@@ -9,6 +9,7 @@ import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
+import '../datasources/google_auth_data_source.dart';
 import '../models/auth_tokens_model.dart';
 import '../models/user_model.dart';
 
@@ -17,11 +18,13 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
   final AuthLocalDataSource _localDataSource;
   final NetworkInfo _networkInfo;
+  final GoogleAuthDataSource _googleAuthDataSource;
 
   AuthRepositoryImpl(
       this._remoteDataSource,
       this._localDataSource,
       this._networkInfo,
+      this._googleAuthDataSource,
       );
   @override
   Future<bool> isRememberMeEnabled() async {
@@ -675,6 +678,28 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(
         message: 'Social login failed: ${e.toString()}',
         code: 'SOCIAL_LOGIN_ERROR',
+      ));
+    }
+  }
+  @override
+  Future<Either<Failure, User>> signInWithGoogle() async {
+    try {
+      if (await _networkInfo.isConnected) {
+        final user = await _googleAuthDataSource.signInWithGoogle();
+        await _localDataSource.cacheUser(user);
+        await _localDataSource.setLoggedIn(true);
+        return Right(user);
+      } else {
+        return Left(NetworkFailure.noConnection());
+      }
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message, code: e.code));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(message: e.message, code: e.code));
+    } catch (e) {
+      return Left(ServerFailure(
+        message: 'An unexpected error occurred during Google Sign-In: ${e.toString()}',
+        code: 'UNKNOWN_GOOGLE_SIGN_IN_ERROR',
       ));
     }
   }

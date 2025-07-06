@@ -6,12 +6,17 @@ import '../../../core/network/network_info.dart';
 import '../../../core/utils/app_logger.dart';
 
 import '../data/datasources/auth_local_datasource.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 import '../data/datasources/auth_remote_datasource.dart';
+import '../data/datasources/google_auth_data_source.dart';
 import '../data/repositories/auth_repository_impl.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/usecases/change_password_usecase.dart';
 import '../domain/usecases/forgot_password_usecase.dart';
 import '../domain/usecases/get_current_user_usecase.dart';
+import '../domain/usecases/google_sign_in_usecase.dart';
 import '../domain/usecases/login_usecase.dart';
 import '../domain/usecases/logout_usecase.dart';
 import '../domain/usecases/register_usecase.dart';
@@ -47,16 +52,31 @@ class AuthInjection {
         ),
       );
 
+      // Firebase and Google Sign-In
+      getIt.registerLazySingleton<GoogleSignIn>(() => GoogleSignIn.instance);
+      getIt.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
+
+      getIt.registerLazySingleton<GoogleAuthDataSource>(
+            () => GoogleAuthDataSourceImpl(
+          googleSignIn: getIt<GoogleSignIn>(),
+          firebaseAuth: getIt<FirebaseAuth>(),
+        ),
+      );
+
       // Repository
       getIt.registerLazySingleton<AuthRepository>(
             () => AuthRepositoryImpl(
           getIt<AuthRemoteDataSource>(),
           getIt<AuthLocalDataSource>(),
           getIt<NetworkInfo>(),
+          getIt<GoogleAuthDataSource>(),
         ),
       );
 
       // Use Cases
+      getIt.registerLazySingleton<GoogleSignInUseCase>(
+            () => GoogleSignInUseCase(getIt<AuthRepository>()),
+      );
       getIt.registerLazySingleton<LoginUseCase>(
             () => LoginUseCase(getIt<AuthRepository>()),
       );
@@ -101,7 +121,8 @@ class AuthInjection {
           getIt<ForgotPasswordUseCase>(),
           getIt<ResetPasswordUseCase>(),
               getIt<UpdateProfileUseCase>(),
-                getIt<AuthRepository>()
+                getIt<AuthRepository>(),
+                getIt<GoogleSignInUseCase>(),
         ),
       );
 

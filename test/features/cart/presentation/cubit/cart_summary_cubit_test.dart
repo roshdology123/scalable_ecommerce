@@ -872,7 +872,7 @@ void main() {
           return cartSummaryCubit;
         },
         seed: () => CartSummaryState.loaded(summary: CartSummary(
-          subtotal: 100.0,
+          subtotal: 100.0,   
           totalTax: 8.0,
           total: 108.0,
           shippingCost: 0.0,

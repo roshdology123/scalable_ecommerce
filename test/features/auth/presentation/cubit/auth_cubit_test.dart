@@ -14,6 +14,7 @@ import 'package:scalable_ecommerce/features/auth/domain/usecases/logout_usecase.
 import 'package:scalable_ecommerce/features/auth/domain/usecases/register_usecase.dart';
 import 'package:scalable_ecommerce/features/auth/domain/usecases/reset_password_usecase.dart';
 import 'package:scalable_ecommerce/features/auth/domain/usecases/update_profile_usecase.dart';
+import 'package:scalable_ecommerce/features/auth/domain/usecases/google_sign_in_usecase.dart';
 import 'package:scalable_ecommerce/features/auth/presentation/cubit/auth_cubit.dart';
 import 'auth_cubit_test.mocks.dart';
 
@@ -27,6 +28,7 @@ import 'auth_cubit_test.mocks.dart';
   UpdateProfileUseCase,
   AuthRepository,
   SecureStorage,
+  GoogleSignInUseCase,
 ])
 void main() {
   late AuthCubit cubit;
@@ -39,6 +41,7 @@ void main() {
   late MockUpdateProfileUseCase updateProfileUseCase;
   late MockAuthRepository authRepository;
   late MockSecureStorage mockStorage;
+  late MockGoogleSignInUseCase googleSignInUseCase;
 
   setUp(() {
     loginUseCase = MockLoginUseCase();
@@ -50,6 +53,7 @@ void main() {
     updateProfileUseCase = MockUpdateProfileUseCase();
     authRepository = MockAuthRepository();
     mockStorage = MockSecureStorage();
+    googleSignInUseCase = MockGoogleSignInUseCase();
     cubit = AuthCubit(
       loginUseCase,
       registerUseCase,
@@ -59,6 +63,7 @@ void main() {
       resetPasswordUseCase,
       updateProfileUseCase,
       authRepository,
+      googleSignInUseCase,
     );
   });
 

@@ -125,4 +125,7 @@ abstract class AuthRepository {
 
   /// Get saved credentials for auto-login
   Future<Either<Failure, Map<String, String?>>> getSavedCredentials();
+
+  /// Sign in with Google
+  Future<Either<Failure, User>> signInWithGoogle();
 }

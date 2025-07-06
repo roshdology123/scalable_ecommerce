@@ -16,6 +16,7 @@ import '../../domain/usecases/get_current_user_usecase.dart';
 import '../../domain/usecases/forgot_password_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
 import '../../domain/usecases/update_profile_usecase.dart';
+import '../../domain/usecases/google_sign_in_usecase.dart';
 
 part 'auth_state.dart';
 part 'auth_cubit.freezed.dart';
@@ -29,6 +30,7 @@ class AuthCubit extends Cubit<AuthState> {
   final ForgotPasswordUseCase _forgotPasswordUseCase;
   final ResetPasswordUseCase _resetPasswordUseCase;
   final UpdateProfileUseCase _updateProfileUseCase;
+  final GoogleSignInUseCase _googleSignInUseCase;
   final AuthRepository _authRepository;
 
   AuthCubit(
@@ -40,6 +42,7 @@ class AuthCubit extends Cubit<AuthState> {
       this._resetPasswordUseCase,
       this._updateProfileUseCase,
       this._authRepository,
+      this._googleSignInUseCase,
       ) : super(const AuthState.initial()) {
     _initializeAuth();
   }
@@ -263,6 +266,25 @@ class AuthCubit extends Cubit<AuthState> {
       },
           (user) {
         debugPrint('[AuthCubit] Registration successful: ${user.email}');
+        emit(AuthState.authenticated(user));
+      },
+    );
+  }
+
+  Future<void> signInWithGoogle() async {
+    debugPrint('[AuthCubit] Google Sign-In attempt');
+    emit(const AuthState.loading());
+
+    final result = await _googleSignInUseCase(const NoParams());
+
+    result.fold(
+          (failure) {
+            debugPrint('[AuthCubit] Google Sign-In failed: ${failure.data}');
+        debugPrint('[AuthCubit] Google Sign-In failed: ${failure.message}');
+        emit(AuthState.error(failure.message, failure.code));
+      },
+          (user) {
+        debugPrint('[AuthCubit] Google Sign-In successful: ${user.email}');
         emit(AuthState.authenticated(user));
       },
     );

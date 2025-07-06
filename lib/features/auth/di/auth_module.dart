@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 import '../../../core/network/network_info.dart';
 import '../data/datasources/auth_local_datasource.dart';
 import '../data/datasources/auth_remote_datasource.dart';
+import '../data/datasources/google_auth_data_source.dart';
 import '../data/repositories/auth_repository_impl.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/usecases/change_password_usecase.dart';
@@ -16,16 +17,16 @@ import '../domain/usecases/update_profile_usecase.dart';
 
 @module
 abstract class AuthModule {
-  // Note: AuthLocalDataSource is already registered with @LazySingleton
-  // Note: AuthRemoteDataSource needs to be implemented
 
   @LazySingleton(as: AuthRepository)
   AuthRepositoryImpl authRepository(
       AuthRemoteDataSource remoteDataSource,
       AuthLocalDataSource localDataSource,
       NetworkInfo networkInfo,
+      GoogleAuthDataSource googleAuthDataSource,
       ) =>
-      AuthRepositoryImpl(remoteDataSource, localDataSource, networkInfo);
+      AuthRepositoryImpl(remoteDataSource, localDataSource, networkInfo,
+          googleAuthDataSource);
 
   @LazySingleton()
   LoginUseCase loginUseCase(AuthRepository repository) =>

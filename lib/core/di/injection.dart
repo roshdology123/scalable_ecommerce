@@ -4,6 +4,11 @@ import 'package:get_it/get_it.dart';
 import 'package:scalable_ecommerce/core/services/notification_service.dart';
 import 'package:scalable_ecommerce/core/services/notification_simulator.dart';
 import 'package:scalable_ecommerce/features/favorites/di/favorites_module.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../../features/auth/data/datasources/google_auth_data_source.dart';
+import '../../features/auth/domain/usecases/google_sign_in_usecase.dart';
 import 'package:scalable_ecommerce/features/notifications/domain/repositories/notification_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -233,6 +238,14 @@ Future<void> configureDependencies() async {
     getIt.registerSingleton<AuthRemoteDataSource>(
       AuthRemoteDataSourceImpl(getIt<DioClient>()),
     );
+    getIt.registerSingleton<GoogleSignIn>(GoogleSignIn.instance);
+    getIt.registerSingleton<FirebaseAuth>(FirebaseAuth.instance);
+    getIt.registerSingleton<GoogleAuthDataSource>(
+      GoogleAuthDataSourceImpl(
+        googleSignIn: getIt<GoogleSignIn>(),
+        firebaseAuth: getIt<FirebaseAuth>(),
+      ),
+    );
 
     // Repository
     getIt.registerSingleton<AuthRepository>(
@@ -240,10 +253,14 @@ Future<void> configureDependencies() async {
         getIt<AuthRemoteDataSource>(),
         getIt<AuthLocalDataSource>(),
         getIt<NetworkInfo>(),
+        getIt<GoogleAuthDataSource>(),
       ),
     );
 
     // Use Cases
+    getIt.registerSingleton<GoogleSignInUseCase>(
+      GoogleSignInUseCase(getIt<AuthRepository>()),
+    );
     getIt.registerSingleton<LoginUseCase>(
       LoginUseCase(getIt<AuthRepository>()),
     );
@@ -278,6 +295,7 @@ Future<void> configureDependencies() async {
         getIt<ResetPasswordUseCase>(),
         getIt<UpdateProfileUseCase>(),
         getIt<AuthRepository>(),
+        getIt<GoogleSignInUseCase>(),
       ),
     );
 
