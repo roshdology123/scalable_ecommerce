@@ -55,6 +55,7 @@ class ProductsPage extends HookWidget {
     // Load initial data
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<FavoritesCubit>().loadFavorites();
         context.read<CategoriesCubit>().loadCategories();
 
         if (initialQuery?.isNotEmpty == true) {

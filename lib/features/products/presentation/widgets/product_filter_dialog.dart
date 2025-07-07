@@ -628,18 +628,37 @@ class ProductFilterDialog extends HookWidget {
       bool featuredOnly,
       bool newArrivalsOnly,
       ) {
-    context.read<ProductsCubit>().applyFilters(
-      category: category,
-      minPrice: minPrice,
-      maxPrice: maxPrice,
-      minRating: minRating,
-      brands: brands.isEmpty ? null : brands.toList(),
-      colors: colors.isEmpty ? null : colors.toList(),
-      sizes: sizes.isEmpty ? null : sizes.toList(),
-      inStockOnly: inStockOnly ? true : null,
-      onSaleOnly: onSaleOnly ? true : null,
-      featuredOnly: featuredOnly ? true : null,
-      newArrivalsOnly: newArrivalsOnly ? true : null,
+    final cubit = context.read<ProductsCubit>();
+    final currentFilters = cubit.currentFilters;
+
+    final newFilters = {
+      'category': category,
+      'minPrice': minPrice,
+      'maxPrice': maxPrice,
+      'minRating': minRating,
+      'brands': brands.isEmpty ? null : brands.toList(),
+      'colors': colors.isEmpty ? null : colors.toList(),
+      'sizes': sizes.isEmpty ? null : sizes.toList(),
+      'inStockOnly': inStockOnly ? true : null,
+      'onSaleOnly': onSaleOnly ? true : null,
+      'featuredOnly': featuredOnly ? true : null,
+      'newArrivalsOnly': newArrivalsOnly ? true : null,
+    };
+
+    final mergedFilters = {...currentFilters, ...newFilters};
+
+    cubit.applyFilters(
+      category: mergedFilters['category'],
+      minPrice: mergedFilters['minPrice'],
+      maxPrice: mergedFilters['maxPrice'],
+      minRating: mergedFilters['minRating'],
+      brands: mergedFilters['brands'],
+      colors: mergedFilters['colors'],
+      sizes: mergedFilters['sizes'],
+      inStockOnly: mergedFilters['inStockOnly'],
+      onSaleOnly: mergedFilters['onSaleOnly'],
+      featuredOnly: mergedFilters['featuredOnly'],
+      newArrivalsOnly: mergedFilters['newArrivalsOnly'],
     );
 
     Navigator.of(context).pop();

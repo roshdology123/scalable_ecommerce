@@ -15,6 +15,7 @@ class ProductsCubit extends Cubit<ProductsState> {
   final SearchProductsUseCase _searchProductsUseCase;
   final FilterProductsUseCase _filterProductsUseCase;
 
+  List<Product> _unfilteredProducts = [];
   // Current state variables
   int _currentPage = 1;
   bool _hasReachedMax = false;
@@ -101,6 +102,7 @@ class ProductsCubit extends Cubit<ProductsState> {
             }
           } else {
             final allProducts = refresh ? newProducts : [...products, ...newProducts];
+            _unfilteredProducts = allProducts;
             _currentPage++;
             _hasReachedMax = newProducts.length < 20;
 
@@ -227,6 +229,7 @@ class ProductsCubit extends Cubit<ProductsState> {
             final allProducts = refresh || _currentPage == 1
                 ? newProducts
                 : [...products, ...newProducts];
+            _unfilteredProducts = allProducts;
             _currentPage++;
             _hasReachedMax = newProducts.length < 20;
 
@@ -301,6 +304,7 @@ class ProductsCubit extends Cubit<ProductsState> {
             final allProducts = refresh || _currentPage == 1
                 ? newProducts
                 : [...products, ...newProducts];
+            _unfilteredProducts = allProducts;
             _currentPage++;
             _hasReachedMax = newProducts.length < 20;
 
@@ -338,12 +342,12 @@ class ProductsCubit extends Cubit<ProductsState> {
     String? sortBy,
     String? sortOrder,
   }) async {
-    final currentProducts = products;
+    final currentProducts = _unfilteredProducts;
     if (currentProducts.isEmpty) return;
 
     emit(const ProductsState.loading());
 
-    _currentFilters = {
+    final newFilters = {
       if (category != null) 'category': category,
       if (minPrice != null) 'minPrice': minPrice,
       if (maxPrice != null) 'maxPrice': maxPrice,
@@ -356,6 +360,8 @@ class ProductsCubit extends Cubit<ProductsState> {
       if (featuredOnly == true) 'featuredOnly': true,
       if (newArrivalsOnly == true) 'newArrivalsOnly': true,
     };
+
+    _currentFilters = {..._currentFilters, ...newFilters};
 
     _currentSortBy = sortBy;
     _currentSortOrder = sortOrder;

@@ -92,32 +92,45 @@ class ProductGrid extends StatelessWidget {
   Widget _buildGridView() {
     return BlocBuilder<FavoritesCubit, FavoritesState>(
       builder: (context, favoritesState) {
-        return GridView.builder(
-          controller: scrollController,
-          padding: padding ?? const EdgeInsets.all(16),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: childAspectRatio ?? 0.48,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
-          itemCount: products.length + (isLoadingMore ? crossAxisCount : 0),
-          itemBuilder: (context, index) {
-            if (index >= products.length) {
-              return const LoadingProductCard();
-            }
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final crossAxisCount = width > 1200
+                ? 5
+                : width > 800
+                ? 4
+                : width > 600
+                ? 3
+                : 2;
 
-            final product = products[index];
+            return GridView.builder(
+              controller: scrollController,
+              padding: padding ?? const EdgeInsets.all(16),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: childAspectRatio ?? 0.48,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: products.length + (isLoadingMore ? crossAxisCount : 0),
+              itemBuilder: (context, index) {
+                if (index >= products.length) {
+                  return const LoadingProductCard();
+                }
 
-            // 🔥 Use synchronous method that checks current favorites in memory
-            final isFavorite = _isProductFavorite(context, product.id, favoritesState);
+                final product = products[index];
 
-            return ProductCard(
-              product: product,
-              isFavorite: isFavorite,
-              onTap: () => onProductTap?.call(product),
-              onFavoriteTap: () => onFavoriteTap?.call(product),
-              onAddToCartTap: () => onAddToCartTap?.call(product),
+                // 🔥 Use synchronous method that checks current favorites in memory
+                final isFavorite = _isProductFavorite(context, product.id, favoritesState);
+
+                return ProductCard(
+                  product: product,
+                  isFavorite: isFavorite,
+                  onTap: () => onProductTap?.call(product),
+                  onFavoriteTap: () => onFavoriteTap?.call(product),
+                  onAddToCartTap: () => onAddToCartTap?.call(product),
+                );
+              },
             );
           },
         );
@@ -170,12 +183,10 @@ class ProductGrid extends StatelessWidget {
 
   // 🔥 Helper method to check if product is favorite from current state
   bool _isProductFavorite(BuildContext context, int productId, FavoritesState favoritesState) {
-    // Check from current favorites list in memory (instant)
-    final currentFavorites = context.read<FavoritesCubit>().currentFavorites;
-    final isInCurrentList = currentFavorites.any((favorite) => favorite.productId == productId);
-
-    debugPrint('[ProductGrid] Checking favorite status for product $productId for roshdology123: $isInCurrentList at 2025-06-22 12:02:22');
-
-    return isInCurrentList;
+    return favoritesState.maybeWhen(
+      loaded: (favorites, _, __, ___, ____, _____, ______, _______, ________, _________) =>
+          favorites.any((favorite) => favorite.productId == productId),
+      orElse: () => false,
+    );
   }
 }

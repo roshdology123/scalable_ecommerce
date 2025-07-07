@@ -49,7 +49,6 @@ class _FavoritesPageState extends State<FavoritesPage>
 
     _initializeAnimations();
     _setupScrollListener();
-    _loadInitialData();
 
     _logger.logUserAction('favorites_page_opened', {
       'user': _userContext,
@@ -57,6 +56,12 @@ class _FavoritesPageState extends State<FavoritesPage>
       'initial_collection_id': widget.initialCollectionId,
       'initial_category': widget.initialCategory,
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadInitialData();
   }
 
   void _initializeAnimations() {
